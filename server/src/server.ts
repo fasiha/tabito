@@ -1,8 +1,15 @@
 import express from "express";
+import cors from "cors";
+
 import { isRight } from "fp-ts/lib/Either.js";
 import { path } from "static-path";
-import { PostSentenceCodec } from "./restDecoders.js";
-import { getSentencesInDocument, upsertSentence } from "./db.js";
+import { PostSentenceCodec, SentenceExistsCodec } from "./restDecoders.js";
+import {
+  getSentence,
+  getSentencesInDocument,
+  sentenceExists,
+  upsertSentence,
+} from "./db.js";
 
 const app = express();
 const port =
@@ -11,14 +18,14 @@ const port =
     : 3000;
 
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const document = path("/api/document/:documentId");
-
-app.get(document.pattern, (req, res) => {
+const documentPath = path("/api/document/:documentId");
+app.get(documentPath.pattern, (req, res) => {
   const { documentId } = req.params;
 
   const jsons = getSentencesInDocument(documentId).map((o) => o.jsonEncoded);
@@ -26,7 +33,7 @@ app.get(document.pattern, (req, res) => {
   res.end(`[${jsons.join(",")}]`);
 });
 
-app.post("/api/sentence", (req, res) => {
+app.put("/api/sentence", (req, res) => {
   const parsed = PostSentenceCodec.decode(req.body);
   if (isRight(parsed)) {
     try {
@@ -38,6 +45,48 @@ app.post("/api/sentence", (req, res) => {
       console.error("Unexpected error", e);
       res.sendStatus(500);
     }
+  } else {
+    console.error("io-ts rejection");
+    res.sendStatus(422);
+  }
+});
+
+app.post("/api/sentence-exists", (req, res) => {
+  const parsed = SentenceExistsCodec.decode(req.body);
+  if (isRight(parsed)) {
+    try {
+      res.sendStatus(sentenceExists(parsed.right) ? 200 : 204);
+    } catch (e) {
+      console.error("Unexpected error", e);
+      res.sendStatus(500);
+    }
+  } else {
+    console.error("io-ts rejection");
+    res.sendStatus(422);
+  }
+});
+
+app.post("/api/sentence", (req, res) => {
+  const parsed = SentenceExistsCodec.decode(req.body);
+  if (isRight(parsed)) {
+    let sentence: ReturnType<typeof getSentence>;
+    try {
+      sentence = getSentence(parsed.right, true);
+    } catch (e) {
+      console.error("Unexpected error", e);
+      res.sendStatus(500);
+      return;
+    }
+
+    if (typeof sentence === "string") {
+      // found
+      res.setHeader("Content-Type", "application/json");
+      res.end(sentence);
+    } else if (sentence === undefined) {
+      // not found
+      res.sendStatus(204);
+    }
+    // type `Sentence` is a fake return for `getSentence` since we asked it for string-only
   } else {
     console.error("io-ts rejection");
     res.sendStatus(422);

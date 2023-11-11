@@ -39,3 +39,22 @@ export const PostSentenceCodec = t.intersection([
   }),
 ]);
 export type PostSentence = t.TypeOf<typeof PostSentenceCodec>;
+
+interface PlainOrHashBrand {
+  readonly PlainOrHash: unique symbol; // use `unique symbol` here to ensure uniqueness across modules / packages
+}
+const PlainOrHashCodec = t.brand(
+  t.partial({ plain: t.string, plainSha256: t.string }), // a codec representing the type to be refined
+  (
+    obj
+  ): obj is t.Branded<
+    Partial<{ plain: string; plainSha256: string }>,
+    PlainOrHashBrand
+  > => obj.plain !== undefined || obj.plainSha256 !== undefined, // a custom type guard using the build-in helper `Branded`
+  "PlainOrHash" // the name must match the readonly field in the brand
+);
+export const SentenceExistsCodec = t.intersection([
+  t.partial({ documentId: t.union([t.string, t.number]) }),
+  PlainOrHashCodec,
+]);
+export type SentenceExists = t.TypeOf<typeof SentenceExistsCodec>;
