@@ -10,7 +10,8 @@
     "astro": "astro",
     "server:clean": "find server -name '*js' | xargs rm",
     "server:schema": "esbuild server/sql/makeWrapper.ts --outfile=server/sql/makeWrapper.cjs --format=cjs && node server/sql/makeWrapper.cjs",
-    "server:build": "esbuild server/src/*ts --outdir=server/src --format=esm"
+    "server:build": "esbuild server/src/*ts --outdir=server/src --format=esm",
+    "server:start": "TABITO_DB=tabito.db TABITO_PORT=4000 node server/src/server.js"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.0",
