@@ -1,47 +1,47 @@
-# Astro Starter Kit: Minimal
+# Tabito
 
+## Restart everything
+In one tab start the server:
 ```sh
-npm create astro@latest -- --template minimal
+npm run server:build && npm run server:start
 ```
+This will load http://localhost:4000 with a SQLite file in `tabito.db`.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/minimal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/minimal/devcontainer.json)
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+Then in another terminal run,
+```sh
+npm run dev
 ```
+to start the Astro dev server on http://localhost:4321. This will have the website.
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Working notes
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+After entering a sentence, it needs to hit MeCab (probabily `curtiz-japanese-nlp`?) or Ichiran to get furigana.
 
-Any static assets, like images, can be placed in the `public/` directory.
+The Sentence Editor needs to offer Furigana editing and synonym generation. This will generate data in the Tabito format (see `tabito-lib`).
 
-## 🧞 Commands
+Then the document page needs to show the plain sentences, without furigana. Ultimately this document view will become the passive reading page, with a button to mark a sentence as 
+- "fully understood" versus 
+- "click to see furigana" vs
+- "click to see meaning".
 
-All commands are run from the root of the project, from a terminal:
+We also need to create a "review" page that'll use Ebisu v3 (probably the single-Beta power-law algorithm?) to pick the sentence most at risk of being forgotten and let you review it. That'll finally use the Tabito library.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Detailed setup
+After cloning this repo, I think these are the setup steps:
+```sh
+# install dependencies
+npx pnpm i
 
-## 👀 Want to learn more?
+# generate TypeScript wrappers from SQL schema
+npm run server:schema
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+# transpile server TypeScript code to JavaScript modules
+npm run server:build
+
+# start the backend server
+npm run server:start
+```
+Then in another terminal, start Astro, the frontend dev server:
+```sh
+npm run dev
+```
