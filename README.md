@@ -9,6 +9,8 @@ npx pnpm install       # install dependencies
 npm run server:schema  # convert SQL schema to TypeScript interfaces
 ```
 
+Then, start [Curtiz Japanese NLP](https://github.com/fasiha/curtiz-japanese-nlp) on `locahost`, port 8133 (or provide URL via an environment variable `CURTIZ_URL` to the following).
+
 Then to start the dev server:
 ```sh
 npm run dev
