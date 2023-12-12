@@ -1,17 +1,19 @@
 # Tabito
 
-## Restart everything
-In one tab start the server:
-```sh
-npm run server:build && npm run server:start
-```
-This will load http://localhost:4000 with a SQLite file in `tabito.db`.
+Very work in progress.
 
-Then in another terminal run,
+## Setup
+First-time setup:
+```sh
+npx pnpm install       # install dependencies
+npm run server:schema  # convert SQL schema to TypeScript interfaces
+```
+
+Then to start the dev server:
 ```sh
 npm run dev
 ```
-to start the Astro dev server on http://localhost:4321. This will have the website.
+and visit http://localhost:4321.
 
 ## Working notes
 
@@ -25,23 +27,3 @@ Then the document page needs to show the plain sentences, without furigana. Ulti
 - "click to see meaning".
 
 We also need to create a "review" page that'll use Ebisu v3 (probably the single-Beta power-law algorithm?) to pick the sentence most at risk of being forgotten and let you review it. That'll finally use the Tabito library.
-
-## Detailed setup
-After cloning this repo, I think these are the setup steps:
-```sh
-# install dependencies
-npx pnpm i
-
-# generate TypeScript wrappers from SQL schema
-npm run server:schema
-
-# transpile server TypeScript code to JavaScript modules
-npm run server:build
-
-# start the backend server
-npm run server:start
-```
-Then in another terminal, start Astro, the frontend dev server:
-```sh
-npm run dev
-```
