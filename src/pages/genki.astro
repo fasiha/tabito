@@ -1,7 +1,8 @@
 ---
 export const prerender = true;
 
-import "../styles/global.css";
+import Basic from "../layouts/Basic.astro";
+
 import StaticSentence from "../components/StaticSentenceSsr.astro";
 import { clearDocument } from "../db";
 
@@ -10,20 +11,12 @@ const documentName = "Genki";
 clearDocument(documentName);
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{documentName} (Tabito)</title>
-  </head>
-  <body>
-    <h1>{documentName}</h1>
-    <p>
-      Here's a basic sentence I want to remember: <StaticSentence
-        plain="うどんを食べた"
-        docName={documentName}
-      />
-    </p>
-  </body>
-</html>
+<Basic title={documentName}>
+  <h1>{documentName}</h1>
+  <p>
+    Here's a basic sentence I want to remember: <StaticSentence
+      plain="うどんを食べた"
+      docName={documentName}
+    />
+  </p>
+</Basic>

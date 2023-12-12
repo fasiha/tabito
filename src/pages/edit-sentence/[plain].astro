@@ -1,13 +1,13 @@
 ---
-import { getSentenceFromPlain } from "../../db";
+import Basic from "../../layouts/Basic.astro";
+
 import { SentenceEditor } from "../../components/SentenceEditor";
 
 const { plain } = Astro.params;
 if (!plain) throw new Error("plain not provided unexpectedly");
-
-// const sentence = getSentenceFromPlain(plain);
-// if (!sentence) throw new Error("sentence unexpectedly not found in database");
 ---
 
-<SentenceEditor plain={plain} client:only />
-<!-- <SentenceEditor sentence={sentence} client:only /> -->
+<Basic title="Sentence Editor">
+  <h1>Sentence Editor</h1>
+  <SentenceEditor plain={plain} client:only />
+</Basic>

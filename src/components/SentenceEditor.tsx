@@ -183,7 +183,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                   placeholder="New translation"
                   type="text"
                   value={newTranslation.value}
-                />
+                />{" "}
                 <button disabled={!newTranslation.value}>Submit</button>
               </form>
             </li>
