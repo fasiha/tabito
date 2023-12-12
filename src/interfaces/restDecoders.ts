@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 import { type Furigana, type Sentence } from "tabito-lib";
-import type * as Table from "./interfaces/DbTablesV1";
+import type * as Table from "./DbTablesV1";
 
 // It sucks I have to define these io-ts parsers here, far far away from Tabito. Maybe they can be
 // moved there? Make io-ts an optional/peer dependency…?

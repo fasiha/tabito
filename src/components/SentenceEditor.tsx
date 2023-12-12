@@ -1,127 +1,214 @@
-/*
-
-Start server:
-```
-npm run server:build && TABITO_DB=tabito.db TABITO_PORT=4000 node server/src/server.js
-```
-
-*/
-
 import type { FunctionalComponent } from "preact";
-import { effect, signal, useSignal } from "@preact/signals";
-import type { Sentence } from "tabito-lib";
-import {
-  type PostSentence,
-  type SentenceExists,
-} from "../../server/src/restDecoders";
-import type { TargetedEvent } from "preact/compat";
+import { Signal, useSignal, useSignalEffect } from "@preact/signals";
+import { type Sentence, addSynonym } from "tabito-lib";
+import { type TargetedEvent } from "preact/compat";
+import { Sentence as SentenceComponent } from "./Sentence";
+import type { Furigana } from "curtiz-japanese-nlp";
 
-const plain = signal("");
-const sentence = signal<undefined | Sentence>(undefined);
-const networkFeedback = signal("");
+interface Props {
+  plain: string;
+}
 
-effect(async () => {
-  const plainValue = plain.value;
-
-  const body: Pick<SentenceExists, "plain"> = { plain: plainValue };
-  const response = await fetch("http://localhost:4000/api/sentence", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (response.status === 200) {
-    const payload = await response.json();
-    sentence.value = payload;
-    networkFeedback.value = "";
-  } else if (response.status === 204) {
-    sentence.value = undefined;
+async function plainToSentenceSignal(
+  plain: string,
+  sentence: Signal<Sentence | undefined>,
+  networkFeedback: Signal<string>
+) {
+  console.log("Fetching sentence from database");
+  const res = await fetch(`/api/sentence/${plain}`);
+  if (res.ok) {
+    sentence.value = await res.json();
     networkFeedback.value = "";
   } else {
-    networkFeedback.value = `Error ${response.status} ${response.statusText}`;
-    console.error("Error", response);
+    networkFeedback.value = `${res.status} ${res.statusText}`;
   }
-});
+}
 
-export const SentenceEditor: FunctionalComponent = () => {
+export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
+  const sentence = useSignal<Sentence | undefined>(undefined);
   const newTranslation = useSignal("");
+  const newSynonym = useSignal("");
+  const newCitation = useSignal<undefined | string>(undefined);
+  const networkFeedback = useSignal("");
 
-  const words = plain.value.split("");
-  function handleStartEditing() {
-    const newSentence: Sentence = { furigana: words };
-    sentence.value = newSentence;
+  useSignalEffect(() => {
+    plainToSentenceSignal(plain, sentence, networkFeedback);
+  });
+
+  function handleInputTranslation(
+    ev: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    newTranslation.value = ev.currentTarget.value;
   }
 
-  function handleChangeCitation(e: TargetedEvent<HTMLInputElement, Event>) {
-    sentence.value = {
-      ...sentence.value!, // this is defined per ternary above
-      citation: (e.target as HTMLInputElement).value,
-    };
+  async function handleSubmitTranslation(
+    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    ev.preventDefault();
+    if (newTranslation.value && sentence.value) {
+      const body: Sentence = {
+        ...sentence.value,
+        english: (sentence.value.english ?? []).concat(newTranslation.value),
+      };
+      const request = await fetch(`/api/sentence/${plain}`, {
+        body: JSON.stringify({ sentence: body }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (request.ok) {
+        sentence.value = body; // new value!
+        // clear
+        networkFeedback.value = "";
+        newTranslation.value = "";
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
   }
 
-  function handleTranslationChange(e: TargetedEvent<HTMLInputElement, Event>) {
-    newTranslation.value = (e.target as HTMLInputElement).value;
+  function handleEditCitation() {
+    newCitation.value = sentence.value?.citation || "";
   }
-  function handleTranslationAdd() {
-    if (!sentence.value) return;
 
-    const pointer = sentence.value;
-    if (!pointer.english) pointer.english = [];
-    pointer.english.push(newTranslation.value);
-    sentence.value = { ...pointer };
-
-    newTranslation.value = "";
+  function handleInputCitation(
+    ev: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    newCitation.value = ev.currentTarget.value;
   }
-  async function handleSubmit() {
-    if (!sentence.value) return;
-    const body: PostSentence = { sentence: sentence.value };
-    const response = await fetch("http://localhost:4000/api/sentence", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (response.ok) {
-      networkFeedback.value = "Submitted!";
-      newTranslation.value = "";
+
+  async function handleSubmitCitation(
+    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    ev.preventDefault();
+    if (sentence.value && newCitation.value !== undefined) {
+      const body: Sentence = {
+        ...sentence.value,
+        citation: newCitation.value,
+      };
+      const request = await fetch(`/api/sentence/${plain}`, {
+        body: JSON.stringify({ sentence: body }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (request.ok) {
+        sentence.value = body; // new value!
+        // clear
+        networkFeedback.value = "";
+        newCitation.value = undefined;
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
+  }
+
+  function handleInputSynonym(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
+    newSynonym.value = ev.currentTarget.value;
+  }
+
+  async function handleSubmitSynonym(
+    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    ev.preventDefault();
+    if (sentence.value && newSynonym.value) {
+      const furiganaResponse = await fetch(`/api/furigana/${newSynonym}`);
+      if (furiganaResponse.ok) {
+        const synFurigana = await furiganaResponse.json();
+        const newSentence = addSynonym(sentence.value, synFurigana);
+
+        const request = await fetch(`/api/sentence/${plain}`, {
+          body: JSON.stringify({ sentence: newSentence }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (request.ok) {
+          sentence.value = newSentence; // new value!
+          // clear
+          networkFeedback.value = "";
+          newSynonym.value = "";
+        } else {
+          networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+        }
+      } else {
+        networkFeedback.value = `${furiganaResponse.status} ${furiganaResponse.statusText}. Retry?`;
+      }
     }
   }
 
   return (
     <div>
-      <p>Type in a sentence to search for it or create it</p>
-      <input
-        onInput={(e) => (plain.value = (e.target as HTMLInputElement).value)}
-        type="text"
-        value={plain}
-      />
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
-      {!sentence.value ? (
-        <button onClick={handleStartEditing}>Start Editing</button>
-      ) : (
-        <div>
+      {sentence.value && (
+        <>
+          <SentenceComponent sentence={sentence.value} />
+          <p>Synonyms:</p>
           <ul>
-            <li>
-              Change citation:{" "}
-              <input
-                type="text"
-                onChange={handleChangeCitation}
-                value={sentence.value.citation}
-              />
-            </li>
-            {(sentence.value.english ?? []).map((english) => (
-              <li key={english}>{english}</li>
+            {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
+              <li>
+                {syn}: <SentenceComponent sentence={{ furigana: alt }} />
+              </li>
             ))}
             <li>
-              New translation?{" "}
-              <input
-                onChange={handleTranslationChange}
-                type="text"
-                value={newTranslation}
-              />{" "}
-              <button onClick={handleTranslationAdd}>Submit</button>
+              <form onSubmit={handleSubmitSynonym}>
+                <input
+                  onInput={handleInputSynonym}
+                  placeholder="Synonymous sentence"
+                  type="text"
+                  value={newSynonym.value}
+                />{" "}
+                <button disabled={!newSynonym.value}>Submit</button>
+              </form>
             </li>
           </ul>
-          <button onClick={handleSubmit}>Submit</button>
-        </div>
+          <p>Furigana:</p>
+          <ul>
+            {sentence.value.furigana
+              .filter(
+                (f): f is Exclude<Furigana, string> => typeof f !== "string"
+              )
+              .map((r) => (
+                <>
+                  {r.ruby}: {r.rt}
+                </>
+              ))}
+          </ul>
+          <p>English translation(s):</p>
+          <ul>
+            {(sentence.value.english ?? []).map((english) => (
+              <li>{english}</li>
+            ))}
+            <li>
+              <form onSubmit={handleSubmitTranslation}>
+                <input
+                  onInput={handleInputTranslation}
+                  placeholder="New translation"
+                  type="text"
+                  value={newTranslation.value}
+                />
+                <button disabled={!newTranslation.value}>Submit</button>
+              </form>
+            </li>
+          </ul>
+          <p>
+            Citation:{" "}
+            {newCitation.value === undefined ? (
+              <>
+                <span>{sentence.value.citation || "(none)"}</span>{" "}
+                <button onClick={handleEditCitation}>Edit</button>
+              </>
+            ) : (
+              <>
+                <form onSubmit={handleSubmitCitation}>
+                  <input
+                    onInput={handleInputCitation}
+                    type="text"
+                    value={newCitation.value}
+                  />{" "}
+                  <button>Submit</button>
+                </form>
+              </>
+            )}
+          </p>
+        </>
       )}
     </div>
   );

@@ -8,6 +8,9 @@ dependencies:
   '@astrojs/check':
     specifier: ^0.3.1
     version: 0.3.1(typescript@5.2.2)
+  '@astrojs/node':
+    specifier: ^7.0.0
+    version: 7.0.0(astro@3.4.4)
   '@astrojs/preact':
     specifier: ^3.0.1
     version: 3.0.1(@babel/core@7.23.2)(preact@10.18.2)(vite@4.5.0)
@@ -46,7 +49,7 @@ dependencies:
     version: 0.0.4
   tabito-lib:
     specifier: github:fasiha/tabito-lib
-    version: github.com/fasiha/tabito-lib/dc2e9aa07fc446ee2c9ed62add9f7fc51fcd933d
+    version: github.com/fasiha/tabito-lib/d0dab3ee6fa09ebb9e177d10e653491cce5ee5c5
   typescript:
     specifier: ^5.2.2
     version: 5.2.2
@@ -166,6 +169,18 @@ packages:
       unified: 10.1.2
       unist-util-visit: 4.1.2
       vfile: 5.3.7
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@astrojs/node@7.0.0(astro@3.4.4):
+    resolution: {integrity: sha512-G2NXEbinFqysOCa3mL8PqsyU4yot3I1lmF1WNPJaLGyW0LvG6pbz4iTa4Pk07O2oU+lE9J6JMC5GeNjaWQ0UFA==}
+    peerDependencies:
+      astro: ^4.0.0-beta.0
+    dependencies:
+      astro: 3.4.4(@types/node@20.9.0)(typescript@5.2.2)
+      send: 0.18.0
+      server-destroy: 1.0.1
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5843,8 +5858,8 @@ packages:
     hasBin: true
     dev: true
 
-  github.com/fasiha/tabito-lib/dc2e9aa07fc446ee2c9ed62add9f7fc51fcd933d:
-    resolution: {tarball: https://codeload.github.com/fasiha/tabito-lib/tar.gz/dc2e9aa07fc446ee2c9ed62add9f7fc51fcd933d}
+  github.com/fasiha/tabito-lib/d0dab3ee6fa09ebb9e177d10e653491cce5ee5c5:
+    resolution: {tarball: https://codeload.github.com/fasiha/tabito-lib/tar.gz/d0dab3ee6fa09ebb9e177d10e653491cce5ee5c5}
     name: tabito-lib
-    version: 1.0.3
+    version: 1.0.6
     dev: false

@@ -1,0 +1,32 @@
+---
+export const prerender = true;
+
+import {
+  enrollSentenceIntoDoc,
+  getSentenceFromPlain,
+  sentenceExists,
+  upsertSentence,
+} from "../db";
+import { stringToFurigana } from "../nlp-wrappers/curtiz";
+import { Sentence } from "./Sentence";
+
+interface Props {
+  plain: string;
+  docName: string;
+}
+
+const { plain, docName } = Astro.props;
+
+enrollSentenceIntoDoc(plain, docName);
+if (!sentenceExists(plain)) {
+  const furigana = await stringToFurigana(plain);
+  upsertSentence({ furigana });
+}
+const sentence = getSentenceFromPlain(plain);
+if (!sentence || typeof sentence === "string")
+  throw new Error("sentence not in database");
+---
+
+<Sentence client:load sentence={sentence} /><a href={`/edit-sentence/${plain}`}
+  >📝</a
+>

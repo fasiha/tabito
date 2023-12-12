@@ -1,15 +1,18 @@
-import express from "express";
+/*import express from "express";
 import cors from "cors";
 
 import { isRight } from "fp-ts/lib/Either.js";
 import { path } from "static-path";
-import { PostSentenceCodec, SentenceExistsCodec } from "./restDecoders.js";
+import {
+  PostSentenceCodec,
+  SentenceExistsCodec,
+} from "../../interfaces/restDecoders";
 import {
   getSentence,
   getSentencesInDocument,
   sentenceExists,
   upsertSentence,
-} from "./db.js";
+} from "../../db";
 
 const app = express();
 const port =
@@ -96,6 +99,7 @@ app.post("/api/sentence", (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+*/
 
 /* to test:
 ```console

@@ -2,7 +2,7 @@ import { Fragment, type FunctionalComponent } from "preact";
 import type { Sentence as SentenceType } from "tabito-lib";
 
 interface Props {
-  sentence: SentenceType;
+  sentence: Pick<SentenceType, "furigana">;
 }
 export const Sentence: FunctionalComponent<Props> = ({ sentence }) => {
   return (

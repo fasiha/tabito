@@ -6,12 +6,10 @@ import { resolve } from "path";
 import { type Sentence } from "tabito-lib";
 // import { furiganaToString } from "curtiz-japanese-nlp";
 
-import type * as Table from "./interfaces/DbTablesV1";
-import type { Db, Selected } from "./interfaces";
+import type { Selected, Tables } from "../interfaces";
 
 import path from "path";
 import { fileURLToPath } from "url";
-import type { SentenceExists } from "./restDecoders";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,10 +17,6 @@ const __dirname = path.dirname(__filename);
 // We have a very basic system of handling database schema upgrades. This code will work with
 // databases with this schema version
 const SCHEMA_VERSION_REQUIRED = 1;
-
-const DEFAULT_AUTHOR_ID = 1;
-const DEFAULT_DOCUMENT_ID = 1;
-const DEFAULT_SHARE_STATUS = "default";
 
 // Let's load the database
 export const db = new Database(process.env.TABITO_DB || "sentences.db");
@@ -42,73 +36,93 @@ db.pragma("journal_mode = WAL");
     // nope this is a fresh/clean database. Initialize it with our schema
     db.exec(
       readFileSync(
-        resolve(__dirname, "..", "sql", `db-v${SCHEMA_VERSION_REQUIRED}.sql`),
+        resolve(
+          __dirname,
+          "..",
+          "..",
+          "sql",
+          `db-v${SCHEMA_VERSION_REQUIRED}.sql`
+        ),
         "utf8"
       )
     );
     dbVersionCheck(db);
   }
-  function dbVersionCheck(db: Db) {
-    const s = db.prepare(`select schemaVersion from _tabito_db_state`);
-    const dbState = s.get() as Selected<Table._tabito_db_stateRow>;
+  function dbVersionCheck(thisDb: typeof db) {
+    const s = thisDb.prepare(`select schemaVersion from _tabito_db_state`);
+    const dbState = s.get() as Selected<Tables._tabito_db_stateRow>;
     if (dbState?.schemaVersion !== SCHEMA_VERSION_REQUIRED) {
       throw new Error("db wrong version: need " + SCHEMA_VERSION_REQUIRED);
     }
   }
 }
 
-// Let's make sure we have a default document and user for sentences to go into
-{
-  db.prepare<Table.userRow>(
-    `insert or ignore into user (id, displayName) values ($id, $displayName)`
-  ).run({ id: DEFAULT_AUTHOR_ID, displayName: "default" });
-  db.prepare<Table.documentRow>(
-    `insert or ignore into document (id, title, authorId, shareStatus) values ($id, $title, $authorId, $shareStatus)`
-  ).run({
-    id: DEFAULT_DOCUMENT_ID,
-    title: "default",
-    authorId: DEFAULT_AUTHOR_ID,
-    shareStatus: DEFAULT_SHARE_STATUS,
-  });
+// Functions
+
+const clearDocumentStatement = db.prepare<Pick<Tables.documentRow, "docName">>(
+  `delete from document where docName=$docName`
+);
+export function clearDocument(docName: string) {
+  return clearDocumentStatement.run({ docName });
+}
+
+const enrollSentenceIntoDocStatement =
+  db.prepare<Tables.documentRow>(`insert into document
+(docName, plain)
+values
+($docName, $plain)`);
+export function enrollSentenceIntoDoc(plain: string, docName: string) {
+  return enrollSentenceIntoDocStatement.run({ plain, docName });
 }
 
 const upsertSentenceStatement =
-  db.prepare<Table.sentenceRow>(`insert into sentence 
-(jsonEncoded, plain, plainSha256, authorId, documentId) 
+  db.prepare<Tables.sentenceRow>(`insert into sentence 
+(jsonEncoded, plain, plainSha256) 
 values
-($jsonEncoded, $plain, $plainSha256, $authorId, $documentId)
+($jsonEncoded, $plain, $plainSha256)
 on conflict do
 update set
   jsonEncoded=$jsonEncoded, 
   plain=$plain, 
-  plainSha256=$plainSha256, 
-  authorId=$authorId, 
-  documentId=$documentId
+  plainSha256=$plainSha256
 where 
-  plain=$plain and 
-  documentId=$documentId`);
-export function upsertSentence(
-  sentence: Sentence,
-  {
-    authorId = DEFAULT_AUTHOR_ID,
-    documentId = DEFAULT_DOCUMENT_ID,
-  }: Partial<Table.sentenceRow> = {}
-) {
+  plain=$plain`);
+export function upsertSentence(sentence: Sentence) {
   const plain = sentence.furigana
     .map((f) => (typeof f === "string" ? f : f.ruby))
     .join("");
   const plainSha256 = createHash("sha256").update(plain).digest("base64url");
   const jsonEncoded = JSON.stringify(sentence);
   upsertSentenceStatement.run({
-    authorId,
-    documentId,
-    // 👆 from input options, 👇 from `sentence`
     plain,
     plainSha256,
     jsonEncoded,
   });
 }
 
+const sentenceExistsStatement = db.prepare<Pick<Tables.sentenceRow, "plain">>(
+  `select id from sentence where plain=$plain`
+);
+export function sentenceExists(plain: string): boolean {
+  return !!sentenceExistsStatement.get({ plain });
+}
+
+const getSentenceFromPlainStatement = db.prepare<
+  Pick<Tables.sentenceRow, "plain">
+>(`select jsonEncoded from sentence where plain=$plain`);
+export function getSentenceFromPlain(
+  plain: string,
+  dontParse = false
+): undefined | Sentence | string {
+  const result = getSentenceFromPlainStatement.get({ plain }) as
+    | undefined
+    | { jsonEncoded: string };
+  if (result)
+    return dontParse ? result.jsonEncoded : JSON.parse(result.jsonEncoded);
+  return undefined;
+}
+
+/*
 const getSentencesInDocumentStatement = db.prepare<{
   documentId: string | number;
 }>(`select * from sentence where documentId=$documentId`);
@@ -177,6 +191,7 @@ export function getSentence(
   if (!res) return undefined;
   return stringOnly ? res.jsonEncoded : JSON.parse(res.jsonEncoded);
 }
+*/
 
 /* to test: uncomment the following
 

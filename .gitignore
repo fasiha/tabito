@@ -25,3 +25,7 @@ pnpm-debug.log*
 *.db
 *.db-shm
 *.db-wal
+
+# more
+sql/*cjs
+*.txt

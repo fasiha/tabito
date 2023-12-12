@@ -8,10 +8,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "server:clean": "find server -name '*js' | xargs rm",
-    "server:schema": "esbuild server/sql/makeWrapper.ts --outfile=server/sql/makeWrapper.cjs --format=cjs && node server/sql/makeWrapper.cjs",
-    "server:build": "esbuild server/src/*ts --outdir=server/src --format=esm",
-    "server:start": "TABITO_DB=tabito.db TABITO_PORT=4000 node server/src/server.js"
+    "server:schema": "esbuild sql/makeWrapper.ts --outfile=sql/makeWrapper.cjs --format=cjs && node sql/makeWrapper.cjs"
   },
   "devDependencies": {
     "@rmp135/sql-ts": "^1.18.0",
@@ -25,6 +22,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.3.1",
+    "@astrojs/node": "^7.0.0",
     "@astrojs/preact": "^3.0.1",
     "@preact/signals": "^1.2.1",
     "@types/node-fetch": "^2.6.9",

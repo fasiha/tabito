@@ -12,9 +12,9 @@ export async function stringToFurigana(raw: string): Promise<Furigana[]> {
       body: JSON.stringify({ sentence: raw }),
     }
   );
-  const data: v1ResSentence = (await reply.json()) as any;
-  if (typeof data === "string") {
-    return [data];
+  const data: v1ResSentence[] = (await reply.json()) as any;
+  if (typeof data[0] === "string") {
+    return [data[0]];
   }
-  return data.furigana.flat();
+  return data[0].furigana.flat();
 }
