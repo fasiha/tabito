@@ -166,9 +166,9 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                 (f): f is Exclude<Furigana, string> => typeof f !== "string"
               )
               .map((r) => (
-                <>
+                <li>
                   {r.ruby}: {r.rt}
-                </>
+                </li>
               ))}
           </ul>
           <p>English translation(s):</p>
