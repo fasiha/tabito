@@ -4,7 +4,7 @@ import Basic from "../../layouts/Basic.astro";
 import { SentenceEditor } from "../../components/SentenceEditor";
 
 const { plain } = Astro.params;
-if (!plain) throw new Error("plain not provided unexpectedly");
+if (!plain) throw new Error("parameter not provided unexpectedly");
 ---
 
 <Basic title="Sentence Editor">

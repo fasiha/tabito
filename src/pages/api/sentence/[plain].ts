@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
-import { getSentenceFromPlain, upsertSentence } from "../../../db";
+import { getSentence, upsertSentence } from "../../../db";
 
 const DONT_PARSE = true;
 export const GET: APIRoute = ({ params }) => {
   const { plain } = params;
   if (plain) {
-    return new Response(getSentenceFromPlain(plain, DONT_PARSE) as string, {
+    return new Response(getSentence(plain, DONT_PARSE) as string, {
       headers: {
         "Content-Type": "application/json",
       },

@@ -14,7 +14,6 @@ async function plainToSentenceSignal(
   sentence: Signal<Sentence | undefined>,
   networkFeedback: Signal<string>
 ) {
-  console.log("Fetching sentence from database");
   const res = await fetch(`/api/sentence/${plain}`);
   if (res.ok) {
     sentence.value = await res.json();
@@ -26,10 +25,10 @@ async function plainToSentenceSignal(
 
 export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const sentence = useSignal<Sentence | undefined>(undefined);
+  const networkFeedback = useSignal("");
   const newTranslation = useSignal("");
   const newSynonym = useSignal("");
   const newCitation = useSignal<undefined | string>(undefined);
-  const networkFeedback = useSignal("");
 
   useSignalEffect(() => {
     plainToSentenceSignal(plain, sentence, networkFeedback);

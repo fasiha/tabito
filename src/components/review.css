@@ -1,0 +1,46 @@
+.chunk {
+  border: 1px yellow solid;
+  border-radius: 0.3rem;
+  margin-right: 0.2rem;
+  padding: 0.2rem;
+}
+
+.start-chunk {
+  background-color: green;
+}
+
+.unknown-chunk {
+  background-color: brown;
+}
+
+@keyframes rainbowBackground {
+  0% {
+    background-color: red;
+  }
+  14% {
+    background-color: orange;
+  }
+  28% {
+    background-color: yellow;
+  }
+  42% {
+    background-color: green;
+  }
+  57% {
+    background-color: blue;
+  }
+  71% {
+    background-color: indigo;
+  }
+  85% {
+    background-color: violet;
+  }
+  100% {
+    background-color: red;
+  }
+}
+
+.full-chunk {
+  animation: rainbowBackground 5s linear infinite;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* black shadow for light text */
+}

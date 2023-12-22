@@ -1,0 +1,13 @@
+---
+import Basic from "../../layouts/Basic.astro";
+
+import { Review } from "../../components/Review";
+
+const sentenceId = Number(Astro.params.sentenceId);
+if (!sentenceId) throw new Error("parameter not provided unexpectedly");
+---
+
+<Basic title="Reviewing">
+  <h1>Review!</h1>
+  <Review sentenceId={sentenceId} client:only />
+</Basic>

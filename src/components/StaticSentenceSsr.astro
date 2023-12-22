@@ -3,7 +3,7 @@ export const prerender = true;
 
 import {
   enrollSentenceIntoDoc,
-  getSentenceFromPlain,
+  getSentence,
   sentenceExists,
   upsertSentence,
 } from "../db";
@@ -22,7 +22,7 @@ if (!sentenceExists(plain)) {
   const furigana = await stringToFurigana(plain);
   upsertSentence({ furigana });
 }
-const sentence = getSentenceFromPlain(plain);
+const sentence = getSentence(plain);
 if (!sentence || typeof sentence === "string")
   throw new Error("sentence not in database");
 ---

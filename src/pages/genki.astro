@@ -14,9 +14,17 @@ clearDocument(documentName);
 <Basic title={documentName}>
   <h1>{documentName}</h1>
   <p>
-    Here's a basic sentence I want to remember: <StaticSentence
+    Here's a basic demo sentence I want to remember: <StaticSentence
       plain="うどんを食べた"
       docName={documentName}
+    />
+  </p>
+  <p>
+    I didn't know this about たくさん: it can be used as an adverb and a noun
+    and an adjective. This sentence can be shuffled around two ways, though only
+    one will be visible: <StaticSentence
+      docName={documentName}
+      plain="京都でたくさん写真を撮りました"
     />
   </p>
 </Basic>

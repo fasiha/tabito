@@ -110,13 +110,18 @@ export function sentenceExists(plain: string): boolean {
 const getSentenceFromPlainStatement = db.prepare<
   Pick<Tables.sentenceRow, "plain">
 >(`select jsonEncoded from sentence where plain=$plain`);
-export function getSentenceFromPlain(
-  plain: string,
+const getSentenceFromIdStatement = db.prepare<Pick<Tables.sentenceRow, "id">>(
+  `select jsonEncoded from sentence where id=$id`
+);
+export function getSentence(
+  plainOrId: string | number,
   dontParse = false
 ): undefined | Sentence | string {
-  const result = getSentenceFromPlainStatement.get({ plain }) as
-    | undefined
-    | { jsonEncoded: string };
+  const result = (
+    typeof plainOrId === "string"
+      ? getSentenceFromPlainStatement.get({ plain: plainOrId })
+      : getSentenceFromIdStatement.get({ id: plainOrId })
+  ) as undefined | { jsonEncoded: string };
   if (result)
     return dontParse ? result.jsonEncoded : JSON.parse(result.jsonEncoded);
   return undefined;
