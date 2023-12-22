@@ -133,6 +133,30 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
+  async function handleDeleteSynonym(syn: string, alt: Furigana[]) {
+    if (sentence.value) {
+      const newSynonyms = sentence.value.synonyms?.filter(
+        ([oldSyn, oldAlt]) => !(oldSyn === syn && oldAlt === alt)
+      );
+      const newSentence: Sentence = {
+        ...sentence.value,
+        synonyms: newSynonyms,
+      };
+
+      const request = await fetch(`/api/sentence/${plain}`, {
+        body: JSON.stringify({ sentence: newSentence }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (request.ok) {
+        sentence.value = newSentence; // new value!
+        // clear
+        networkFeedback.value = "";
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
+  }
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
@@ -143,7 +167,10 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           <ul>
             {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
               <li>
-                {syn}: <SentenceComponent sentence={{ furigana: alt }} />
+                {syn}: <SentenceComponent sentence={{ furigana: alt }} />{" "}
+                <button onClick={() => handleDeleteSynonym(syn, alt)}>
+                  Delete
+                </button>
               </li>
             ))}
             <li>
