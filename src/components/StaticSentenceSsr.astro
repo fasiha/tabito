@@ -28,5 +28,5 @@ if (!sentence || typeof sentence === "string")
 ---
 
 <Sentence client:load sentence={sentence} /><a href={`/edit-sentence/${plain}`}
-  >📝</a
+  >{sentence.english?.length ? "📝" : "❓"}</a
 >

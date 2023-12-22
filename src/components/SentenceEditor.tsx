@@ -27,7 +27,9 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const sentence = useSignal<Sentence | undefined>(undefined);
   const networkFeedback = useSignal("");
   const newTranslation = useSignal("");
-  const newSynonym = useSignal("");
+  const synonymSentence = useSignal("");
+  const synonymWord = useSignal<[string, string]>(["", ""]);
+
   const newCitation = useSignal<undefined | string>(undefined);
 
   useSignalEffect(() => {
@@ -100,16 +102,18 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
-  function handleInputSynonym(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
-    newSynonym.value = ev.currentTarget.value;
+  function handleInputSynonymSent(
+    ev: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    synonymSentence.value = ev.currentTarget.value;
   }
 
-  async function handleSubmitSynonym(
+  async function handleSubmitSynonymSent(
     ev: TargetedEvent<HTMLFormElement, SubmitEvent>
   ) {
     ev.preventDefault();
-    if (sentence.value && newSynonym.value) {
-      const furiganaResponse = await fetch(`/api/furigana/${newSynonym}`);
+    if (sentence.value && synonymSentence.value) {
+      const furiganaResponse = await fetch(`/api/furigana/${synonymSentence}`);
       if (furiganaResponse.ok) {
         const synFurigana = await furiganaResponse.json();
         const newSentence = addSynonym(sentence.value, synFurigana);
@@ -123,7 +127,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           sentence.value = newSentence; // new value!
           // clear
           networkFeedback.value = "";
-          newSynonym.value = "";
+          synonymSentence.value = "";
         } else {
           networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
         }
@@ -157,12 +161,62 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       }
     }
   }
+
+  function handleInputSynonymWord1(
+    ev: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    synonymWord.value = [ev.currentTarget.value, synonymWord.value[1]];
+  }
+  function handleInputSynonymWord2(
+    ev: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    synonymWord.value = [synonymWord.value[0], ev.currentTarget.value];
+  }
+
+  async function handleSubmitSynonymWord(
+    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    ev.preventDefault();
+    if (sentence.value && synonymWord.value[0] && synonymWord.value[1]) {
+      const furiganaResponse = await fetch(
+        `/api/furigana/${synonymWord.value[1]}`
+      );
+      if (furiganaResponse.ok) {
+        const synFurigana = await furiganaResponse.json();
+        const newSynonyms = (sentence.value.synonyms ?? []).concat([
+          [synonymWord.value[0], synFurigana],
+        ]);
+        const newSentence: Sentence = {
+          ...sentence.value,
+          synonyms: newSynonyms,
+        };
+
+        const request = await fetch(`/api/sentence/${plain}`, {
+          body: JSON.stringify({ sentence: newSentence }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (request.ok) {
+          sentence.value = newSentence; // new value!
+          // clear
+          networkFeedback.value = "";
+          synonymWord.value = ["", ""];
+        } else {
+          networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+        }
+      } else {
+        networkFeedback.value = `${furiganaResponse.status} ${furiganaResponse.statusText}. Retry?`;
+      }
+    }
+  }
+
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
       {sentence.value && (
         <>
           <SentenceComponent sentence={sentence.value} />
+
           <p>Synonyms:</p>
           <ul>
             {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
@@ -174,17 +228,39 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
               </li>
             ))}
             <li>
-              <form onSubmit={handleSubmitSynonym}>
+              <form onSubmit={handleSubmitSynonymSent}>
                 <input
-                  onInput={handleInputSynonym}
+                  onInput={handleInputSynonymSent}
                   placeholder="Synonymous sentence"
                   type="text"
-                  value={newSynonym.value}
+                  value={synonymSentence.value}
                 />{" "}
-                <button disabled={!newSynonym.value}>Submit</button>
+                <button disabled={!synonymSentence.value}>Submit</button>
+              </form>
+            </li>
+            <li>
+              <form onSubmit={handleSubmitSynonymWord}>
+                <input
+                  onInput={handleInputSynonymWord1}
+                  placeholder="Original word/phrase"
+                  type="text"
+                  value={synonymWord.value[0]}
+                />{" "}
+                <input
+                  onInput={handleInputSynonymWord2}
+                  placeholder="Synonym"
+                  type="text"
+                  value={synonymWord.value[1]}
+                />{" "}
+                <button
+                  disabled={!(synonymWord.value[0] && synonymWord.value[1])}
+                >
+                  Submit
+                </button>
               </form>
             </li>
           </ul>
+
           <p>Furigana:</p>
           <ul>
             {sentence.value.furigana
@@ -197,6 +273,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                 </li>
               ))}
           </ul>
+
           <p>English translation(s):</p>
           <ul>
             {(sentence.value.english ?? []).map((english) => (
@@ -214,6 +291,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
               </form>
             </li>
           </ul>
+
           <p>
             Citation:{" "}
             {newCitation.value === undefined ? (
