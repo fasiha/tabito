@@ -44,8 +44,8 @@ export const Review: FunctionalComponent<Props> = ({ sentenceId }) => {
     networkCall(sentenceId, sentence, graph, networkFeedback);
   });
   useSignalEffect(() => {
-    if (graph.value && answer.value) {
-      chunks.value = chunkInput(answer.value, graph.value);
+    if (graph.value) {
+      chunks.value = answer.value ? chunkInput(answer.value, graph.value) : [];
     }
   });
 
@@ -74,7 +74,7 @@ export const Review: FunctionalComponent<Props> = ({ sentenceId }) => {
           placeholder="Type answer"
           onInput={handleInput}
           type="text"
-          value={answer.value}
+          value={answer}
         />
       </p>
       <p>
