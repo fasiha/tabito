@@ -107,7 +107,6 @@ export function rawToIchiran(raw: string): Promise<Ichiran> {
   return new Promise((resolve, reject) => {
     let spawned = spawn("docker", [
       "exec",
-      "-it",
       "ichiran-main-1",
       "ichiran-cli",
       "-f",

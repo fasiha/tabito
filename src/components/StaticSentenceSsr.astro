@@ -8,6 +8,7 @@ import {
   upsertSentence,
 } from "../db";
 import { analyzeString, stringToFurigana } from "../nlp-wrappers/curtiz";
+import { rawToIchiran } from "../nlp-wrappers/ichiran";
 import { Sentence } from "./Sentence";
 
 interface Props {
@@ -19,11 +20,12 @@ const { plain, docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
 if (!sentenceExists(plain)) {
-  const analysis = await analyzeString(plain);
+  const curtiz = await analyzeString(plain);
+  const ichiran = await rawToIchiran(plain);
   upsertSentence({
-    furigana:
-      typeof analysis === "string" ? [analysis] : analysis.furigana.flat(),
-    curtiz: analysis,
+    furigana: typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat(),
+    curtiz,
+    ichiran,
   });
 }
 const sentence = getSentence(plain);
