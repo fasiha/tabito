@@ -2,7 +2,6 @@ import "./review.css";
 import { Signal, useSignal, useSignalEffect } from "@preact/signals";
 import type { FunctionalComponent } from "preact";
 import {
-  type Sentence,
   type Graph,
   sentenceToGraph,
   type Chunk,
@@ -10,6 +9,7 @@ import {
 } from "tabito-lib";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { TargetedEvent } from "preact/compat";
+import type { Sentence } from "../interfaces";
 
 interface Props {
   sentenceId: number;

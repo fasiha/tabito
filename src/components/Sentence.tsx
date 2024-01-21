@@ -1,5 +1,5 @@
 import { Fragment, type FunctionalComponent } from "preact";
-import type { Sentence as SentenceType } from "tabito-lib";
+import type { Sentence as SentenceType } from "../interfaces";
 
 interface Props {
   sentence: Pick<SentenceType, "furigana">;

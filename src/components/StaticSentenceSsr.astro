@@ -7,7 +7,7 @@ import {
   sentenceExists,
   upsertSentence,
 } from "../db";
-import { stringToFurigana } from "../nlp-wrappers/curtiz";
+import { analyzeString, stringToFurigana } from "../nlp-wrappers/curtiz";
 import { Sentence } from "./Sentence";
 
 interface Props {
@@ -19,8 +19,12 @@ const { plain, docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
 if (!sentenceExists(plain)) {
-  const furigana = await stringToFurigana(plain);
-  upsertSentence({ furigana });
+  const analysis = await analyzeString(plain);
+  upsertSentence({
+    furigana:
+      typeof analysis === "string" ? [analysis] : analysis.furigana.flat(),
+    curtiz: analysis,
+  });
 }
 const sentence = getSentence(plain);
 if (!sentence || typeof sentence === "string")
@@ -28,5 +32,5 @@ if (!sentence || typeof sentence === "string")
 ---
 
 <Sentence client:load sentence={sentence} /><a href={`/edit-sentence/${plain}`}
-  >{sentence.english?.length ? "📝" : "❓"}</a
+  >{sentence.translations?.en.length ? "📝" : "❓"}</a
 >

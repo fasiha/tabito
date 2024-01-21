@@ -3,10 +3,9 @@ import Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-import { type Sentence } from "tabito-lib";
 // import { furiganaToString } from "curtiz-japanese-nlp";
 
-import type { Selected, Tables } from "../interfaces";
+import type { Sentence, Selected, Tables } from "../interfaces";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -113,10 +112,10 @@ const getSentenceFromPlainStatement = db.prepare<
 const getSentenceFromIdStatement = db.prepare<Pick<Tables.sentenceRow, "id">>(
   `select jsonEncoded from sentence where id=$id`
 );
-export function getSentence(
+export function getSentence<T extends boolean>(
   plainOrId: string | number,
-  dontParse = false
-): undefined | Sentence | string {
+  dontParse?: T
+): undefined | (T extends false ? Sentence : string) {
   const result = (
     typeof plainOrId === "string"
       ? getSentenceFromPlainStatement.get({ plain: plainOrId })

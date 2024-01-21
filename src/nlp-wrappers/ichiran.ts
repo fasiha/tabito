@@ -1,4 +1,4 @@
-import { type Sentence, type Furigana } from "tabito-lib";
+import { type Furigana } from "tabito-lib";
 import { spawn } from "child_process";
 import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";

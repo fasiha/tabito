@@ -1,9 +1,10 @@
 import type { FunctionalComponent } from "preact";
 import { Signal, useSignal, useSignalEffect } from "@preact/signals";
-import { type Sentence, addSynonym } from "tabito-lib";
+import { addSynonym } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
+import type { Sentence } from "../interfaces";
 
 interface Props {
   plain: string;
@@ -47,10 +48,12 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   ) {
     ev.preventDefault();
     if (newTranslation.value && sentence.value) {
-      const body: Sentence = {
-        ...sentence.value,
-        english: (sentence.value.english ?? []).concat(newTranslation.value),
-      };
+      const body: Sentence = structuredClone(sentence.value);
+      if (!body.translations) {
+        body.translations = { en: [] };
+      }
+      body.translations.en.concat(newTranslation.value);
+
       const request = await fetch(`/api/sentence/${plain}`, {
         body: JSON.stringify({ sentence: body }),
         method: "POST",
@@ -276,7 +279,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 
           <p>English translation(s):</p>
           <ul>
-            {(sentence.value.english ?? []).map((english) => (
+            {(sentence.value.translations?.en ?? []).map((english) => (
               <li>{english}</li>
             ))}
             <li>
