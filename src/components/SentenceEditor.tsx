@@ -5,7 +5,12 @@ import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
-import type { Ichiran } from "../nlp-wrappers/ichiran-types";
+import type {
+  Ichiran,
+  IchiranSingle,
+  IchiranWord,
+} from "../nlp-wrappers/ichiran-types";
+import { cellFit, type Cell } from "../utils/cellFit";
 
 interface Props {
   plain: string;
@@ -344,25 +349,30 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
     return <>ichiran mismatch?</>;
   }
 
-  const rows: VNode[] = [];
-  let skip = 0;
+  const cells: Cell[] = [];
+  let start = 0;
   for (const [, x] of ichiWords) {
     if ("gloss" in x) {
-      const len = x.text.length;
-      rows.push(
-        <tr key={skip}>
-          {Array.from(Array(skip), (_, i) => (
-            <td key={i}></td>
-          ))}
-          <td colspan={len}>
-            <div class="cell">{x.gloss.map((g) => g.gloss).join("/")}</div>
-          </td>
-        </tr>
-      );
-      skip += len;
-    } else {
-      skip += x.text.length;
+      cells.push({ start, len: x.text.length, content: x });
     }
+    start += x.text.length;
+  }
+  const table: VNode[] = [];
+  for (const [rowId, row] of cellFit(cells).entries()) {
+    const tds = Array.from(Array(plain.length), (_, i) => <td key={i}></td>);
+    for (let i = row.length - 1; i >= 0; i--) {
+      const x = row[i];
+      tds.splice(
+        x.start,
+        x.len,
+        <td key={x.start} colspan={x.len}>
+          <div class="cell">
+            {(x.content as IchiranSingle).gloss.map((g) => g.gloss).join("/")}
+          </div>
+        </td>
+      );
+    }
+    table.push(<tr key={rowId}>{tds}</tr>);
   }
 
   return (
@@ -374,7 +384,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
           ))}
         </tr>
       </thead>
-      <tbody>{rows}</tbody>
+      <tbody>{table}</tbody>
     </table>
   );
 };
