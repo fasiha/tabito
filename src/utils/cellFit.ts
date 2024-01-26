@@ -1,10 +1,10 @@
-export interface Cell {
+export interface Cell<T = unknown> {
   start: number;
   len: number;
-  content: unknown;
+  content: T;
 }
-export function cellFit(cells: Cell[]): Cell[][] {
-  const rows: Cell[][] = [];
+export function cellFit<T>(cells: Cell<T>[]): Cell<T>[][] {
+  const rows: Cell<T>[][] = [];
   const occupied = new Set<string>();
   for (const x of cells) {
     if (x.len < 1) {

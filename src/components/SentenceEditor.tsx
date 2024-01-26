@@ -349,7 +349,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
     return <>ichiran mismatch?</>;
   }
 
-  const cells: Cell[] = [];
+  const cells: Cell<IchiranSingle>[] = [];
   let start = 0;
   for (const [, x] of ichiWords) {
     if ("gloss" in x) {
@@ -367,7 +367,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
         x.len,
         <td key={x.start} colspan={x.len}>
           <div class="cell">
-            {(x.content as IchiranSingle).gloss.map((g) => g.gloss).join("/")}
+            {x.content.gloss.map((g) => g.gloss).join("/")}
           </div>
         </td>
       );
