@@ -1,0 +1,22 @@
+table,
+td {
+  border: 1px solid gray;
+  border-collapse: collapse;
+}
+
+td {
+  min-width: 5rem;
+  max-width: 5rem;
+}
+td div.cell {
+  font-size: small;
+  height: 5rem;
+  /* line-height: 12rem; */
+  /* text-align: center; */
+  /* white-space: nowrap; */
+  overflow: scroll;
+}
+
+td:empty {
+  border: none;
+}

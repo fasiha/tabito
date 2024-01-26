@@ -1,6 +1,6 @@
 import type { v1ResSentence } from "curtiz-japanese-nlp/interfaces";
 import { type Sentence as TabitoSentence } from "tabito-lib";
-import type { Ichiran } from "../nlp-wrappers/ichiran";
+import type { Ichiran } from "../nlp-wrappers/ichiran-types";
 
 export * as Tables from "./DbTablesV1";
 

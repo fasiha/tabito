@@ -1,10 +1,11 @@
-import type { FunctionalComponent } from "preact";
+import type { FunctionalComponent, VNode } from "preact";
 import { Signal, useSignal, useSignalEffect } from "@preact/signals";
 import { addSynonym } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
+import type { Ichiran } from "../nlp-wrappers/ichiran-types";
 
 interface Props {
   plain: string;
@@ -118,8 +119,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     if (sentence.value && synonymSentence.value) {
       const furiganaResponse = await fetch(`/api/furigana/${synonymSentence}`);
       if (furiganaResponse.ok) {
-        const synFurigana = await furiganaResponse.json();
-        const newSentence = addSynonym(sentence.value, synFurigana);
+        const synFurigana: Furigana[] = await furiganaResponse.json();
+        const newSentence: Sentence = {
+          ...sentence.value,
+          ...addSynonym(sentence.value, synFurigana),
+        };
 
         const request = await fetch(`/api/sentence/${plain}`, {
           body: JSON.stringify({ sentence: newSentence }),
@@ -220,6 +224,8 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         <>
           <SentenceComponent sentence={sentence.value} />
 
+          <IchiranTable plain={plain} ichiran={sentence.value.ichiran} />
+
           <p>Synonyms:</p>
           <ul>
             {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
@@ -318,5 +324,57 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         </>
       )}
     </div>
+  );
+};
+
+interface IchiranTableProps {
+  plain: string;
+  ichiran: Ichiran;
+}
+
+const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
+  plain,
+  ichiran,
+}) => {
+  if (typeof ichiran[0] === "string") {
+    return <>no Japanese</>;
+  }
+  const ichiWords = ichiran[0][0][0];
+  if (plain !== ichiWords.map((x) => x[1].text).join("")) {
+    return <>ichiran mismatch?</>;
+  }
+
+  const rows: VNode[] = [];
+  let skip = 0;
+  for (const [, x] of ichiWords) {
+    if ("gloss" in x) {
+      const len = x.text.length;
+      rows.push(
+        <tr key={skip}>
+          {Array.from(Array(skip), (_, i) => (
+            <td key={i}></td>
+          ))}
+          <td colspan={len}>
+            <div class="cell">{x.gloss.map((g) => g.gloss).join("/")}</div>
+          </td>
+        </tr>
+      );
+      skip += len;
+    } else {
+      skip += x.text.length;
+    }
+  }
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          {plain.split("").map((c, i) => (
+            <td key={i}>{c}</td>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
   );
 };

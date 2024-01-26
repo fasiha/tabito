@@ -1,106 +1,7 @@
 import { type Furigana } from "tabito-lib";
 import { spawn } from "child_process";
-import * as t from "io-ts";
-import { isRight } from "fp-ts/Either";
+import type { Ichiran } from "./ichiran-types";
 
-const IchiranGloss = t.union([
-  t.type({ pos: t.string, gloss: t.string }),
-  t.partial({ info: t.string }),
-]);
-const IchiranConjProp = t.union([
-  t.type({
-    pos: t.string,
-    type: t.string,
-  }),
-  t.partial({ fml: t.boolean }),
-]);
-const IchiranConj = t.type({
-  prop: t.array(IchiranConjProp),
-  reading: t.string,
-  gloss: t.array(IchiranGloss),
-  readok: t.boolean,
-});
-
-const InnerIchiranHit = t.union([
-  t.type({
-    reading: t.string,
-    text: t.string,
-    kana: t.string,
-    score: t.number,
-    seq: t.number,
-    conj: t.array(IchiranConj),
-    gloss: t.array(IchiranGloss),
-  }),
-  t.partial({ suffix: t.string }),
-]);
-const IchiranHit = t.union([
-  t.type({
-    reading: t.string,
-    text: t.string,
-    kana: t.string,
-    score: t.number,
-    seq: t.number,
-    conj: t.array(IchiranConj),
-  }),
-  t.partial({
-    gloss: t.array(IchiranGloss),
-    compound: t.array(t.string),
-    suffix: t.string,
-    components: t.array(InnerIchiranHit),
-  }),
-]);
-
-const IchiranWord = t.tuple([t.string, IchiranHit, t.array(t.unknown)]);
-const IchiranLine = t.tuple([t.array(IchiranWord), t.number]);
-const Ichiran = t.array(t.union([t.string, t.array(IchiranLine)]));
-
-// export type IchiranGloss = t.TypeOf<typeof IchiranGloss>;
-// export type IchiranConjProp = t.TypeOf<typeof IchiranConjProp>;
-// export type IchiranConj = t.TypeOf<typeof IchiranConj>;
-// export type IchiranHit = t.TypeOf<typeof IchiranHit>;
-// export type IchiranWord = t.TypeOf<typeof IchiranWord>;
-// export type IchiranLine = t.TypeOf<typeof IchiranLine>;
-export type Ichiran = t.TypeOf<typeof Ichiran>;
-
-/*
-Raw TypeScript interfaces:
-
-interface IchiranGloss {
-  pos: string;
-  gloss: string;
-  info?: string;
-}
-
-interface IchiranConjProp {
-  pos: string;
-  type: string;
-  fml?: boolean;
-}
-interface IchiranConj {
-  prop: IchiranConjProp[];
-  reading: string;
-  gloss: IchiranGloss[];
-  readok: boolean;
-}
-interface IchiranHit {
-  reading: string;
-  text: string;
-  kana: string;
-  score: number;
-  seq: number;
-  conj: IchiranConj[];
-  suffix?: string;
-  gloss?: IchiranGloss[];
-  compound?: string[];
-  components?: IchiranHit[];
-}
-type IchiranWord = [string, IchiranHit, []];
-type IchiranLine = [IchiranWord[], number];
-type Ichiran = (string | [IchiranLine])[];
-
-
-
-*/
 export function rawToIchiran(raw: string): Promise<Ichiran> {
   // docker exec -it ichiran-main-1 ichiran-cli -f "京都でたくさん写真を撮りました"
 
@@ -123,14 +24,7 @@ export function rawToIchiran(raw: string): Promise<Ichiran> {
       }
 
       try {
-        const decoded = Ichiran.decode(JSON.parse(arr.join("")));
-        if (isRight(decoded)) {
-          resolve(decoded.right);
-          return;
-        }
-        // io-ts decoder errors
-        console.error("Unexpected output from Ichiran", decoded.left);
-        reject(decoded.left);
+        resolve(JSON.parse(arr.join("")));
       } catch (e) {
         reject(e);
       }
