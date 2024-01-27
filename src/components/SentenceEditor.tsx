@@ -351,20 +351,35 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
     return <>ichiran mismatch?</>;
   }
 
-  const cells: Cell<
-    Exclusive<IchiranSingle, IchiranConj & { suffix: undefined | string }>
-  >[] = [];
+  const cells: Cell<VNode>[] = [];
   let start = 0;
   for (const [, x] of ichiWords) {
     if ("gloss" in x && x.gloss) {
-      cells.push({ start, len: x.text.length, content: x });
+      cells.push({
+        start,
+        len: x.text.length,
+        content: <>{x.gloss.map((g) => g.gloss).join("/")}</>,
+      });
       start += x.text.length;
     } else if (x.conj?.length) {
       for (const conj of x.conj) {
         cells.push({
           start: start,
           len: x.text.length,
-          content: { ...conj, suffix: x.suffix },
+          content: (
+            <>
+              {conj.prop && (
+                <em>
+                  {conj.prop
+                    .map((p) => `[${p.pos}: ${p.type}]`)
+                    .join("; ")
+                    .concat(" — ")}
+                </em>
+              )}
+              {x.suffix && <strong>{x.suffix}) </strong>}
+              {conj.gloss?.map((g) => g.gloss).join("/")}
+            </>
+          ),
         });
       }
       start += x.text.length;
@@ -373,13 +388,30 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
       for (const y of x.components) {
         yStart = plain.indexOf(y.text, yStart);
         if ("gloss" in y && y.gloss) {
-          cells.push({ start: yStart, len: y.text.length, content: y });
+          cells.push({
+            start: yStart,
+            len: y.text.length,
+            content: <>{y.gloss.map((g) => g.gloss).join("/")}</>,
+          });
         } else if ("conj" in y && y.conj?.length) {
           for (const conj of y.conj) {
             cells.push({
               start: yStart,
               len: y.text.length,
-              content: { ...conj, suffix: y.suffix },
+              content: (
+                <>
+                  {conj.prop && (
+                    <em>
+                      {conj.prop
+                        .map((p) => `[${p.pos}: ${p.type}]`)
+                        .join("; ")
+                        .concat(" — ")}
+                    </em>
+                  )}
+                  {y.suffix && <strong>{y.suffix}) </strong>}
+                  {conj.gloss?.map((g) => g.gloss).join("/")}
+                </>
+              ),
             });
           }
         }
@@ -389,6 +421,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
       start += x.text.length;
     }
   }
+
   const table: VNode[] = [];
   for (const [rowId, row] of cellFit(cells).entries()) {
     const tds = Array.from(Array(plain.length), (_, i) => <td key={i}></td>);
@@ -398,18 +431,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
         x.start,
         x.len,
         <td key={x.start} colspan={x.len}>
-          <div class="cell">
-            {x.content.prop && (
-              <em>
-                {x.content.prop
-                  .map((p) => `[${p.pos}: ${p.type}]`)
-                  .join("; ")
-                  .concat(" — ")}
-              </em>
-            )}
-            {x.content.suffix && <strong>{x.content.suffix}) </strong>}
-            {x.content.gloss?.map((g) => g.gloss).join("/")}
-          </div>
+          <div class="cell">{x.content}</div>
         </td>
       );
     }
