@@ -359,6 +359,15 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
     if ("gloss" in x && x.gloss) {
       cells.push({ start, len: x.text.length, content: x });
       start += x.text.length;
+    } else if (x.conj?.length) {
+      for (const conj of x.conj) {
+        cells.push({
+          start: start,
+          len: x.text.length,
+          content: { ...conj, suffix: x.suffix },
+        });
+      }
+      start += x.text.length;
     } else if ("components" in x && x.components) {
       let yStart = start;
       for (const y of x.components) {
