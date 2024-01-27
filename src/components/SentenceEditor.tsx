@@ -5,13 +5,6 @@ import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
-import type {
-  Exclusive,
-  Ichiran,
-  IchiranConj,
-  IchiranSingle,
-  IchiranWord,
-} from "../nlp-wrappers/ichiran-types";
 import { cellFit, type Cell } from "../utils/cellFit";
 
 interface Props {
@@ -231,7 +224,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         <>
           <SentenceComponent sentence={sentence.value} />
 
-          <IchiranTable plain={plain} ichiran={sentence.value.ichiran} />
+          <NlpTable
+            plain={plain}
+            ichiran={sentence.value.ichiran}
+            curtiz={sentence.value.curtiz}
+          />
 
           <p>Synonyms:</p>
           <ul>
@@ -334,14 +331,16 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   );
 };
 
-interface IchiranTableProps {
+interface NlpTableProps {
   plain: string;
-  ichiran: Ichiran;
+  ichiran: Sentence["ichiran"];
+  curtiz: Sentence["curtiz"];
 }
 
-const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
+const NlpTable: FunctionalComponent<NlpTableProps> = ({
   plain,
   ichiran,
+  curtiz,
 }) => {
   if (typeof ichiran[0] === "string") {
     return <>no Japanese</>;
@@ -352,9 +351,12 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
   }
 
   const cells: Cell<VNode>[] = [];
+
+  const jmdictSeqSeen = new Set<number>();
   let start = 0;
   for (const [, x] of ichiWords) {
     if ("gloss" in x && x.gloss) {
+      jmdictSeqSeen.add(x.seq);
       cells.push({
         start,
         len: x.text.length,
@@ -362,6 +364,7 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
       });
       start += x.text.length;
     } else if (x.conj?.length) {
+      jmdictSeqSeen.add(x.seq);
       for (const conj of x.conj) {
         cells.push({
           start: start,
@@ -388,12 +391,14 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
       for (const y of x.components) {
         yStart = plain.indexOf(y.text, yStart);
         if ("gloss" in y && y.gloss) {
+          jmdictSeqSeen.add(y.seq);
           cells.push({
             start: yStart,
             len: y.text.length,
             content: <>{y.gloss.map((g) => g.gloss).join("/")}</>,
           });
         } else if ("conj" in y && y.conj?.length) {
+          jmdictSeqSeen.add(y.seq);
           for (const conj of y.conj) {
             cells.push({
               start: yStart,
@@ -419,6 +424,27 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
       start += x.text.length;
     } else {
       start += x.text.length;
+    }
+  }
+
+  start = 0;
+  if (typeof curtiz !== "string") {
+    for (const { startIdx, results } of curtiz.hits) {
+      for (const { endIdx, run, results: subresults } of results) {
+        start = plain.indexOf(
+          typeof run === "string" ? run : `${run.left}${run.cloze}${run.right}`,
+          start
+        );
+        const len = curtiz.furigana
+          .slice(startIdx, endIdx)
+          .flat()
+          .map((o) => (typeof o === "string" ? o.length : o.ruby.length))
+          .reduce((a, b) => a + b, 0);
+        for (const { summary, wordId } of subresults) {
+          if (jmdictSeqSeen.has(+wordId)) continue;
+          cells.push({ start, len, content: <>{summary}</> });
+        }
+      }
     }
   }
 
