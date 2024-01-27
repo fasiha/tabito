@@ -6,7 +6,9 @@ import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
 import type {
+  Exclusive,
   Ichiran,
+  IchiranConj,
   IchiranSingle,
   IchiranWord,
 } from "../nlp-wrappers/ichiran-types";
@@ -349,13 +351,34 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
     return <>ichiran mismatch?</>;
   }
 
-  const cells: Cell<IchiranSingle>[] = [];
+  const cells: Cell<
+    Exclusive<IchiranSingle, IchiranConj & { suffix: undefined | string }>
+  >[] = [];
   let start = 0;
   for (const [, x] of ichiWords) {
-    if ("gloss" in x) {
+    if ("gloss" in x && x.gloss) {
       cells.push({ start, len: x.text.length, content: x });
+      start += x.text.length;
+    } else if ("components" in x && x.components) {
+      let yStart = start;
+      for (const y of x.components) {
+        yStart = plain.indexOf(y.text, yStart);
+        if ("gloss" in y && y.gloss) {
+          cells.push({ start: yStart, len: y.text.length, content: y });
+        } else if ("conj" in y && y.conj?.length) {
+          for (const conj of y.conj) {
+            cells.push({
+              start: yStart,
+              len: y.text.length,
+              content: { ...conj, suffix: y.suffix },
+            });
+          }
+        }
+      }
+      start += x.text.length;
+    } else {
+      start += x.text.length;
     }
-    start += x.text.length;
   }
   const table: VNode[] = [];
   for (const [rowId, row] of cellFit(cells).entries()) {
@@ -367,7 +390,16 @@ const IchiranTable: FunctionalComponent<IchiranTableProps> = ({
         x.len,
         <td key={x.start} colspan={x.len}>
           <div class="cell">
-            {x.content.gloss.map((g) => g.gloss).join("/")}
+            {x.content.prop && (
+              <em>
+                {x.content.prop
+                  .map((p) => `[${p.pos}: ${p.type}]`)
+                  .join("; ")
+                  .concat(" — ")}
+              </em>
+            )}
+            {x.content.suffix && <strong>{x.content.suffix}) </strong>}
+            {x.content.gloss?.map((g) => g.gloss).join("/")}
           </div>
         </td>
       );
