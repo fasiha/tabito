@@ -38,6 +38,9 @@ dependencies:
   io-ts:
     specifier: ^2.2.20
     version: 2.2.20(fp-ts@2.16.1)
+  kamiya-codec:
+    specifier: ^4.9.4
+    version: 4.9.4
   node-fetch:
     specifier: ^3.3.2
     version: 3.3.2
@@ -3373,9 +3376,8 @@ packages:
     resolution: {integrity: sha512-AilxAyFOAcK5wA1+LeaySVBrHsGQvUFCDWXKpZjzaL0PqW+xfBOttn8GNtWKFWqneyMZj41MWF9Kl6iPWLwgOA==}
     dev: true
 
-  /kamiya-codec@4.9.2:
-    resolution: {integrity: sha512-x3Z86jyoCj9PWDwmcsS+8zBakQDZK+62mrtklCJovEjk4y11w8KGuVI+49yvhLbQ7i1YnbmULBTAWej+JAb7mw==}
-    dev: true
+  /kamiya-codec@4.9.4:
+    resolution: {integrity: sha512-RCU3UeMus9fR/YCd1H2xh3f4lq/HtdI4vYR2C5JQnT9sfRbvRmArhnfHPbfPbLnW4MwcQpPEx9GWc3xb0UHaeA==}
 
   /kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
@@ -6270,7 +6272,7 @@ packages:
       io-ts: 2.2.20(fp-ts@2.16.1)
       jmdict-furigana-node: github.com/fasiha/jmdict-furigana-node/5338507221e8c4506e4d3f8730d45dd019811c99
       jmdict-simplified-node: github.com/fasiha/jmdict-simplified-node/a94e8188e254295381c65a05bb8db5e4ea51064f
-      kamiya-codec: 4.9.2
+      kamiya-codec: 4.9.4
       mecab-emscripten-node: github.com/fasiha/mecab-emscripten-node/3962af82c0061739b12b748b3ab5dfcc22f91933
       mkdirp: 1.0.4
       node-gzip: 1.1.2

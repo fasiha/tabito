@@ -1,5 +1,6 @@
-import { Fragment, type FunctionalComponent } from "preact";
+import { type FunctionalComponent } from "preact";
 import type { Sentence as SentenceType } from "../interfaces";
+import { Furigana } from "./Furigana";
 
 interface Props {
   sentence: Pick<SentenceType, "furigana">;
@@ -7,18 +8,7 @@ interface Props {
 export const Sentence: FunctionalComponent<Props> = ({ sentence }) => {
   return (
     <span>
-      {sentence.furigana.map((f) => (
-        <Fragment>
-          {typeof f === "string" ? (
-            f
-          ) : (
-            <ruby>
-              {f.ruby}
-              <rt>{f.rt}</rt>
-            </ruby>
-          )}
-        </Fragment>
-      ))}
+      <Furigana furigana={sentence.furigana} />
     </span>
   );
 };

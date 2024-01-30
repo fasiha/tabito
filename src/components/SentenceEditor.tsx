@@ -6,6 +6,9 @@ import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
 import { cellFit, type Cell } from "../utils/cellFit";
+import type { ContextCloze } from "curtiz-japanese-nlp/interfaces";
+import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
+import { Furigana as FuriganaComponent } from "./Furigana";
 
 interface Props {
   plain: string;
@@ -431,10 +434,18 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
   if (typeof curtiz !== "string") {
     for (const { startIdx, results } of curtiz.hits) {
       for (const { endIdx, run, results: subresults } of results) {
-        start = plain.indexOf(
-          typeof run === "string" ? run : `${run.left}${run.cloze}${run.right}`,
-          start
-        );
+        if (typeof run === "string") {
+          start = plain.indexOf(run, start);
+        } else {
+          const clozeHit = plain.indexOf(
+            `${run.left}${run.cloze}${run.right}`,
+            start
+          );
+          if (clozeHit < start) {
+            throw new Error("unable to find cloze");
+          }
+          start = clozeHit + run.left.length;
+        }
         const len = curtiz.furigana
           .slice(startIdx, endIdx)
           .flat()
@@ -445,6 +456,23 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           cells.push({ start, len, content: <>{summary}</> });
         }
       }
+    }
+
+    const conjugated = curtiz.clozes?.conjugatedPhrases.slice() ?? [];
+    conjugated.sort((a, b) => b.cloze.cloze.length - a.cloze.cloze.length);
+    for (const { deconj, cloze, lemmas, startIdx, endIdx } of conjugated) {
+      const plain = furiganaIdxToPlain(curtiz.furigana);
+      const start = findClozeIdx(plain, cloze);
+      const content = (
+        <>
+          🟡 <FuriganaComponent furigana={lemmas[0]} /> →{" "}
+          {deconj.map(renderDeconjugation).join("/")} →{" "}
+          <FuriganaComponent
+            furigana={curtiz.furigana.slice(startIdx, endIdx).flat()}
+          />
+        </>
+      );
+      cells.push({ start, len: cloze.cloze.length, content });
     }
   }
 
@@ -477,3 +505,30 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
     </table>
   );
 };
+
+function furiganaIdxToPlain(
+  furigana: Furigana[][],
+  startIdx: number = 0,
+  endIdx: undefined | number = undefined
+): string {
+  return furigana
+    .slice(startIdx, endIdx)
+    .flat()
+    .map((o) => (typeof o === "string" ? o : o.ruby))
+    .join("");
+}
+
+function findClozeIdx(plain: string, run: ContextCloze): number {
+  const clozeHit = plain.indexOf(`${run.left}${run.cloze}${run.right}`);
+  if (clozeHit >= 0) {
+    return clozeHit + run.left.length;
+  }
+  throw new Error("cloze not found?");
+}
+
+function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
+  if ("auxiliaries" in d && d.auxiliaries.length) {
+    return `${d.auxiliaries.join(" + ")} + ${d.conjugation}`;
+  }
+  return d.conjugation;
+}
