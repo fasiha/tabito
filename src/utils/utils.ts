@@ -1,4 +1,4 @@
-import { type Furigana } from "curtiz-japanese-nlp";
+import type { Furigana } from "curtiz-japanese-nlp";
 
 export function mergeFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
@@ -9,3 +9,9 @@ export function mergeFurigana(input: Furigana[]): Furigana[] {
     []
   );
 }
+
+const circledNumbers =
+  "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿".split(
+    ""
+  );
+export const prefixNumber = (n: number) => circledNumbers[n] || `(${n + 1})`;

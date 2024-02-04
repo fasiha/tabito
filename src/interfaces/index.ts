@@ -1,4 +1,4 @@
-import type { v1ResSentence } from "curtiz-japanese-nlp/interfaces";
+import type { Word, v1ResSentence } from "curtiz-japanese-nlp/interfaces";
 import { type Sentence as TabitoSentence } from "tabito-lib";
 import type { Ichiran } from "../nlp-wrappers/ichiran-types";
 
@@ -15,4 +15,5 @@ export interface Sentence extends TabitoSentence {
   citation?: string;
   curtiz: v1ResSentence;
   ichiran: Ichiran;
+  words: Record<string, Word>;
 }

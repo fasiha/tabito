@@ -1,13 +1,18 @@
 ---
 export const prerender = true;
 
+import type { Word } from "curtiz-japanese-nlp/interfaces";
 import {
   enrollSentenceIntoDoc,
   getSentence,
   sentenceExists,
   upsertSentence,
 } from "../db";
-import { analyzeString, stringToFurigana } from "../nlp-wrappers/curtiz";
+import {
+  analyzeString,
+  jmdictSeqsToWords,
+  stringToFurigana,
+} from "../nlp-wrappers/curtiz";
 import { rawToIchiran } from "../nlp-wrappers/ichiran";
 import { Sentence } from "./Sentence";
 
@@ -21,11 +26,29 @@ const { plain, docName } = Astro.props;
 enrollSentenceIntoDoc(plain, docName);
 if (!sentenceExists(plain)) {
   const curtiz = await analyzeString(plain);
-  const ichiran = await rawToIchiran(plain);
+  const { ichiran, jmdictSeqs, seqMap } = await rawToIchiran(plain);
+  const words = Object.fromEntries(
+    (await jmdictSeqsToWords(jmdictSeqs))
+      .filter((x): x is Word => !!x)
+      .map((w) => [w.id, w])
+  );
+
+  {
+    const moreSeqs = jmdictSeqs.filter((x) => !(x in words) && x in seqMap);
+    const moreWords = await jmdictSeqsToWords(moreSeqs.map((x) => seqMap[x]));
+    for (const [idx, w] of moreWords.entries()) {
+      if (w) {
+        // we know we're not overwriting anything here because `w.id` isn't in `words` by construction
+        words[moreSeqs[idx]] = w;
+      }
+    }
+  }
+
   upsertSentence({
     furigana: typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat(),
     curtiz,
     ichiran,
+    words,
   });
 }
 const sentence = getSentence(plain);

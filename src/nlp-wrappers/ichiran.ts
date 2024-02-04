@@ -1,8 +1,18 @@
-import { type Furigana } from "tabito-lib";
 import { spawn } from "child_process";
 import type { Ichiran } from "./ichiran-types";
 
-export function rawToIchiran(raw: string): Promise<Ichiran> {
+function seqAwareReviver(key: string, value: unknown, seqs: Set<number>) {
+  if (key === "seq" && typeof value === "number") {
+    seqs.add(value);
+  }
+  return value;
+}
+
+export function rawToIchiran(raw: string): Promise<{
+  ichiran: Ichiran;
+  jmdictSeqs: number[];
+  seqMap: Record<number, number>;
+}> {
   // docker exec -it ichiran-main-1 ichiran-cli -f "京都でたくさん写真を撮りました"
 
   return new Promise((resolve, reject) => {
@@ -24,7 +34,14 @@ export function rawToIchiran(raw: string): Promise<Ichiran> {
       }
 
       try {
-        resolve(JSON.parse(arr.join("")));
+        const seqs = new Set<number>();
+        const ichiran: Ichiran = JSON.parse(arr.join(""), (key, value) =>
+          seqAwareReviver(key, value, seqs)
+        );
+        const jmdictSeqs = [...seqs];
+        getRootJmdictSeqs(jmdictSeqs).then((seqMap) => {
+          resolve({ ichiran, jmdictSeqs, seqMap });
+        });
       } catch (e) {
         reject(e);
       }
@@ -32,9 +49,61 @@ export function rawToIchiran(raw: string): Promise<Ichiran> {
   });
 }
 
-function ichiranToFurigana(ichiran: Ichiran): Furigana[] {
-  // TODO
-  return [];
+/**
+ * This is needed because Ichiran will return a non-JMdict Ichiran-only
+ * seq number for conjugated phrases, see
+ * https://github.com/tshatrov/ichiran/issues/21
+ *
+ * This function digs through the database (via Docker) to map such
+ * sequence numbers to JMdict-native roots
+ */
+export async function getRootJmdictSeqs(
+  seqs: number[]
+): Promise<Record<number, number>> {
+  // docker exec -it ichiran-pg-1 psql -U postgres -h 127.0.0.1 jmdict --csv -t  -c "select \"from\" from conjugation where seq in (10132248, 10149587, -123)"
+
+  // If this gets slow, cuz we're asking for like thousands of seqs in
+  // `in`, maybe we can make a temp table and insert these into there
+  // and ask Postgres to join?
+  return new Promise((resolve, reject) => {
+    let spawned = spawn("docker", [
+      "exec",
+      "ichiran-pg-1",
+      "psql",
+      "-U",
+      "postgres",
+      "-h",
+      "127.0.0.1",
+      "jmdict",
+      "--csv",
+      "-t",
+      "-c",
+      `select seq, "from" from conjugation where seq in (${seqs
+        // `select min(seq) from conjugation` is > 1e6, but maybe this isn't worth it
+        .filter((s) => s >= 1e6)
+        .join(",")})`,
+    ]);
+    spawned.stdin.end();
+    let arr: string[] = [];
+    spawned.stdout.on("data", (data: Buffer) =>
+      arr.push(data.toString("utf8"))
+    );
+    spawned.on("close", (code: number) => {
+      if (code !== 0) {
+        reject(code);
+      }
+
+      resolve(
+        Object.fromEntries(
+          arr
+            .join("")
+            .split("\n")
+            .filter((x) => x) // use this instead of `trim` because we want `''` to map to `[]`
+            .map((l) => l.split(",").map((x) => Number(x)) as [number, number])
+        )
+      );
+    });
+  });
 }
 
 // Examples

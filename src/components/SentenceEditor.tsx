@@ -6,9 +6,11 @@ import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../interfaces";
 import { cellFit, type Cell } from "../utils/cellFit";
-import type { ContextCloze } from "curtiz-japanese-nlp/interfaces";
+import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
+import { WordPicker, displayWordLight } from "./WordPicker";
+import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
 
 interface Props {
   plain: string;
@@ -231,6 +233,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             plain={plain}
             ichiran={sentence.value.ichiran}
             curtiz={sentence.value.curtiz}
+            words={sentence.value.words}
           />
 
           <p>Synonyms:</p>
@@ -338,12 +341,14 @@ interface NlpTableProps {
   plain: string;
   ichiran: Sentence["ichiran"];
   curtiz: Sentence["curtiz"];
+  words: Sentence["words"];
 }
 
 const NlpTable: FunctionalComponent<NlpTableProps> = ({
   plain,
   ichiran,
   curtiz,
+  words,
 }) => {
   if (typeof ichiran[0] === "string") {
     return <>no Japanese</>;
@@ -352,6 +357,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
   if (plain !== ichiWords.map((x) => x[1].text).join("")) {
     return <>ichiran mismatch?</>;
   }
+
+  const tags = typeof curtiz === "string" ? {} : curtiz.tags ?? {};
 
   const cells: Cell<VNode>[] = [];
 
@@ -363,7 +370,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
       cells.push({
         start,
         len: x.text.length,
-        content: <>{x.gloss.map((g) => g.gloss).join("/")}</>,
+        content: renderIchiranGloss(x.gloss, words[x.seq], tags),
       });
       start += x.text.length;
     } else if (x.conj?.length) {
@@ -383,7 +390,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                 </em>
               )}
               {x.suffix && <strong>{x.suffix}) </strong>}
-              {conj.gloss?.map((g) => g.gloss).join("/")}
+              <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
+              {renderIchiranGloss(conj.gloss, words[x.seq], tags, x.seq)}
             </>
           ),
         });
@@ -398,7 +406,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           cells.push({
             start: yStart,
             len: y.text.length,
-            content: <>{y.gloss.map((g) => g.gloss).join("/")}</>,
+            content: renderIchiranGloss(y.gloss, words[y.seq], tags),
           });
         } else if ("conj" in y && y.conj?.length) {
           jmdictSeqSeen.add(y.seq);
@@ -417,7 +425,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                     </em>
                   )}
                   {y.suffix && <strong>{y.suffix}) </strong>}
-                  {conj.gloss?.map((g) => g.gloss).join("/")}
+                  <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
+                  {renderIchiranGloss(conj.gloss, words[y.seq], tags, y.seq)}
                 </>
               ),
             });
@@ -453,7 +462,11 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           .reduce((a, b) => a + b, 0);
         for (const { summary, wordId } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
-          cells.push({ start, len, content: <>{summary}</> });
+          cells.push({
+            start,
+            len,
+            content: <>{summary}</>,
+          });
         }
       }
     }
@@ -531,4 +544,19 @@ function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
     return `${d.auxiliaries.join(" + ")} + ${d.conjugation}`;
   }
   return d.conjugation;
+}
+
+function renderIchiranGloss(
+  gloss: IchiranGloss[],
+  word: Word | undefined,
+  tags: Record<string, string>,
+  seq?: number
+): VNode {
+  return word ? (
+    <WordPicker word={word} tags={tags} />
+  ) : (
+    <>
+      (❓ {seq}) {gloss.map((g) => g.gloss).join("/")}
+    </>
+  );
 }

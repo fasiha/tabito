@@ -11,9 +11,6 @@ td {
 td div.cell {
   font-size: small;
   height: 5rem;
-  /* line-height: 12rem; */
-  /* text-align: center; */
-  /* white-space: nowrap; */
   overflow: scroll;
 }
 
