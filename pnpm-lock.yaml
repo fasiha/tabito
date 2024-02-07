@@ -75,7 +75,7 @@ devDependencies:
     version: 20.9.0
   curtiz-japanese-nlp:
     specifier: github:fasiha/curtiz-japanese-nlp
-    version: github.com/fasiha/curtiz-japanese-nlp/f9730cabb0427a252940a26dfbf12d5633c03a58
+    version: github.com/fasiha/curtiz-japanese-nlp/ac2fe79201ccd094b03268a7874b46012b8eaf9d
   esbuild:
     specifier: ^0.19.5
     version: 0.19.5
@@ -6246,8 +6246,8 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
     dev: false
 
-  github.com/fasiha/curtiz-japanese-nlp/f9730cabb0427a252940a26dfbf12d5633c03a58:
-    resolution: {tarball: https://codeload.github.com/fasiha/curtiz-japanese-nlp/tar.gz/f9730cabb0427a252940a26dfbf12d5633c03a58}
+  github.com/fasiha/curtiz-japanese-nlp/ac2fe79201ccd094b03268a7874b46012b8eaf9d:
+    resolution: {tarball: https://codeload.github.com/fasiha/curtiz-japanese-nlp/tar.gz/ac2fe79201ccd094b03268a7874b46012b8eaf9d}
     name: curtiz-japanese-nlp
     version: 3.0.0
     engines: {node: '>=12.0.0'}

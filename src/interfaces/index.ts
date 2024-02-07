@@ -1,6 +1,11 @@
-import type { Word, v1ResSentence } from "curtiz-japanese-nlp/interfaces";
+import type {
+  Furigana,
+  Word,
+  v1ResSentence,
+} from "curtiz-japanese-nlp/interfaces";
 import { type Sentence as TabitoSentence } from "tabito-lib";
 import type { Ichiran } from "../nlp-wrappers/ichiran-types";
+import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 
 export * as Tables from "./DbTablesV1";
 
@@ -10,9 +15,34 @@ export type FullRow<T> = {
 export type Selected<T> = FullRow<T> | undefined;
 export type SelectedAll<T> = FullRow<T>[];
 
+export interface Vocab {
+  /** character index */
+  start: number;
+  /** number of characters */
+  len: number;
+
+  entry: Word;
+  sense: number;
+  subsense?: number;
+}
+
+export interface GrammarConj {
+  /** character index */
+  start: number;
+  /** number of characters */
+  len: number;
+
+  lemmas: Furigana[];
+  deconj: AdjDeconjugated | Deconjugated;
+}
+
+export type Bunsetsu = { idx: number; parent: number; numMorphemes: number };
+
 export interface Sentence extends TabitoSentence {
   translations?: Record<"en", string[]>; // add more target languages someday
   citation?: string;
+  vocab?: Vocab[];
+  grammarConj?: GrammarConj[];
   nlp: {
     curtiz: v1ResSentence;
     ichiran: Ichiran;

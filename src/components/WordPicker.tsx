@@ -1,14 +1,20 @@
 import type { FunctionComponent } from "preact";
 import type { Sense, Tag, Word, Xref } from "curtiz-japanese-nlp/interfaces";
 import { prefixNumber } from "../utils/utils";
+import type { VocabGrammarProps } from "./commonInterfaces";
 
 interface Props {
   word: Word;
   tags: Record<string, string>;
+  onNewVocabGrammar: (x: VocabGrammarProps) => void;
 }
 
-export const WordPicker: FunctionComponent<Props> = ({ word, tags }) => {
-  return <>{displayWordLight(word, tags)}</>;
+export const WordPicker: FunctionComponent<Props> = ({
+  word,
+  tags,
+  onNewVocabGrammar,
+}) => {
+  return <>! {displayWordLight(word, tags)}</>;
 };
 
 function printXrefs(v: Xref[]) {

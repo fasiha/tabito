@@ -4,13 +4,14 @@ import { addSynonym } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
-import type { Sentence } from "../interfaces";
+import type { GrammarConj, Sentence, Vocab } from "../interfaces";
 import { cellFit, type Cell } from "../utils/cellFit";
 import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker, displayWordLight } from "./WordPicker";
 import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
+import type { VocabGrammarProps } from "./commonInterfaces";
 
 interface Props {
   plain: string;
@@ -222,6 +223,37 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
+  async function handleNewVocabGrammar({ vocab, grammar }: VocabGrammarProps) {
+    if (sentence.value) {
+      const newSentence: Sentence = structuredClone(sentence.value);
+      if (vocab) {
+        if (!newSentence.vocab) {
+          newSentence.vocab = [];
+        }
+        newSentence.vocab.push(vocab);
+      }
+      if (grammar) {
+        if (!newSentence.grammarConj) {
+          newSentence.grammarConj = [];
+        }
+        newSentence.grammarConj.push(grammar);
+      }
+
+      const request = await fetch(`/api/sentence/${plain}`, {
+        body: JSON.stringify({ sentence: newSentence }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (request.ok) {
+        sentence.value = newSentence; // new value!
+        // clear
+        networkFeedback.value = "";
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
+  }
+
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
@@ -229,7 +261,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         <>
           <SentenceComponent sentence={sentence.value} />
 
-          <NlpTable plain={plain} nlp={sentence.value.nlp} />
+          <NlpTable
+            nlp={sentence.value.nlp}
+            onNewVocabGrammar={handleNewVocabGrammar}
+            plain={plain}
+          />
 
           <p>Synonyms:</p>
           <ul>
@@ -335,9 +371,14 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 interface NlpTableProps {
   plain: string;
   nlp: Sentence["nlp"];
+  onNewVocabGrammar: (x: VocabGrammarProps) => void;
 }
 
-const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
+const NlpTable: FunctionalComponent<NlpTableProps> = ({
+  plain,
+  nlp,
+  onNewVocabGrammar,
+}) => {
   const { ichiran, curtiz, words } = nlp;
   if (typeof ichiran[0] === "string") {
     return <>no Japanese</>;
@@ -359,7 +400,14 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
       cells.push({
         start,
         len: x.text.length,
-        content: renderIchiranGloss(x.gloss, words[x.seq], tags),
+        content: (
+          <IchiranGloss
+            gloss={x.gloss}
+            word={words[x.seq]}
+            tags={tags}
+            onNewVocabGrammar={onNewVocabGrammar}
+          />
+        ),
       });
       start += x.text.length;
     } else if (x.conj?.length) {
@@ -379,7 +427,13 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
                 </em>
               )}
               {x.suffix && <strong>{x.suffix}) </strong>}
-              {renderIchiranGloss(conj.gloss, words[x.seq], tags, x.seq)}
+              <IchiranGloss
+                gloss={conj.gloss}
+                word={words[x.seq]}
+                tags={tags}
+                onNewVocabGrammar={onNewVocabGrammar}
+                seq={x.seq}
+              />
             </>
           ),
         });
@@ -394,7 +448,14 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
           cells.push({
             start: yStart,
             len: y.text.length,
-            content: renderIchiranGloss(y.gloss, words[y.seq], tags),
+            content: (
+              <IchiranGloss
+                gloss={y.gloss}
+                word={words[y.seq]}
+                tags={tags}
+                onNewVocabGrammar={onNewVocabGrammar}
+              />
+            ),
           });
         } else if ("conj" in y && y.conj?.length) {
           jmdictSeqSeen.add(y.seq);
@@ -414,7 +475,13 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
                   )}
                   {y.suffix && <strong>{y.suffix}) </strong>}
                   <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
-                  {renderIchiranGloss(conj.gloss, words[y.seq], tags, y.seq)}
+                  <IchiranGloss
+                    gloss={conj.gloss}
+                    word={words[y.seq]}
+                    tags={tags}
+                    onNewVocabGrammar={onNewVocabGrammar}
+                    seq={y.seq}
+                  />
                 </>
               ),
             });
@@ -448,12 +515,18 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
           .flat()
           .map((o) => (typeof o === "string" ? o.length : o.ruby.length))
           .reduce((a, b) => a + b, 0);
-        for (const { summary, wordId } of subresults) {
+        for (const { wordId, word, tags } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
           cells.push({
             start,
             len,
-            content: <>{summary}</>,
+            content: (
+              <WordPicker
+                onNewVocabGrammar={onNewVocabGrammar}
+                word={word!}
+                tags={tags}
+              />
+            ),
           });
         }
       }
@@ -534,17 +607,29 @@ function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
   return d.conjugation;
 }
 
-function renderIchiranGloss(
-  gloss: IchiranGloss[],
-  word: Word | undefined,
-  tags: Record<string, string>,
-  seq?: number
-): VNode {
+interface IchiranGlossProps {
+  gloss: IchiranGloss[];
+  onNewVocabGrammar: (x: VocabGrammarProps) => void;
+  /** Only needed for conjugated phrases (fake Ichiran sequence IDs not
+   * in JMdict) */
+  seq?: number;
+  tags: Record<string, string>;
+  /** similarly might be missing if we can't recover the root Ichiran
+   * sequence ID for conjugations */
+  word: Word | undefined;
+}
+const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
+  gloss,
+  onNewVocabGrammar,
+  seq,
+  tags,
+  word,
+}) => {
   return word ? (
-    <WordPicker word={word} tags={tags} />
+    <WordPicker onNewVocabGrammar={onNewVocabGrammar} word={word} tags={tags} />
   ) : (
     <>
       (❓ {seq}) {gloss.map((g) => g.gloss).join("/")}
     </>
   );
-}
+};
