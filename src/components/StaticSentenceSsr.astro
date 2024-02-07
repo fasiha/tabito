@@ -11,6 +11,7 @@ import {
 import { analyzeString, jmdictSeqsToWords } from "../nlp-wrappers/curtiz";
 import { rawToIchiran } from "../nlp-wrappers/ichiran";
 import { Sentence } from "./Sentence";
+import type { Sentence as SentenceType } from "../interfaces";
 
 interface Props {
   plain: string;
@@ -20,7 +21,8 @@ interface Props {
 const { plain, docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
-if (!sentenceExists(plain)) {
+const existing = getSentence(plain);
+if (existing === undefined || (typeof existing === "object" && !existing.nlp)) {
   const curtiz = await analyzeString(plain);
   const { ichiran, jmdictSeqs, seqMap } = await rawToIchiran(plain);
   const words = Object.fromEntries(
@@ -40,12 +42,14 @@ if (!sentenceExists(plain)) {
     }
   }
 
-  upsertSentence({
-    furigana: typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat(),
-    curtiz,
-    ichiran,
-    words,
-  });
+  const furigana =
+    typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat();
+  const sentence: SentenceType = {
+    furigana: existing?.furigana || furigana, // keep old furigana as it might have corrections
+    ...existing,
+    nlp: { curtiz, ichiran, words },
+  };
+  upsertSentence(sentence);
 }
 const sentence = getSentence(plain);
 if (!sentence || typeof sentence === "string")

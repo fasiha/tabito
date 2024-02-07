@@ -229,12 +229,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         <>
           <SentenceComponent sentence={sentence.value} />
 
-          <NlpTable
-            plain={plain}
-            ichiran={sentence.value.ichiran}
-            curtiz={sentence.value.curtiz}
-            words={sentence.value.words}
-          />
+          <NlpTable plain={plain} nlp={sentence.value.nlp} />
 
           <p>Synonyms:</p>
           <ul>
@@ -339,17 +334,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 
 interface NlpTableProps {
   plain: string;
-  ichiran: Sentence["ichiran"];
-  curtiz: Sentence["curtiz"];
-  words: Sentence["words"];
+  nlp: Sentence["nlp"];
 }
 
-const NlpTable: FunctionalComponent<NlpTableProps> = ({
-  plain,
-  ichiran,
-  curtiz,
-  words,
-}) => {
+const NlpTable: FunctionalComponent<NlpTableProps> = ({ plain, nlp }) => {
+  const { ichiran, curtiz, words } = nlp;
   if (typeof ichiran[0] === "string") {
     return <>no Japanese</>;
   }

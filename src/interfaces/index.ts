@@ -13,10 +13,12 @@ export type SelectedAll<T> = FullRow<T>[];
 export interface Sentence extends TabitoSentence {
   translations?: Record<"en", string[]>; // add more target languages someday
   citation?: string;
-  curtiz: v1ResSentence;
-  ichiran: Ichiran;
-  /**
-   * Extra JMdict entries for non-standard IDs that Ichiran might give us
-   */
-  words: Record<string, Word>;
+  nlp: {
+    curtiz: v1ResSentence;
+    ichiran: Ichiran;
+    /**
+     * Extra JMdict entries for non-standard IDs that Ichiran might give us
+     */
+    words: Record<string, Word>;
+  };
 }

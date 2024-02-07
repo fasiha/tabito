@@ -17,6 +17,11 @@ npm run dev
 ```
 and visit http://localhost:4321.
 
+To clear all NLP data and reload it (for example, when the NLP pipeline has changed), run
+```sh
+sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded, '$.nlp')" && npm run dev
+```
+
 ## Working notes
 
 After entering a sentence, it needs to hit MeCab (probabily `curtiz-japanese-nlp`?) or Ichiran to get furigana.
