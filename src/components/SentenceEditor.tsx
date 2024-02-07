@@ -390,7 +390,6 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                 </em>
               )}
               {x.suffix && <strong>{x.suffix}) </strong>}
-              <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
               {renderIchiranGloss(conj.gloss, words[x.seq], tags, x.seq)}
             </>
           ),
