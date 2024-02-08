@@ -41,7 +41,8 @@ export type Exclusive<T, U> = T | U extends object
       | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>)
   : never;
 export type IchiranHit = Exclusive<IchiranCompound, IchiranSingle>;
+export type IchiranHitOrAlt = IchiranHit | { alternative: IchiranHit[] };
 
-export type IchiranWord = [string, IchiranHit, []];
+export type IchiranWord = [string, IchiranHitOrAlt, []];
 export type IchiranLine = [IchiranWord[], number];
 export type Ichiran = (string | [IchiranLine])[];

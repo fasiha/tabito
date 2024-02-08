@@ -107,7 +107,165 @@ export async function getRootJmdictSeqs(
 }
 
 // Examples
-
+const alt: Ichiran = [
+  [
+    [
+      [
+        [
+          "oto/on/ne",
+          {
+            alternative: [
+              {
+                reading: "音 【おと】",
+                text: "音",
+                kana: "おと",
+                score: 24,
+                seq: 1576900,
+                gloss: [
+                  {
+                    pos: "[n]",
+                    gloss: "sound; noise",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "(musical) note",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "fame",
+                    info: "as 音に聞く, 音に聞こえた, etc.",
+                  },
+                ],
+                conj: [],
+              },
+              {
+                reading: "音 【おん】",
+                text: "音",
+                kana: "おん",
+                score: 16,
+                seq: 2859161,
+                gloss: [
+                  {
+                    pos: "[n,n-suf]",
+                    gloss: "sound; noise",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "(speech) sound",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "Chinese-derived reading of a kanji",
+                  },
+                ],
+                conj: [],
+              },
+              {
+                reading: "音 【ね】",
+                text: "音",
+                kana: "ね",
+                score: 16,
+                seq: 2859162,
+                gloss: [
+                  {
+                    pos: "[n]",
+                    gloss: "sound; tone; note; ring; chirp",
+                  },
+                ],
+                conj: [],
+              },
+            ],
+          },
+          [],
+        ],
+        [
+          "ga",
+          {
+            reading: "が",
+            text: "が",
+            kana: "が",
+            score: 11,
+            seq: 2028930,
+            gloss: [
+              {
+                pos: "[prt]",
+                gloss: "indicates sentence subject (occasionally object)",
+              },
+              {
+                pos: "[prt]",
+                gloss: "indicates possessive (esp. in literary expressions)",
+              },
+              {
+                pos: "[conj]",
+                gloss: "but; however; still; and",
+              },
+              {
+                pos: "[conj]",
+                gloss: "regardless of; whether (or not)",
+                info: "after the volitional form of a verb",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "suki",
+          {
+            reading: "好き 【すき】",
+            text: "好き",
+            kana: "すき",
+            score: 128,
+            seq: 1277450,
+            gloss: [
+              {
+                pos: "[adj-na,n]",
+                gloss:
+                  "liking; being fond of; to one's liking; to one's taste; preferred; favourite",
+              },
+              {
+                pos: "[adj-na,n]",
+                gloss: "liking (romantically); being in love with; beloved",
+              },
+              {
+                pos: "[n,adj-na]",
+                gloss: "faddism; eccentricity",
+              },
+              {
+                pos: "[adj-na,n]",
+                gloss: "as one likes; as it suits one",
+              },
+              {
+                pos: "[n,adj-na]",
+                gloss: "lecherous; lustful; salacious",
+              },
+            ],
+            conj: [
+              {
+                prop: [
+                  {
+                    pos: "v5k",
+                    type: "Continuative (~i)",
+                  },
+                ],
+                reading: "好く 【すく】",
+                gloss: [
+                  {
+                    pos: "[vt,v5k]",
+                    gloss: "to like; to love; to be fond of",
+                  },
+                ],
+                readok: true,
+              },
+            ],
+          },
+          [],
+        ],
+      ],
+      177,
+    ],
+  ],
+];
 const multiline: Ichiran = [
   [
     [

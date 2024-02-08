@@ -384,7 +384,12 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
     return <>no Japanese</>;
   }
   const ichiWords = ichiran[0][0][0];
-  if (plain !== ichiWords.map((x) => x[1].text).join("")) {
+  if (
+    plain !==
+    ichiWords
+      .map(([, x]) => ("alternative" in x ? x.alternative[0].text : x.text))
+      .join("")
+  ) {
     return <>ichiran mismatch?</>;
   }
 
@@ -394,104 +399,109 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
 
   const jmdictSeqSeen = new Set<number>();
   let start = 0;
-  for (const [, x] of ichiWords) {
-    if ("gloss" in x && x.gloss) {
-      jmdictSeqSeen.add(x.seq);
-      cells.push({
-        start,
-        len: x.text.length,
-        content: (
-          <IchiranGloss
-            gloss={x.gloss}
-            word={words[x.seq]}
-            tags={tags}
-            onNewVocabGrammar={onNewVocabGrammar}
-          />
-        ),
-      });
-      start += x.text.length;
-    } else if (x.conj?.length) {
-      jmdictSeqSeen.add(x.seq);
-      for (const conj of x.conj) {
+  for (const [, wordOrAlt] of ichiWords) {
+    const wordArr =
+      "alternative" in wordOrAlt ? wordOrAlt.alternative : [wordOrAlt];
+    if (!wordArr.every((w) => w.text.length === wordArr[0].text.length)) {
+      throw new Error(
+        "invariant fail: expect all alternatives to have same length"
+      );
+    }
+    for (const x of wordArr) {
+      if ("gloss" in x && x.gloss) {
+        jmdictSeqSeen.add(x.seq);
         cells.push({
-          start: start,
+          start,
           len: x.text.length,
           content: (
-            <>
-              {conj.prop && (
-                <em>
-                  {conj.prop
-                    .map((p) => `[${p.pos}: ${p.type}]`)
-                    .join("; ")
-                    .concat(" — ")}
-                </em>
-              )}
-              {x.suffix && <strong>{x.suffix}) </strong>}
-              <IchiranGloss
-                gloss={conj.gloss}
-                word={words[x.seq]}
-                tags={tags}
-                onNewVocabGrammar={onNewVocabGrammar}
-                seq={x.seq}
-              />
-            </>
+            <IchiranGloss
+              gloss={x.gloss}
+              word={words[x.seq]}
+              tags={tags}
+              onNewVocabGrammar={onNewVocabGrammar}
+            />
           ),
         });
-      }
-      start += x.text.length;
-    } else if ("components" in x && x.components) {
-      let yStart = start;
-      for (const y of x.components) {
-        yStart = plain.indexOf(y.text, yStart);
-        if ("gloss" in y && y.gloss) {
-          jmdictSeqSeen.add(y.seq);
+      } else if (x.conj?.length) {
+        jmdictSeqSeen.add(x.seq);
+        for (const conj of x.conj) {
           cells.push({
-            start: yStart,
-            len: y.text.length,
+            start: start,
+            len: x.text.length,
             content: (
-              <IchiranGloss
-                gloss={y.gloss}
-                word={words[y.seq]}
-                tags={tags}
-                onNewVocabGrammar={onNewVocabGrammar}
-              />
+              <>
+                {conj.prop && (
+                  <em>
+                    {conj.prop
+                      .map((p) => `[${p.pos}: ${p.type}]`)
+                      .join("; ")
+                      .concat(" — ")}
+                  </em>
+                )}
+                {x.suffix && <strong>{x.suffix}) </strong>}
+                <IchiranGloss
+                  gloss={conj.gloss}
+                  word={words[x.seq]}
+                  tags={tags}
+                  onNewVocabGrammar={onNewVocabGrammar}
+                  seq={x.seq}
+                />
+              </>
             ),
           });
-        } else if ("conj" in y && y.conj?.length) {
-          jmdictSeqSeen.add(y.seq);
-          for (const conj of y.conj) {
+        }
+      } else if ("components" in x && x.components) {
+        let yStart = start;
+        for (const y of x.components) {
+          yStart = plain.indexOf(y.text, yStart);
+          if ("gloss" in y && y.gloss) {
+            jmdictSeqSeen.add(y.seq);
             cells.push({
               start: yStart,
               len: y.text.length,
               content: (
-                <>
-                  {conj.prop && (
-                    <em>
-                      {conj.prop
-                        .map((p) => `[${p.pos}: ${p.type}]`)
-                        .join("; ")
-                        .concat(" — ")}
-                    </em>
-                  )}
-                  {y.suffix && <strong>{y.suffix}) </strong>}
-                  <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
-                  <IchiranGloss
-                    gloss={conj.gloss}
-                    word={words[y.seq]}
-                    tags={tags}
-                    onNewVocabGrammar={onNewVocabGrammar}
-                    seq={y.seq}
-                  />
-                </>
+                <IchiranGloss
+                  gloss={y.gloss}
+                  word={words[y.seq]}
+                  tags={tags}
+                  onNewVocabGrammar={onNewVocabGrammar}
+                />
               ),
             });
+          } else if ("conj" in y && y.conj?.length) {
+            jmdictSeqSeen.add(y.seq);
+            for (const conj of y.conj) {
+              cells.push({
+                start: yStart,
+                len: y.text.length,
+                content: (
+                  <>
+                    {conj.prop && (
+                      <em>
+                        {conj.prop
+                          .map((p) => `[${p.pos}: ${p.type}]`)
+                          .join("; ")
+                          .concat(" — ")}
+                      </em>
+                    )}
+                    {y.suffix && <strong>{y.suffix}) </strong>}
+                    <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
+                    <IchiranGloss
+                      gloss={conj.gloss}
+                      word={words[y.seq]}
+                      tags={tags}
+                      onNewVocabGrammar={onNewVocabGrammar}
+                      seq={y.seq}
+                    />
+                  </>
+                ),
+              });
+            }
           }
         }
       }
-      start += x.text.length;
-    } else {
-      start += x.text.length;
     }
+    start += wordArr[0].text.length;
   }
 
   start = 0;
@@ -517,6 +527,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           .reduce((a, b) => a + b, 0);
         for (const { wordId, word, tags } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
+          jmdictSeqSeen.add(+wordId);
           cells.push({
             start,
             len,
