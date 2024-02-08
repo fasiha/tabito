@@ -1,4 +1,4 @@
-import type { FunctionComponent } from "preact";
+import { Fragment, type FunctionComponent } from "preact";
 import type { Sense, Tag, Word, Xref } from "curtiz-japanese-nlp/interfaces";
 import { prefixNumber } from "../utils/utils";
 import type { VocabGrammarProps } from "./commonInterfaces";
@@ -14,41 +14,55 @@ export const WordPicker: FunctionComponent<Props> = ({
   tags,
   onNewVocabGrammar,
 }) => {
-  return <>! {displayWordLight(word, tags)}</>;
+  return (
+    <>
+      {word.kanji.map((k) => k.text).join("・")}「
+      {word.kana.map((k) => k.text).join("・")}」{" "}
+      {word.sense.map((sense, n) => (
+        <Fragment key={n}>
+          {prefixNumber(n)} {sense.gloss.map((g) => g.text).join("/")}{" "}
+          <Related sense={sense} />
+          <Antonym sense={sense} />
+          <Tags sense={sense} tags={tags} />
+        </Fragment>
+      ))}
+    </>
+  );
+};
+
+const Related: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+  sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
+const Antonym: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+  sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;
+const Tags: FunctionComponent<{
+  sense: Sense;
+  tags: Record<string, string>;
+}> = ({ sense, tags }) => {
+  const make = (key: keyof typeof tagFields) =>
+    sense[key].length > 0 ? (
+      <>
+        ({tagFields[key]} {sense[key].map((d) => tags[d]).join("; ")})
+      </>
+    ) : null;
+
+  const partOfSpeech = make("partOfSpeech");
+  const dialect = make("dialect");
+  const field = make("field");
+  const misc = make("misc");
+  return (
+    <>
+      {dialect} {field} {misc} {partOfSpeech}
+    </>
+  );
 };
 
 function printXrefs(v: Xref[]) {
   return v.map((x) => x.join(",")).join(";");
 }
-export function displayWordLight(w: Word, tags: Record<string, string>) {
-  const kanji = w.kanji.map((k) => k.text).join("・");
-  const kana = w.kana.map((k) => k.text).join("・");
 
-  type TagKey = {
-    [K in keyof Sense]: Sense[K] extends Tag[] ? K : never;
-  }[keyof Sense];
-  const tagFields: Partial<Record<TagKey, string>> = {
-    dialect: "🗣",
-    field: "🀄️",
-    misc: "✋",
-  };
-  const s = w.sense
-    .map(
-      (sense, n) =>
-        prefixNumber(n) +
-        " " +
-        sense.gloss.map((gloss) => gloss.text).join("/") +
-        (sense.related.length ? ` (👉 ${printXrefs(sense.related)})` : "") +
-        (sense.antonym.length ? ` (👈 ${printXrefs(sense.antonym)})` : "") +
-        Object.entries(tagFields)
-          .map(([k, v]) =>
-            sense[k as TagKey].length
-              ? ` (${v} ${sense[k as TagKey].map((k) => tags[k]).join("; ")})`
-              : ""
-          )
-          .join("")
-    )
-    .join(" ");
-  // console.error(related)
-  return `${kanji}「${kana}」| ${s}`;
-}
+const tagFields = {
+  dialect: "🗣",
+  field: "🀄️",
+  misc: "✋",
+  partOfSpeech: "🫦",
+} as const;

@@ -9,7 +9,7 @@ import { cellFit, type Cell } from "../utils/cellFit";
 import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
-import { WordPicker, displayWordLight } from "./WordPicker";
+import { WordPicker } from "./WordPicker";
 import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
 import type { VocabGrammarProps } from "./commonInterfaces";
 
