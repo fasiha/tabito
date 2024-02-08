@@ -11,7 +11,7 @@ import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
 import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
-import type { VocabGrammarProps } from "./commonInterfaces";
+import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
 
 interface Props {
   plain: string;
@@ -419,6 +419,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
               word={words[x.seq]}
               tags={tags}
               onNewVocabGrammar={onNewVocabGrammar}
+              start={start}
+              len={x.text.length}
             />
           ),
         });
@@ -445,6 +447,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                   tags={tags}
                   onNewVocabGrammar={onNewVocabGrammar}
                   seq={x.seq}
+                  start={start}
+                  len={x.text.length}
                 />
               </>
             ),
@@ -465,6 +469,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                   word={words[y.seq]}
                   tags={tags}
                   onNewVocabGrammar={onNewVocabGrammar}
+                  start={yStart}
+                  len={y.text.length}
                 />
               ),
             });
@@ -492,6 +498,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                       tags={tags}
                       onNewVocabGrammar={onNewVocabGrammar}
                       seq={y.seq}
+                      start={yStart}
+                      len={y.text.length}
                     />
                   </>
                 ),
@@ -528,15 +536,15 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
         for (const { wordId, word, tags } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
           jmdictSeqSeen.add(+wordId);
+          const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
+            onNewVocabGrammar({
+              vocab: { entry: word!, start, len, sense, subsense },
+            });
           cells.push({
             start,
             len,
             content: (
-              <WordPicker
-                onNewVocabGrammar={onNewVocabGrammar}
-                word={word!}
-                tags={tags}
-              />
+              <WordPicker onNewVocab={onNewVocab} word={word!} tags={tags} />
             ),
           });
         }
@@ -628,6 +636,8 @@ interface IchiranGlossProps {
   /** similarly might be missing if we can't recover the root Ichiran
    * sequence ID for conjugations */
   word: Word | undefined;
+  start: number;
+  len: number;
 }
 const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
   gloss,
@@ -635,9 +645,16 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
   seq,
   tags,
   word,
+  start,
+  len,
 }) => {
+  const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
+    onNewVocabGrammar({
+      vocab: { entry: word!, start, len, sense, subsense },
+    });
+
   return word ? (
-    <WordPicker onNewVocabGrammar={onNewVocabGrammar} word={word} tags={tags} />
+    <WordPicker onNewVocab={onNewVocab} word={word} tags={tags} />
   ) : (
     <>
       (❓ {seq}) {gloss.map((g) => g.gloss).join("/")}

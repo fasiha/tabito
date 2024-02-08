@@ -1,26 +1,39 @@
 import { Fragment, type FunctionComponent } from "preact";
-import type { Sense, Tag, Word, Xref } from "curtiz-japanese-nlp/interfaces";
-import { prefixNumber } from "../utils/utils";
-import type { VocabGrammarProps } from "./commonInterfaces";
+import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
+import type { SenseAndSub } from "./commonInterfaces";
 
 interface Props {
   word: Word;
   tags: Record<string, string>;
-  onNewVocabGrammar: (x: VocabGrammarProps) => void;
+  onNewVocab: (x: SenseAndSub) => void;
 }
 
 export const WordPicker: FunctionComponent<Props> = ({
   word,
   tags,
-  onNewVocabGrammar,
+  onNewVocab,
 }) => {
+  const handleSense = (sense: number) => onNewVocab({ sense });
+  const handleSubSense = (sense: number, subsense: number) =>
+    onNewVocab({ sense, subsense });
+
   return (
     <>
       {word.kanji.map((k) => k.text).join("・")}「
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {word.sense.map((sense, n) => (
         <Fragment key={n}>
-          {prefixNumber(n)} {sense.gloss.map((g) => g.text).join("/")}{" "}
+          {" "}
+          <button onClick={() => handleSense(n)}>{n + 1}</button>
+          {sense.gloss.map((g, gi) => (
+            <Fragment key={gi}>
+              {" "}
+              <button onClick={() => handleSubSense(n, gi)}>
+                {n + 1}.{gi + 1}
+              </button>{" "}
+              {g.text}
+            </Fragment>
+          ))}
           <Related sense={sense} />
           <Antonym sense={sense} />
           <Tags sense={sense} tags={tags} />

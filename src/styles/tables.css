@@ -5,12 +5,12 @@ td {
 }
 
 td {
-  min-width: 5rem;
-  max-width: 5rem;
+  min-width: 6rem;
+  max-width: 6rem;
 }
 td div.cell {
   font-size: small;
-  height: 5rem;
+  height: 7rem;
   overflow: scroll;
 }
 
