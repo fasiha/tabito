@@ -12,6 +12,7 @@ import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
 import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
+import { vocabEqual } from "../utils/utils";
 
 interface Props {
   plain: string;
@@ -230,7 +231,20 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         if (!newSentence.vocab) {
           newSentence.vocab = [];
         }
-        newSentence.vocab.push(vocab);
+
+        const existingIdx = newSentence.vocab.findIndex((v) =>
+          vocabEqual(v, vocab)
+        );
+        if (existingIdx >= 0) {
+          newSentence.vocab.splice(existingIdx, 1);
+        } else {
+          newSentence.vocab.push(vocab);
+        }
+        // what about when you have a subsense selected and then also
+        // select the parent sense? The subsense should be kicked out.
+        // Similarly if you have a sense picked and then pick a
+        // subsense, the parent should be kicked out. But two subsenses
+        // can coexist. TODO
       }
       if (grammar) {
         if (!newSentence.grammarConj) {
