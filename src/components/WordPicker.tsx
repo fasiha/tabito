@@ -6,12 +6,14 @@ interface Props {
   word: Word;
   tags: Record<string, string>;
   onNewVocab: (x: SenseAndSub) => void;
+  alreadyPicked: SenseAndSub[];
 }
 
 export const WordPicker: FunctionComponent<Props> = ({
   word,
   tags,
   onNewVocab,
+  alreadyPicked,
 }) => {
   const handleSense = (sense: number) => onNewVocab({ sense });
   const handleSubSense = (sense: number, subsense: number) =>
@@ -21,24 +23,40 @@ export const WordPicker: FunctionComponent<Props> = ({
     <>
       {word.kanji.map((k) => k.text).join("・")}「
       {word.kana.map((k) => k.text).join("・")}」{" "}
-      {word.sense.map((sense, n) => (
-        <Fragment key={n}>
-          {" "}
-          <button onClick={() => handleSense(n)}>{n + 1}</button>
-          {sense.gloss.map((g, gi) => (
-            <Fragment key={gi}>
-              {" "}
-              <button onClick={() => handleSubSense(n, gi)}>
-                {n + 1}.{gi + 1}
-              </button>{" "}
-              {g.text}
-            </Fragment>
-          ))}
-          <Related sense={sense} />
-          <Antonym sense={sense} />
-          <Tags sense={sense} tags={tags} />
-        </Fragment>
-      ))}
+      {word.sense.map((sense, n) => {
+        const wholeSenseClass = alreadyPicked.find(
+          (a) => a.sense === n && a.subsense === undefined
+        )
+          ? "already-picked"
+          : undefined;
+
+        return (
+          <span class={wholeSenseClass} key={n}>
+            {" "}
+            <button onClick={() => handleSense(n)}>{n + 1}</button>
+            {sense.gloss.map((g, gi) => {
+              const subSenseClass = alreadyPicked.find(
+                (a) => a.sense === n && a.subsense === gi
+              )
+                ? "already-picked"
+                : undefined;
+
+              return (
+                <span class={subSenseClass} key={gi}>
+                  {" "}
+                  <button onClick={() => handleSubSense(n, gi)}>
+                    {n + 1}.{gi + 1}
+                  </button>{" "}
+                  {g.text}
+                </span>
+              );
+            })}
+            <Related sense={sense} />
+            <Antonym sense={sense} />
+            <Tags sense={sense} tags={tags} />
+          </span>
+        );
+      })}
     </>
   );
 };

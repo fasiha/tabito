@@ -265,6 +265,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             nlp={sentence.value.nlp}
             onNewVocabGrammar={handleNewVocabGrammar}
             plain={plain}
+            vocab={sentence.value.vocab}
           />
 
           <p>Synonyms:</p>
@@ -371,12 +372,14 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 interface NlpTableProps {
   plain: string;
   nlp: Sentence["nlp"];
+  vocab: Sentence["vocab"];
   onNewVocabGrammar: (x: VocabGrammarProps) => void;
 }
 
 const NlpTable: FunctionalComponent<NlpTableProps> = ({
   plain,
   nlp,
+  vocab,
   onNewVocabGrammar,
 }) => {
   const { ichiran, curtiz, words } = nlp;
@@ -421,6 +424,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
               onNewVocabGrammar={onNewVocabGrammar}
               start={start}
               len={x.text.length}
+              vocab={vocab}
             />
           ),
         });
@@ -449,6 +453,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                   seq={x.seq}
                   start={start}
                   len={x.text.length}
+                  vocab={vocab}
                 />
               </>
             ),
@@ -471,6 +476,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                   onNewVocabGrammar={onNewVocabGrammar}
                   start={yStart}
                   len={y.text.length}
+                  vocab={vocab}
                 />
               ),
             });
@@ -500,6 +506,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                       seq={y.seq}
                       start={yStart}
                       len={y.text.length}
+                      vocab={vocab}
                     />
                   </>
                 ),
@@ -540,11 +547,20 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
             onNewVocabGrammar({
               vocab: { entry: word!, start, len, sense, subsense },
             });
+          const alreadyPicked: SenseAndSub[] =
+            vocab
+              ?.filter((v) => v.entry.id === wordId)
+              .map((v) => ({ sense: v.sense, subsense: v.subsense })) ?? [];
           cells.push({
             start,
             len,
             content: (
-              <WordPicker onNewVocab={onNewVocab} word={word!} tags={tags} />
+              <WordPicker
+                onNewVocab={onNewVocab}
+                word={word!}
+                tags={tags}
+                alreadyPicked={alreadyPicked}
+              />
             ),
           });
         }
@@ -638,6 +654,7 @@ interface IchiranGlossProps {
   word: Word | undefined;
   start: number;
   len: number;
+  vocab: Sentence["vocab"];
 }
 const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
   gloss,
@@ -647,14 +664,23 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
   word,
   start,
   len,
+  vocab,
 }) => {
   const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
     onNewVocabGrammar({
       vocab: { entry: word!, start, len, sense, subsense },
     });
-
+  const alreadyPicked: SenseAndSub[] =
+    vocab
+      ?.filter((v) => v.entry.id === word!.id)
+      .map((v) => ({ sense: v.sense, subsense: v.subsense })) ?? [];
   return word ? (
-    <WordPicker onNewVocab={onNewVocab} word={word} tags={tags} />
+    <WordPicker
+      onNewVocab={onNewVocab}
+      word={word}
+      tags={tags}
+      alreadyPicked={alreadyPicked}
+    />
   ) : (
     <>
       (❓ {seq}) {gloss.map((g) => g.gloss).join("/")}
