@@ -1,5 +1,4 @@
 import type { Furigana } from "curtiz-japanese-nlp";
-import type { Vocab } from "../interfaces";
 
 export function mergeFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
@@ -16,19 +15,6 @@ const circledNumbers =
     ""
   );
 export const prefixNumber = (n: number) => circledNumbers[n] || `(${n + 1})`;
-
-export function vocabEqual(a: Vocab, b: Vocab): boolean {
-  return (
-    a.start === b.start &&
-    a.len === b.len &&
-    a.entry.id === b.entry.id &&
-    a.sense === b.sense &&
-    a.subsense === b.subsense
-  );
-  // I don't love how the type system won't detect that I"m
-  // checking all keys here if this object ever gets more keys
-  // :(
-}
 
 export function join<T, U>(arr: T[], sep: U): (T | U)[] {
   return arr.flatMap((x) => [x, sep]).slice(0, -1);

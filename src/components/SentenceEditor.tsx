@@ -4,20 +4,19 @@ import { addSynonym } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
-import type { GrammarConj, Sentence, Vocab } from "../interfaces";
+import type { GrammarConj, Sentence } from "../interfaces";
 import { cellFit, type Cell } from "../utils/cellFit";
 import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
 import type {
-  IchiranConj,
   IchiranConjProp,
-  IchiranConjVia,
   IchiranGloss,
 } from "../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
-import { join, vocabEqual } from "../utils/utils";
+import { join, prefixNumber } from "../utils/utils";
+import { deconjEqual, grammarConjEqual, vocabEqual } from "../utils/equality";
 
 interface Props {
   plain: string;
@@ -255,7 +254,15 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         if (!newSentence.grammarConj) {
           newSentence.grammarConj = [];
         }
-        newSentence.grammarConj.push(grammar);
+
+        const existingIdx = newSentence.grammarConj.findIndex((g) =>
+          grammarConjEqual(g, grammar)
+        );
+        if (existingIdx >= 0) {
+          newSentence.grammarConj.splice(existingIdx, 1);
+        } else {
+          newSentence.grammarConj.push(grammar);
+        }
       }
 
       const request = await fetch(`/api/sentence/${plain}`, {
@@ -285,6 +292,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             onNewVocabGrammar={handleNewVocabGrammar}
             plain={plain}
             vocab={sentence.value.vocab}
+            grammarConj={sentence.value.grammarConj}
           />
 
           <p>Synonyms:</p>
@@ -389,17 +397,19 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 };
 
 interface NlpTableProps {
-  plain: string;
+  grammarConj: Sentence["grammarConj"];
   nlp: Sentence["nlp"];
-  vocab: Sentence["vocab"];
   onNewVocabGrammar: (x: VocabGrammarProps) => void;
+  plain: string;
+  vocab: Sentence["vocab"];
 }
 
 const NlpTable: FunctionalComponent<NlpTableProps> = ({
-  plain,
+  grammarConj,
   nlp,
-  vocab,
   onNewVocabGrammar,
+  plain,
+  vocab,
 }) => {
   const { ichiran, curtiz, words } = nlp;
   if (typeof ichiran[0] === "string") {
@@ -623,17 +633,42 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
     const conjugated = curtiz.clozes?.conjugatedPhrases.slice() ?? [];
     conjugated.sort((a, b) => b.cloze.cloze.length - a.cloze.cloze.length);
     for (const { deconj, cloze, lemmas, startIdx, endIdx } of conjugated) {
-      const plain = furiganaIdxToPlain(curtiz.furigana);
       const start = findClozeIdx(plain, cloze);
       const len = cloze.cloze.length;
 
+      const grammar = {
+        start,
+        len,
+        lemmas: lemmas.flat(),
+      };
+      const handleClick = (deconj: GrammarConj["deconj"]) =>
+        onNewVocabGrammar({
+          grammar: { ...grammar, deconj },
+        });
       const content = (
         <>
           🟡 <FuriganaComponent furigana={lemmas[0]} /> →{" "}
-          {deconj.map(renderDeconjugation).join("/")} →{" "}
           <FuriganaComponent
             furigana={curtiz.furigana.slice(startIdx, endIdx).flat()}
-          />
+          />{" "}
+          via
+          <ul>
+            {deconj.map((deconj, di) => {
+              const className = grammarConj?.find((g) =>
+                grammarConjEqual(g, { ...grammar, deconj })
+              )
+                ? "already-picked"
+                : undefined;
+              return (
+                <li class={className}>
+                  <button onClick={() => handleClick(deconj)}>
+                    {prefixNumber(di)}
+                  </button>{" "}
+                  {renderDeconjugation(deconj)}
+                </li>
+              );
+            })}
+          </ul>
         </>
       );
       cells.push({ start, len, content });
