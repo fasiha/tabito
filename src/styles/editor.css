@@ -1,3 +1,7 @@
 .already-picked {
   text-decoration: underline;
 }
+
+.unitalicize-emoji {
+  font-style: normal;
+}

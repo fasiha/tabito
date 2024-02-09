@@ -545,7 +545,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
                 len: len,
                 content: (
                   <>
-                    {y.suffix && <strong>{y.suffix}) </strong>}
+                    {y.suffix && <strong>{y.suffix} </strong>}
                     {ConjProp(conj.prop)}
                     {"via" in conj && conj.via && (
                       <>
@@ -781,9 +781,21 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
 
 const ConjProp = (prop: IchiranConjProp[]) => (
   <em>
-    {prop
-      .map((p) => `[${p.pos}: ${p.type}]`)
-      .join("; ")
-      .concat(" ")}
+    {join(
+      prop.map((p) => (
+        <>
+          [{p.pos}: {p.type}
+          {p.fml && Formal}]
+        </>
+      )),
+      "; "
+    )}{" "}
   </em>
+);
+
+const Formal = (
+  <span class="unitalicize-emoji" title="Formal">
+    {" "}
+    🤵
+  </span>
 );
