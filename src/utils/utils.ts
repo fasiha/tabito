@@ -29,3 +29,7 @@ export function vocabEqual(a: Vocab, b: Vocab): boolean {
   // checking all keys here if this object ever gets more keys
   // :(
 }
+
+export function join<T, U>(arr: T[], sep: U): (T | U)[] {
+  return arr.flatMap((x) => [x, sep]).slice(0, -1);
+}

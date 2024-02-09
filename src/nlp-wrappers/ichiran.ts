@@ -107,6 +107,127 @@ export async function getRootJmdictSeqs(
 }
 
 // Examples
+const conj2: Ichiran = [
+  [
+    [
+      [
+        [
+          "shinjimae",
+          {
+            reading: "死んじまえ 【しんじまえ】",
+            text: "死んじまえ",
+            kana: "しんじまえ",
+            score: 602,
+            compound: ["死んで", "じまえ"],
+            components: [
+              {
+                reading: "死んで 【しんで】",
+                text: "死んで",
+                kana: "しんで",
+                score: 0,
+                seq: 10232231,
+                conj: [
+                  {
+                    prop: [
+                      {
+                        pos: "v5n",
+                        type: "Conjunctive (~te)",
+                      },
+                    ],
+                    reading: "死ぬ 【しぬ】",
+                    gloss: [
+                      {
+                        pos: "[v5n,vn,vi]",
+                        gloss: "to die; to pass away",
+                      },
+                      {
+                        pos: "[v5n,vn,vi]",
+                        gloss: "to lose spirit; to lose vigor; to look dead",
+                      },
+                      {
+                        pos: "[vi,vn,v5n]",
+                        gloss: "to cease; to stop",
+                      },
+                    ],
+                    readok: true,
+                  },
+                ],
+              },
+              {
+                reading: "じまえ",
+                text: "じまえ",
+                kana: "じまえ",
+                score: 0,
+                seq: 10447901,
+                suffix: "indicates completion (to finish ...)",
+                conj: [
+                  {
+                    prop: [
+                      {
+                        pos: "v5u",
+                        type: "Imperative",
+                      },
+                    ],
+                    reading: "じまう",
+                    gloss: [
+                      {
+                        pos: "[aux-v,v5u]",
+                        gloss: "to do completely",
+                        info: "contraction of ..て or で plus しまう",
+                      },
+                      {
+                        pos: "[v5u,aux-v]",
+                        gloss:
+                          "to do accidentally; to do without meaning to; to happen to do",
+                      },
+                    ],
+                    readok: true,
+                  },
+                  {
+                    prop: [
+                      {
+                        pos: "v1",
+                        type: "Continuative (~i)",
+                      },
+                    ],
+                    via: [
+                      {
+                        prop: [
+                          {
+                            pos: "v5u",
+                            type: "Potential",
+                          },
+                        ],
+                        reading: "じまう",
+                        gloss: [
+                          {
+                            pos: "[aux-v,v5u]",
+                            gloss: "to do completely",
+                            info: "contraction of ..て or で plus しまう",
+                          },
+                          {
+                            pos: "[v5u,aux-v]",
+                            gloss:
+                              "to do accidentally; to do without meaning to; to happen to do",
+                          },
+                        ],
+                        readok: true,
+                      },
+                    ],
+                    readok: true,
+                  },
+                ],
+              },
+            ],
+          },
+          [],
+        ],
+      ],
+      602,
+    ],
+  ],
+];
+
 const alt: Ichiran = [
   [
     [

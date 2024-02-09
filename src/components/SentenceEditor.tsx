@@ -10,9 +10,14 @@ import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
-import type { IchiranGloss } from "../nlp-wrappers/ichiran-types";
+import type {
+  IchiranConj,
+  IchiranConjProp,
+  IchiranConjVia,
+  IchiranGloss,
+} from "../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
-import { vocabEqual } from "../utils/utils";
+import { join, vocabEqual } from "../utils/utils";
 
 interface Props {
   plain: string;
@@ -425,6 +430,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
       );
     }
     for (const x of wordArr) {
+      // this is IchiranSingle WITH gloss
       if ("gloss" in x && x.gloss) {
         jmdictSeqSeen.add(x.seq);
         cells.push({
@@ -432,7 +438,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           len: x.text.length,
           content: (
             <IchiranGloss
-              gloss={x.gloss}
+              origGloss={x.gloss}
               word={words[x.seq]}
               tags={tags}
               onNewVocabGrammar={onNewVocabGrammar}
@@ -442,7 +448,9 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
             />
           ),
         });
-      } else if (x.conj?.length) {
+      }
+      if (x.conj?.length) {
+        // IchiranSingle with NO gloss but with conj
         jmdictSeqSeen.add(x.seq);
         for (const conj of x.conj) {
           cells.push({
@@ -450,17 +458,23 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
             len: x.text.length,
             content: (
               <>
-                {conj.prop && (
-                  <em>
-                    {conj.prop
-                      .map((p) => `[${p.pos}: ${p.type}]`)
-                      .join("; ")
-                      .concat(" — ")}
-                  </em>
+                {x.suffix && <strong>{x.suffix} </strong>}
+                {ConjProp(conj.prop)}
+                {"via" in conj && conj.via && (
+                  <>
+                    via{" "}
+                    {join(
+                      conj.via.map((conj) => ConjProp(conj.prop)),
+                      " or "
+                    )}
+                  </>
                 )}
-                {x.suffix && <strong>{x.suffix}) </strong>}
                 <IchiranGloss
-                  gloss={conj.gloss}
+                  origGloss={
+                    "gloss" in conj
+                      ? conj.gloss
+                      : conj.via.flatMap((conj) => conj.gloss)
+                  }
                   word={words[x.seq]}
                   tags={tags}
                   onNewVocabGrammar={onNewVocabGrammar}
@@ -473,53 +487,78 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
             ),
           });
         }
-      } else if ("components" in x && x.components) {
+      }
+      if ("components" in x && x.components) {
         let yStart = start;
         for (const y of x.components) {
-          yStart = plain.indexOf(y.text, yStart);
+          yStart = plain.indexOf(y.text, start);
+          let len = y.text.length;
+          if (yStart < 0 && len > 1) {
+            // sometimes this happens, e.g., full text = "死んじまえ"
+            // but components' text = ["死んで", "じまえ"], notice the
+            // extra `で`
+
+            // if this happens, try to shave off a character and retry
+            yStart = plain.indexOf(y.text.slice(0, -1), start);
+            len -= 1;
+            if (yStart < 0) {
+              yStart = 0;
+              len = 1;
+            }
+          }
+
+          // these two `if`s are very very similar to the above, but I
+          // don't want to DRY this yet
           if ("gloss" in y && y.gloss) {
             jmdictSeqSeen.add(y.seq);
             cells.push({
               start: yStart,
-              len: y.text.length,
+              len,
               content: (
                 <IchiranGloss
-                  gloss={y.gloss}
+                  origGloss={y.gloss}
                   word={words[y.seq]}
                   tags={tags}
                   onNewVocabGrammar={onNewVocabGrammar}
                   start={yStart}
-                  len={y.text.length}
+                  len={len}
                   vocab={vocab}
                 />
               ),
             });
-          } else if ("conj" in y && y.conj?.length) {
+          }
+          if (y.conj.length) {
             jmdictSeqSeen.add(y.seq);
             for (const conj of y.conj) {
               cells.push({
                 start: yStart,
-                len: y.text.length,
+                len: len,
                 content: (
                   <>
-                    {conj.prop && (
-                      <em>
-                        {conj.prop
-                          .map((p) => `[${p.pos}: ${p.type}]`)
-                          .join("; ")
-                          .concat(" — ")}
-                      </em>
-                    )}
                     {y.suffix && <strong>{y.suffix}) </strong>}
-                    <strong>{conj.gloss?.map((g) => g.gloss).join("/")}</strong>
+                    {ConjProp(conj.prop)}
+                    {"via" in conj && conj.via && (
+                      <>
+                        {" "}
+                        via{" "}
+                        {join(
+                          conj.via.map((conj) => ConjProp(conj.prop)),
+                          " or "
+                        )}
+                      </>
+                    )}
                     <IchiranGloss
-                      gloss={conj.gloss}
+                      origGloss={
+                        "gloss" in conj
+                          ? conj.gloss
+                          : conj.via.flatMap((conj) => conj.gloss)
+                      }
                       word={words[y.seq]}
                       tags={tags}
                       onNewVocabGrammar={onNewVocabGrammar}
                       seq={y.seq}
                       start={yStart}
-                      len={y.text.length}
+                      len={len}
                       vocab={vocab}
                     />
                   </>
@@ -586,6 +625,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
     for (const { deconj, cloze, lemmas, startIdx, endIdx } of conjugated) {
       const plain = furiganaIdxToPlain(curtiz.furigana);
       const start = findClozeIdx(plain, cloze);
+      const len = cloze.cloze.length;
+
       const content = (
         <>
           🟡 <FuriganaComponent furigana={lemmas[0]} /> →{" "}
@@ -595,7 +636,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           />
         </>
       );
-      cells.push({ start, len: cloze.cloze.length, content });
+      cells.push({ start, len, content });
     }
   }
 
@@ -657,7 +698,8 @@ function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
 }
 
 interface IchiranGlossProps {
-  gloss: IchiranGloss[];
+  /** Only used if JMdict `seq`/`word` not available */
+  origGloss: IchiranGloss[];
   onNewVocabGrammar: (x: VocabGrammarProps) => void;
   /** Only needed for conjugated phrases (fake Ichiran sequence IDs not
    * in JMdict) */
@@ -671,7 +713,7 @@ interface IchiranGlossProps {
   vocab: Sentence["vocab"];
 }
 const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
-  gloss,
+  origGloss,
   onNewVocabGrammar,
   seq,
   tags,
@@ -697,7 +739,16 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
     />
   ) : (
     <>
-      (❓ {seq}) {gloss.map((g) => g.gloss).join("/")}
+      (❓ {seq}) {origGloss.map((g) => g.gloss).join("/")}
     </>
   );
 };
+
+const ConjProp = (prop: IchiranConjProp[]) => (
+  <em>
+    {prop
+      .map((p) => `[${p.pos}: ${p.type}]`)
+      .join("; ")
+      .concat(" ")}
+  </em>
+);

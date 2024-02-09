@@ -50,9 +50,8 @@ export const WordPicker: FunctionComponent<Props> = ({
                   {g.text}
                 </span>
               );
-            })}
-            <Related sense={sense} />
-            <Antonym sense={sense} />
+            })}{" "}
+            <Related sense={sense} /> <Antonym sense={sense} />{" "}
             <Tags sense={sense} tags={tags} />
           </span>
         );

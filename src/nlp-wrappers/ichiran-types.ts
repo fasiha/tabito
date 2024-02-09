@@ -15,6 +15,11 @@ export interface IchiranConj {
   gloss: IchiranGloss[];
   readok: boolean;
 }
+export interface IchiranConjVia {
+  prop: IchiranConjProp[];
+  readok: boolean;
+  via: IchiranConj[];
+}
 
 export interface IchiranBasic {
   reading: string;
@@ -25,16 +30,15 @@ export interface IchiranBasic {
 }
 
 export interface IchiranSingle extends IchiranBasic {
-  conj: IchiranConj[];
+  conj: (IchiranConj | IchiranConjVia)[];
   seq: number;
   gloss?: IchiranGloss[];
 }
 export interface IchiranCompound extends IchiranBasic {
   compound: string[];
-  components: IchiranHit[];
+  components: IchiranSingle[];
 }
 
-// export type IchiranHit =  IchiranCompound | IchiranSingle;
 export type Exclusive<T, U> = T | U extends object
   ?
       | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
