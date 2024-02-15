@@ -4,7 +4,7 @@ import { addSynonym } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
-import type { GrammarConj, Sentence } from "../interfaces";
+import type { GrammarConj, Sentence } from "../interfaces/backend";
 import { cellFit, type Cell } from "../utils/cellFit";
 import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";

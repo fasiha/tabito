@@ -1,5 +1,5 @@
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
-import type { GrammarConj, Vocab } from "../interfaces";
+import type { GrammarConj, Vocab } from "../interfaces/backend";
 import type { Furigana } from "curtiz-japanese-nlp";
 
 export function deconjEqual(

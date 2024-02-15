@@ -1,4 +1,4 @@
-import type { Vocab, GrammarConj } from "../interfaces";
+import type { Vocab, GrammarConj } from "../interfaces/backend";
 
 export interface VocabGrammarProps {
   vocab?: Vocab;

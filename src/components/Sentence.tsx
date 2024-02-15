@@ -1,5 +1,5 @@
 import { type FunctionalComponent } from "preact";
-import type { Sentence as SentenceType } from "../interfaces";
+import type { Sentence as SentenceType } from "../interfaces/backend";
 import { Furigana } from "./Furigana";
 
 interface Props {

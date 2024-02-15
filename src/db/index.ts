@@ -5,7 +5,7 @@ import { resolve } from "path";
 
 // import { furiganaToString } from "curtiz-japanese-nlp";
 
-import type { Sentence, Selected, Tables } from "../interfaces";
+import type { Sentence, Selected, Tables } from "../interfaces/backend";
 
 import path from "path";
 import { fileURLToPath } from "url";

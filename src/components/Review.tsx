@@ -9,7 +9,7 @@ import {
 } from "tabito-lib";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { TargetedEvent } from "preact/compat";
-import type { Sentence } from "../interfaces";
+import type { Sentence } from "../interfaces/backend";
 
 interface Props {
   sentenceId: number;
@@ -66,8 +66,10 @@ export const Review: FunctionalComponent<Props> = ({ sentenceId }) => {
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
       <p>
         Type the sentence meaning: “
-        <strong>{(sentence.value.english || []).join("/") || "(NONE)"}</strong>”
-        (hint, lol, its <SentenceComponent sentence={sentence.value} />)
+        <strong>
+          {(sentence.value.translations?.en || []).join("/") || "(NONE)"}
+        </strong>
+        ” (hint, lol, its <SentenceComponent sentence={sentence.value} />)
       </p>
       <p>
         <input
