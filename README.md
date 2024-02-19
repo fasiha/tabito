@@ -21,6 +21,10 @@ To clear all NLP data and reload it (for example, when the NLP pipeline has chan
 ```sh
 sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded, '$.nlp')" && npm run dev
 ```
+To clear all saved vocabulary:
+```sh
+sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded, '$.vocab')" && npm run dev
+```
 
 ## Working notes
 

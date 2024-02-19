@@ -60,11 +60,11 @@ export const WordPicker: FunctionComponent<Props> = ({
   );
 };
 
-const Related: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+export const Related: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
   sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
-const Antonym: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+export const Antonym: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
   sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;
-const Tags: FunctionComponent<{
+export const Tags: FunctionComponent<{
   sense: Sense;
   tags: Record<string, string>;
 }> = ({ sense, tags }) => {

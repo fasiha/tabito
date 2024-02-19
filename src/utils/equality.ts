@@ -1,6 +1,7 @@
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import type { GrammarConj, Vocab } from "../interfaces/backend";
 import type { Furigana } from "curtiz-japanese-nlp";
+import type { SenseAndSub } from "../components/commonInterfaces";
 
 export function deconjEqual(
   a: AdjDeconjugated | Deconjugated,
@@ -40,14 +41,9 @@ export function grammarConjEqual(a: GrammarConj, b: GrammarConj): boolean {
 }
 
 export function vocabEqual(a: Vocab, b: Vocab): boolean {
-  return (
-    a.start === b.start &&
-    a.len === b.len &&
-    a.entry.id === b.entry.id &&
-    a.sense === b.sense &&
-    a.subsense === b.subsense
-  );
-  // I don't love how the type system won't detect that I"m
-  // checking all keys here if this object ever gets more keys
-  // :(
+  return a.start === b.start && a.len === b.len && a.entry.id === b.entry.id;
+}
+
+export function senseAndSubEqual(a: SenseAndSub, b: SenseAndSub): boolean {
+  return a.sense === b.sense && a.subsense === b.subsense;
 }

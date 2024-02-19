@@ -16,7 +16,7 @@ export const SentenceAnnotations: FunctionalComponent<Props> = ({
           <WordPicker
             word={v.entry}
             tags={v.tags}
-            alreadyPicked={[{ sense: v.sense, subsense: v.subsense }]}
+            alreadyPicked={v.senses}
             onNewVocab={() => {}}
           />
         </li>

@@ -6,6 +6,7 @@ import type {
 import { type Sentence as TabitoSentence } from "tabito-lib";
 import type { Ichiran } from "../nlp-wrappers/ichiran-types";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
+import type { SenseAndSub } from "../components/commonInterfaces";
 
 export * as Tables from "./DbTablesV1";
 
@@ -22,8 +23,7 @@ export interface Vocab {
   len: number;
 
   entry: Word;
-  sense: number;
-  subsense?: number;
+  senses: SenseAndSub[];
 
   tags: Record<string, string>;
 }

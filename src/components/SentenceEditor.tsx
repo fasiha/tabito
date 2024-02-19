@@ -16,7 +16,12 @@ import type {
 } from "../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
 import { extractTags, join, prefixNumber } from "../utils/utils";
-import { deconjEqual, grammarConjEqual, vocabEqual } from "../utils/equality";
+import {
+  deconjEqual,
+  grammarConjEqual,
+  senseAndSubEqual,
+  vocabEqual,
+} from "../utils/equality";
 
 interface Props {
   plain: string;
@@ -240,15 +245,24 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           vocabEqual(v, vocab)
         );
         if (existingIdx >= 0) {
-          newSentence.vocab.splice(existingIdx, 1);
+          const existing = newSentence.vocab[existingIdx];
+          for (const newSense of vocab.senses) {
+            const senseIdx = existing.senses.findIndex((s) =>
+              senseAndSubEqual(s, newSense)
+            );
+            if (senseIdx >= 0) {
+              existing.senses.splice(senseIdx, 1);
+            } else {
+              existing.senses.push(newSense);
+            }
+          }
+          if (existing.senses.length === 0) {
+            // delete this vocab item if there's no senses in it
+            newSentence.vocab.splice(existingIdx, 1);
+          }
         } else {
           newSentence.vocab.push(vocab);
         }
-        // what about when you have a subsense selected and then also
-        // select the parent sense? The subsense should be kicked out.
-        // Similarly if you have a sense picked and then pick a
-        // subsense, the parent should be kicked out. But two subsenses
-        // can coexist. TODO
       }
       if (grammar) {
         if (!newSentence.grammarConj) {
@@ -606,21 +620,20 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
         for (const { wordId, word, tags } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
           jmdictSeqSeen.add(+wordId);
-          const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
+          const onNewVocab = (sense: SenseAndSub) =>
             onNewVocabGrammar({
               vocab: {
                 entry: word!,
                 start,
                 len,
-                sense,
-                subsense,
+                senses: [sense],
                 tags: extractTags(word!, tags),
               },
             });
           const alreadyPicked: SenseAndSub[] =
             vocab
               ?.filter((v) => v.entry.id === wordId)
-              .map((v) => ({ sense: v.sense, subsense: v.subsense })) ?? [];
+              .flatMap((v) => v.senses) ?? [];
           cells.push({
             start,
             len,
@@ -764,21 +777,19 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
   len,
   vocab,
 }) => {
-  const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
+  const onNewVocab = (sense: SenseAndSub) =>
     onNewVocabGrammar({
       vocab: {
         entry: word!,
         start,
         len,
-        sense,
-        subsense,
+        senses: [sense],
         tags: extractTags(word!, tags),
       },
     });
   const alreadyPicked: SenseAndSub[] =
-    vocab
-      ?.filter((v) => v.entry.id === word!.id)
-      .map((v) => ({ sense: v.sense, subsense: v.subsense })) ?? [];
+    vocab?.filter((v) => v.entry.id === word!.id).flatMap((v) => v.senses) ??
+    [];
   return word ? (
     <WordPicker
       onNewVocab={onNewVocab}
