@@ -1,6 +1,7 @@
 import type { FunctionalComponent } from "preact";
 import type { Sentence } from "../interfaces/backend";
 import { WordPicker } from "./WordPicker";
+import { WordPicked } from "./WordPicked";
 
 interface Props {
   sentence: Sentence;
@@ -13,12 +14,7 @@ export const SentenceAnnotations: FunctionalComponent<Props> = ({
     <ul>
       {sentence.vocab?.map((v) => (
         <li>
-          <WordPicker
-            word={v.entry}
-            tags={v.tags}
-            alreadyPicked={v.senses}
-            onNewVocab={() => {}}
-          />
+          <WordPicked word={v.entry} tags={v.tags} alreadyPicked={v.senses} />
         </li>
       ))}
     </ul>
