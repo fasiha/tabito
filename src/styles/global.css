@@ -1,7 +1,7 @@
 /* from https://perfectmotherfuckingwebsite.com */
 
 :root {
-  --background-color: initial;
+  --background-color: #eee;
   --text-color: #444;
   --link-color: inherit;
   --visited-link-color: inherit;
@@ -16,6 +16,7 @@ body {
   font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  background: var(--background-color);
   color: var(--text-color);
 }
 
