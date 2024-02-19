@@ -15,7 +15,7 @@ import type {
   IchiranGloss,
 } from "../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "./commonInterfaces";
-import { join, prefixNumber } from "../utils/utils";
+import { extractTags, join, prefixNumber } from "../utils/utils";
 import { deconjEqual, grammarConjEqual, vocabEqual } from "../utils/equality";
 
 interface Props {
@@ -608,7 +608,14 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
           jmdictSeqSeen.add(+wordId);
           const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
             onNewVocabGrammar({
-              vocab: { entry: word!, start, len, sense, subsense },
+              vocab: {
+                entry: word!,
+                start,
+                len,
+                sense,
+                subsense,
+                tags: extractTags(word!, tags),
+              },
             });
           const alreadyPicked: SenseAndSub[] =
             vocab
@@ -759,7 +766,14 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
 }) => {
   const onNewVocab = ({ sense, subsense }: SenseAndSub) =>
     onNewVocabGrammar({
-      vocab: { entry: word!, start, len, sense, subsense },
+      vocab: {
+        entry: word!,
+        start,
+        len,
+        sense,
+        subsense,
+        tags: extractTags(word!, tags),
+      },
     });
   const alreadyPicked: SenseAndSub[] =
     vocab

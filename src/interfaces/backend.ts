@@ -24,6 +24,8 @@ export interface Vocab {
   entry: Word;
   sense: number;
   subsense?: number;
+
+  tags: Record<string, string>;
 }
 
 export interface GrammarConj {

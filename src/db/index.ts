@@ -125,3 +125,10 @@ export function getSentence<T extends boolean>(
     return dontParse ? result.jsonEncoded : JSON.parse(result.jsonEncoded);
   return undefined;
 }
+
+const getAllPlainsStatement = db.prepare(`select plain from sentence`);
+export function getAllPlains(): string[] {
+  return (getAllPlainsStatement.all() as Tables.sentenceRow[]).map(
+    (x) => x.plain
+  );
+}

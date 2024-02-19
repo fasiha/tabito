@@ -1,16 +1,14 @@
 ---
 export const prerender = true;
 
+import "../styles/editor.css";
+
 import type { Word } from "curtiz-japanese-nlp/interfaces";
-import {
-  enrollSentenceIntoDoc,
-  getSentence,
-  sentenceExists,
-  upsertSentence,
-} from "../db";
+import { enrollSentenceIntoDoc, getSentence, upsertSentence } from "../db";
 import { analyzeString, jmdictSeqsToWords } from "../nlp-wrappers/curtiz";
 import { rawToIchiran } from "../nlp-wrappers/ichiran";
 import { Sentence } from "./Sentence";
+import { SentenceAnnotations } from "./SentenceAnnotations";
 import type { Sentence as SentenceType } from "../interfaces/backend";
 
 interface Props {
@@ -56,6 +54,33 @@ if (!sentence || typeof sentence === "string")
   throw new Error("sentence not in database");
 ---
 
-<Sentence client:load sentence={sentence} /><a href={`/edit-sentence/${plain}`}
-  >{sentence.translations?.en.length ? "📝" : "❓"}</a
->
+<style>
+  .sentence-annotations {
+    position: absolute;
+    display: block;
+    visibility: hidden;
+    z-index: 1;
+    background: var(--background-color);
+
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    transition:
+      background-color 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .sentence-container:hover + .sentence-annotations {
+    visibility: visible;
+  }
+</style>
+
+<span class="sentence-container">
+  <Sentence sentence={sentence} />
+  <a href={`/edit-sentence/${plain}`}>
+    {sentence.translations?.en.length ? "📝" : "❓"}
+  </a>
+</span>
+<div class="sentence-annotations">
+  <SentenceAnnotations sentence={sentence} />
+</div>

@@ -11,26 +11,55 @@ const documentName = "Genki";
 clearDocument(documentName);
 ---
 
+<style>
+  div.paragraph {
+    margin: 1em 0;
+  }
+</style>
+
 <Basic title={documentName}>
   <h1>{documentName}</h1>
-  <p>
+  <div class="paragraph">
     Here's a basic demo sentence I want to remember: <StaticSentence
       plain="うどんを食べた"
       docName={documentName}
     />
-  </p>
-  <p>
+  </div>
+  <div class="paragraph">
     I didn't know this about たくさん: it can be used as an adverb and a noun
     and an adjective. This sentence can be shuffled around two ways, though only
     one will be visible: <StaticSentence
       docName={documentName}
       plain="京都でたくさん写真を撮りました"
     />
+  </div>
+  <div class="paragraph">
+    Consider several sentences in one:
+    <StaticSentence
+      docName={documentName}
+      plain="これは兄が予約した旅館です"
+    />. Here are two sentences in one:
+    <StaticSentence docName={documentName} plain="音が好き" />. And consider
+    this:
+    <StaticSentence docName={documentName} plain="死んじまえ" />
+  </div>
+  <h2>Usage</h2>
+  <p>
+    You can examine all the details we've attached to sentences: translations,
+    dictionary definitions, verb and adjective conjugations, dependency chunks,
+    etc. This is in the Sentence Details view.
   </p>
   <p>
-    <StaticSentence docName={documentName} plain="これは兄が予約した旅館です" />
+    You can "learn" a sentence: this uses Tabito to practice sentences via
+    Ebisu. This is in the Review section.
   </p>
-
-  <StaticSentence docName={documentName} plain="音が好き" />
-  <StaticSentence docName={documentName} plain="死んじまえ" />
+  <p>
+    You can add individual dictionary to practice as flashcards. You can also
+    override the definition for the flashcard for each dictionary, and add
+    custom mnemonics.
+  </p>
+  <p>
+    Your reviews and customizations are stored locally in your browser (until
+    you sync with a compatible server?)
+  </p>
 </Basic>

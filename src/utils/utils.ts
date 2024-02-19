@@ -1,4 +1,4 @@
-import type { Furigana } from "curtiz-japanese-nlp";
+import type { Furigana, Word } from "curtiz-japanese-nlp";
 
 export function mergeFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
@@ -18,4 +18,20 @@ export const prefixNumber = (n: number) => circledNumbers[n] || `(${n + 1})`;
 
 export function join<T, U>(arr: T[], sep: U): (T | U)[] {
   return arr.flatMap((x) => [x, sep]).slice(0, -1);
+}
+
+export function extractTags(
+  word: Word,
+  tags: Record<string, string>
+): Record<string, string> {
+  const relevant: typeof tags = {};
+  const keys = ["partOfSpeech", "field", "misc", "dialect"] as const;
+  for (const sense of word.sense) {
+    for (const key of keys) {
+      for (const tag of sense[key]) {
+        relevant[tag] = tags[tag];
+      }
+    }
+  }
+  return relevant;
 }
