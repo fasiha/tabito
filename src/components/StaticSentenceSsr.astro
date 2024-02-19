@@ -69,18 +69,26 @@ if (!sentence || typeof sentence === "string")
       background-color 0.3s,
       border-color 0.3s,
       box-shadow 0.3s;
+
+    left: 0;
   }
-  .sentence-container:hover + .sentence-annotations {
+  .hover-area:hover .sentence-annotations {
     visibility: visible;
+  }
+
+  .hover-area {
+    display: inline-block;
   }
 </style>
 
-<span class="sentence-container">
-  <Sentence sentence={sentence} />
-  <a href={`/edit-sentence/${plain}`}>
-    {sentence.translations?.en.length ? "📝" : "❓"}
-  </a>
-</span>
-<div class="sentence-annotations">
-  <SentenceAnnotations sentence={sentence} />
+<div class="hover-area">
+  <span class="sentence-container">
+    <Sentence sentence={sentence} />
+    <a href={`/edit-sentence/${plain}`}>
+      {sentence.translations?.en.length ? "📝" : "❓"}
+    </a>
+  </span>
+  <div class="sentence-annotations">
+    <SentenceAnnotations sentence={sentence} />
+  </div>
 </div>
