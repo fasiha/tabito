@@ -8,7 +8,7 @@ import { enrollSentenceIntoDoc, getSentence, upsertSentence } from "../db";
 import { analyzeString, jmdictSeqsToWords } from "../nlp-wrappers/curtiz";
 import { rawToIchiran } from "../nlp-wrappers/ichiran";
 import { Sentence } from "./preact/Sentence";
-import { SentenceAnnotations } from "./preact/SentenceAnnotations";
+import { SentenceAnnotations } from "./solid/SentenceAnnotations";
 import type { Sentence as SentenceType } from "../interfaces/backend";
 
 interface Props {

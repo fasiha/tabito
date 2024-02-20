@@ -1,6 +1,7 @@
 import { type FunctionComponent } from "preact";
 import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
+import { printXrefs } from "../../utils/utils";
 
 interface Props {
   word: Word;
@@ -60,11 +61,11 @@ export const WordPicker: FunctionComponent<Props> = ({
   );
 };
 
-export const Related: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+const Related: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
   sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
-export const Antonym: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
+const Antonym: FunctionComponent<{ sense: Sense }> = ({ sense }) =>
   sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;
-export const Tags: FunctionComponent<{
+const Tags: FunctionComponent<{
   sense: Sense;
   tags: Record<string, string>;
 }> = ({ sense, tags }) => {
@@ -85,10 +86,6 @@ export const Tags: FunctionComponent<{
     </>
   );
 };
-
-function printXrefs(v: Xref[]) {
-  return v.map((x) => x.join(",")).join(";");
-}
 
 const tagFields = {
   dialect: "🗣",

@@ -1,8 +1,10 @@
+/** @jsxImportSource solid-js */
+import type { Component } from "solid-js";
 import { type FunctionComponent } from "preact";
 import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
-import { prefixNumber } from "../../utils/utils";
-import { Antonym, Related } from "./WordPicker";
+import { prefixNumber, printXrefs } from "../../utils/utils";
+// import { Antonym, Related } from "../preact/WordPicker";
 
 interface Props {
   word: Word;
@@ -10,11 +12,7 @@ interface Props {
   alreadyPicked: SenseAndSub[];
 }
 
-export const WordPicked: FunctionComponent<Props> = ({
-  word,
-  tags,
-  alreadyPicked,
-}) => {
+export const WordPicked: Component<Props> = ({ word, tags, alreadyPicked }) => {
   alreadyPicked
     .slice()
     .sort(
@@ -78,7 +76,7 @@ export const WordPicked: FunctionComponent<Props> = ({
   );
 };
 
-export const Tags: FunctionComponent<{
+export const Tags: Component<{
   sense: Sense;
   tags: Record<string, string>;
 }> = ({ sense, tags }) => {
@@ -109,3 +107,8 @@ const tagFields = {
   misc: "✋",
   partOfSpeech: "🫦",
 } as const;
+
+export const Related: Component<{ sense: Sense }> = ({ sense }) =>
+  sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
+export const Antonym: Component<{ sense: Sense }> = ({ sense }) =>
+  sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;

@@ -1,4 +1,4 @@
-import type { Furigana, Word } from "curtiz-japanese-nlp";
+import type { Furigana, Word, Xref } from "curtiz-japanese-nlp";
 
 export function mergeFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
@@ -34,4 +34,8 @@ export function extractTags(
     }
   }
   return relevant;
+}
+
+export function printXrefs(v: Xref[]) {
+  return v.map((x) => x.join(",")).join(";");
 }
