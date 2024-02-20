@@ -1,6 +1,5 @@
 import type { FunctionalComponent } from "preact";
 import type { Sentence } from "../../interfaces/backend";
-import { WordPicker } from "./WordPicker";
 import { WordPicked } from "./WordPicked";
 
 interface Props {

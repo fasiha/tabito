@@ -26,6 +26,7 @@
     "@astrojs/check": "^0.5.4",
     "@astrojs/node": "^8.2.0",
     "@astrojs/preact": "^3.1.0",
+    "@astrojs/solid-js": "^4.0.1",
     "@preact/signals": "^1.2.1",
     "@types/node-fetch": "^2.6.9",
     "astro": "^4.4.0",
@@ -38,6 +39,7 @@
     "kamiya-codec": "^4.9.4",
     "node-fetch": "^3.3.2",
     "preact": "^10.6.5",
+    "solid-js": "^1.8.15",
     "static-path": "^0.0.4",
     "tabito-lib": "github:fasiha/tabito-lib",
     "typescript": "^5.2.2"
