@@ -1,7 +1,7 @@
 import { type FunctionComponent } from "preact";
 import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
-import type { SenseAndSub } from "./commonInterfaces";
-import { prefixNumber } from "../utils/utils";
+import type { SenseAndSub } from "../commonInterfaces";
+import { prefixNumber } from "../../utils/utils";
 import { Antonym, Related } from "./WordPicker";
 
 interface Props {

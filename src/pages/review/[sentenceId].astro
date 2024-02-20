@@ -1,7 +1,7 @@
 ---
 import Basic from "../../layouts/Basic.astro";
 
-import { Review } from "../../components/Review";
+import { Review } from "../../components/preact/Review";
 
 const sentenceId = Number(Astro.params.sentenceId);
 if (!sentenceId) throw new Error("parameter not provided unexpectedly");
@@ -11,3 +11,4 @@ if (!sentenceId) throw new Error("parameter not provided unexpectedly");
   <h1>Review!</h1>
   <Review sentenceId={sentenceId} client:only />
 </Basic>
+../../components/preact/Review

@@ -9,7 +9,7 @@ import {
 } from "tabito-lib";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { TargetedEvent } from "preact/compat";
-import type { Sentence } from "../interfaces/backend";
+import type { Sentence } from "../../interfaces/backend";
 
 interface Props {
   sentenceId: number;

@@ -3,7 +3,7 @@ import Basic from "../../layouts/Basic.astro";
 import "../../styles/tables.css";
 import "../../styles/editor.css";
 
-import { SentenceEditor } from "../../components/SentenceEditor";
+import { SentenceEditor } from "../../components/preact/SentenceEditor";
 
 const { plain } = Astro.params;
 if (!plain) throw new Error("parameter not provided unexpectedly");
