@@ -1,10 +1,11 @@
 /** @jsxImportSource solid-js */
 import type { Component } from "solid-js";
-import { type FunctionComponent } from "preact";
-import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
+import type { Sense, Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
 import { prefixNumber, printXrefs } from "../../utils/utils";
-// import { Antonym, Related } from "../preact/WordPicker";
+import { db } from "../../indexeddb";
+import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
+import { makeVocabMemory } from "../../utils/make";
 
 interface Props {
   word: Word;
@@ -22,18 +23,24 @@ export const WordPicked: Component<Props> = ({ word, tags, alreadyPicked }) => {
           ? a.subsense - b.subsense
           : 0)
     );
+  const memory = createDexieSignalQuery(() => db.vocab.get(word.id));
+  const handleToggleLearn = () => {
+    if (memory()) {
+      db.vocab.delete(word.id);
+    } else {
+      db.vocab
+        .put(makeVocabMemory(word), word.id)
+        .then((res) => console.log("Put in Dexie", res));
+    }
+  };
   return (
     <>
+      <button onClick={handleToggleLearn}>
+        {memory() ? "Unlearn" : "Learn!"}
+      </button>
       {word.kanji.map((k) => k.text).join("・")}「
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {word.sense.map((sense, n) => {
-        const extra = (
-          <sub>
-            <Related sense={sense} /> <Antonym sense={sense} />{" "}
-            <Tags sense={sense} tags={tags} />
-          </sub>
-        );
-
         const wholeSensePicked = alreadyPicked.find(
           (a) => a.sense === n && a.subsense === undefined
         );
@@ -46,7 +53,10 @@ export const WordPicked: Component<Props> = ({ word, tags, alreadyPicked }) => {
                   <sup>{prefixNumber(gi)}</sup> {g.text}{" "}
                 </>
               ))}
-              {extra}{" "}
+              <sub>
+                <Related sense={sense} /> <Antonym sense={sense} />{" "}
+                <Tags sense={sense} tags={tags} />
+              </sub>{" "}
             </>
           );
         }
@@ -67,7 +77,10 @@ export const WordPicked: Component<Props> = ({ word, tags, alreadyPicked }) => {
                   {sense.gloss[subsense].text}{" "}
                 </>
               ))}
-              {extra}{" "}
+              <sub>
+                <Related sense={sense} /> <Antonym sense={sense} />{" "}
+                <Tags sense={sense} tags={tags} />
+              </sub>{" "}
             </>
           );
         }

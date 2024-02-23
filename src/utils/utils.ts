@@ -16,8 +16,15 @@ const circledNumbers =
   );
 export const prefixNumber = (n: number) => circledNumbers[n] || `(${n + 1})`;
 
+/**
+ * Interleaves a separator between array elements
+ */
 export function join<T, U>(arr: T[], sep: U): (T | U)[] {
-  return arr.flatMap((x) => [x, sep]).slice(0, -1);
+  const ret: (T | U)[] = [];
+  for (const x of arr) {
+    ret.push(x, sep);
+  }
+  return ret.slice(0, -1);
 }
 
 export function extractTags(

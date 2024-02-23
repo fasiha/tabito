@@ -3,8 +3,9 @@ import type { EbisuModel } from "./ebisu";
 
 export interface VocabMemory {
   type: "vocab";
-  word: Word;
-  readings: string[];
+  wordId: Word["id"];
+  readingsSeen: string[];
+  kanjiSeen: string[];
   personalDefinition?: string;
   models: {
     meaningToReading: EbisuModel;
@@ -22,3 +23,6 @@ export interface SentenceMemory {
     meaningToSentence: EbisuModel;
   };
 }
+
+export type MemoryType = VocabMemory["type"] | SentenceMemory["type"];
+export type MemoryKey = VocabMemory["wordId"] | SentenceMemory["plain"];

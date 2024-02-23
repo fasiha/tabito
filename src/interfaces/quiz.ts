@@ -1,8 +1,16 @@
 import type { Word } from "curtiz-japanese-nlp";
 import type { EbisuUpdate } from "./ebisu";
-import type { SentenceMemory, VocabMemory } from "./frontend";
+import type {
+  MemoryKey,
+  MemoryType,
+  SentenceMemory,
+  VocabMemory,
+} from "./frontend";
 
 interface BaseQuiz {
+  timestampMillis: number;
+  type: MemoryType;
+  memoryKey: MemoryKey;
   style: "multipleChoice" | "typed" | "strokes";
   data: unknown; // alternatives, timings, edit history, etc.
   update: EbisuUpdate;
@@ -21,3 +29,5 @@ export interface SentenceQuiz extends BaseQuiz {
   direction: keyof SentenceMemory["models"];
   style: "typed";
 }
+
+export type Quiz = VocabQuiz | SentenceQuiz;
