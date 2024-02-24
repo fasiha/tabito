@@ -19,6 +19,7 @@
     "@types/node": "^20.9.0",
     "curtiz-japanese-nlp": "github:fasiha/curtiz-japanese-nlp",
     "esbuild": "^0.19.5",
+    "sass": "^1.71.1",
     "sqlite3": "^5.1.6",
     "vitest": "^1.2.1"
   },

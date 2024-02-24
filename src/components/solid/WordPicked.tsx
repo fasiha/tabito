@@ -1,24 +1,31 @@
 /** @jsxImportSource solid-js */
 import type { Component } from "solid-js";
-import type { Sense, Word } from "curtiz-japanese-nlp/interfaces";
+import type { Furigana, Sense, Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
-import { prefixNumber, printXrefs } from "../../utils/utils";
+import {
+  furiganaToPlain,
+  furiganaToReading,
+  prefixNumber,
+  printXrefs,
+} from "../../utils/utils";
 import { db } from "../../indexeddb";
 import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
 import { makeVocabMemory } from "../../utils/make";
+
+import "./WordPicked.scss";
 
 interface Props {
   word: Word;
   tags: Record<string, string>;
   alreadyPicked: SenseAndSub[];
-  sentenceSnippet?: string;
+  relevantFurigana?: Furigana[];
 }
 
 export const WordPicked: Component<Props> = ({
   word,
   tags,
   alreadyPicked,
-  sentenceSnippet,
+  relevantFurigana,
 }) => {
   const memory = createDexieSignalQuery(() => db.vocab.get(word.id));
   const handleToggleLearn = () => {
@@ -62,6 +69,11 @@ export const WordPicked: Component<Props> = ({
       );
     }
   };
+
+  const snippet = relevantFurigana
+    ? furiganaToPlain(relevantFurigana) + furiganaToReading(relevantFurigana)
+    : undefined;
+
   return (
     <>
       <button
@@ -74,7 +86,11 @@ export const WordPicked: Component<Props> = ({
       </button>{" "}
       {word.kanji.map((k) => (
         <label>
-          {k.text}{" "}
+          {k.text
+            .split("")
+            .map((c) =>
+              snippet?.includes(c) ? <span class="in-snippet">{c}</span> : c
+            )}{" "}
           <input
             type="checkbox"
             checked={memory()?.kanjiSeen.includes(k.text)}
@@ -84,7 +100,12 @@ export const WordPicked: Component<Props> = ({
       ))}
       {word.kana.map((k) => (
         <label>
-          「{k.text}
+          「
+          {k.text
+            .split("")
+            .map((c) =>
+              snippet?.includes(c) ? <span class="in-snippet">{c}</span> : c
+            )}
           <input
             type="checkbox"
             checked={memory()?.readingsSeen.includes(k.text)}

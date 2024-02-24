@@ -8,6 +8,8 @@
 
   --border-color: #cccccc;
   --shadow-color: rgba(0, 0, 0, 0.2);
+
+  --important: red;
 }
 body {
   /* max-width: 650px; */
@@ -35,6 +37,8 @@ h3 {
 
     --border-color: #444444;
     --shadow-color: rgba(255, 255, 255, 0.1);
+
+    --important: red;
   }
 
   body {

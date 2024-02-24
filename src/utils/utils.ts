@@ -3,8 +3,77 @@ import type { Furigana, Word, Xref } from "curtiz-japanese-nlp";
 export function furiganaToPlain(furigana: Furigana[]): string {
   return furigana.map((s) => (typeof s === "string" ? s : s.ruby)).join("");
 }
+export function furiganaToReading(furigana: Furigana[]): string {
+  return furigana.map((s) => (typeof s === "string" ? s : s.rt)).join("");
+}
 
-export function mergeFurigana(input: Furigana[]): Furigana[] {
+/**
+ * Does NOT split string or Ruby
+ */
+export function furiganaSlice(
+  furigana: Furigana[],
+  start: number,
+  len: number
+): Furigana[] {
+  const mapping: (Furigana | undefined)[] = [];
+  for (const f of furigana) {
+    mapping.push(f);
+    const extra = Math.max(
+      0,
+      (typeof f === "string" ? f.length : f.ruby.length) - 1
+    );
+    for (let i = 0; i < extra; i++) {
+      mapping.push(undefined);
+    }
+  }
+  const subset = mapping
+    .slice(start, start + len)
+    .filter((f): f is Furigana => !!f);
+
+  const expectedPlain = furiganaToPlain(furigana).slice(start, start + len);
+  const subsetPlain = furiganaToPlain(subset);
+  if (expectedPlain !== subsetPlain) {
+    throw new Error("unable to split furigana");
+  }
+  return subset;
+}
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+  const orig = [
+    "aa", // 0-1
+    { ruby: "bc", rt: "BC!" }, // 2-3
+    "d", // 4
+    "e", // 5
+    { ruby: "f", rt: "FFF" }, // 6
+    { ruby: "gg", rt: "G" }, // 7-8
+  ];
+
+  describe("furiganaSlice", () => {
+    it("works for the happy case", () => {
+      expect(furiganaToPlain(furiganaSlice(orig, 0, 4))).toEqual("aabc");
+      expect(furiganaToPlain(furiganaSlice(orig, 2, 2))).toEqual("bc");
+    });
+    it("throws if you try to split", () => {
+      expect(() => furiganaToPlain(furiganaSlice(orig, 0, 1))).toThrow();
+      expect(() => furiganaToPlain(furiganaSlice(orig, 1, 1))).toThrow();
+      expect(() => furiganaToPlain(furiganaSlice(orig, 1, 2))).toThrow();
+
+      expect(() => furiganaToPlain(furiganaSlice(orig, 2, 1))).toThrow();
+      expect(() => furiganaToPlain(furiganaSlice(orig, 3, 2))).toThrow();
+
+      expect(() => furiganaToPlain(furiganaSlice(orig, 6, 2))).toThrow();
+    });
+    it("returns originally-split strings", () => {
+      expect(furiganaSlice(orig, 0, 2)).toEqual(orig.slice(0, 1));
+      expect(furiganaSlice(orig, 0, 4)).toEqual(orig.slice(0, 2));
+      expect(furiganaSlice(orig, 4, 1)).toEqual(["d"]);
+      expect(furiganaSlice(orig, 4, 2)).toEqual(["d", "e"]);
+    });
+  });
+}
+
+export function compressFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
     (arr, curr) =>
       typeof curr === "string" && typeof arr[arr.length - 1] === "string"
