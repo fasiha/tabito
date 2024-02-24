@@ -1,5 +1,9 @@
 import type { Furigana, Word, Xref } from "curtiz-japanese-nlp";
 
+export function furiganaToPlain(furigana: Furigana[]): string {
+  return furigana.map((s) => (typeof s === "string" ? s : s.ruby)).join("");
+}
+
 export function mergeFurigana(input: Furigana[]): Furigana[] {
   return input.reduce<Furigana[]>(
     (arr, curr) =>

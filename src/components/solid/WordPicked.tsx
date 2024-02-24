@@ -11,35 +11,88 @@ interface Props {
   word: Word;
   tags: Record<string, string>;
   alreadyPicked: SenseAndSub[];
+  sentenceSnippet?: string;
 }
 
-export const WordPicked: Component<Props> = ({ word, tags, alreadyPicked }) => {
-  alreadyPicked
-    .slice()
-    .sort(
-      (a, b) =>
-        a.sense - b.sense ||
-        (a.subsense !== undefined && b.subsense !== undefined
-          ? a.subsense - b.subsense
-          : 0)
-    );
+export const WordPicked: Component<Props> = ({
+  word,
+  tags,
+  alreadyPicked,
+  sentenceSnippet,
+}) => {
   const memory = createDexieSignalQuery(() => db.vocab.get(word.id));
   const handleToggleLearn = () => {
     if (memory()) {
       db.vocab.delete(word.id);
     } else {
       db.vocab
-        .put(makeVocabMemory(word), word.id)
+        .put(makeVocabMemory(word, [word.kana[0].text]), word.id)
         .then((res) => console.log("Put in Dexie", res));
+    }
+  };
+  const toggleReadingOrKanji = (
+    text: string,
+    readingOrKanji: "reading" | "kanji"
+  ) => {
+    const readingKanjiKey =
+      readingOrKanji === "reading" ? "readingsSeen" : "kanjiSeen";
+
+    if (memory()) {
+      // word exists
+
+      const newVocab = structuredClone(memory()!);
+      if (memory()![readingKanjiKey].includes(text)) {
+        // we're removing this
+        newVocab[readingKanjiKey] = newVocab[readingKanjiKey].filter(
+          (s) => s !== text
+        );
+      } else {
+        // we're adding this reading
+        newVocab[readingKanjiKey].push(text);
+      }
+      db.vocab.put(newVocab, word.id);
+    } else {
+      db.vocab.put(
+        makeVocabMemory(
+          word,
+          readingOrKanji === "reading" ? [text] : [word.kana[0].text],
+          readingOrKanji === "kanji" ? [text] : []
+        ),
+        word.id
+      );
     }
   };
   return (
     <>
-      <button onClick={handleToggleLearn}>
-        {memory() ? "Unlearn" : "Learn!"}
-      </button>
-      {word.kanji.map((k) => k.text).join("・")}「
-      {word.kana.map((k) => k.text).join("・")}」{" "}
+      <button
+        onClick={handleToggleLearn}
+        title={
+          memory() ? "Learned! Click to unlearn" : "Unlearned. Click to learn"
+        }
+      >
+        {memory() ? "✅" : "❓"}
+      </button>{" "}
+      {word.kanji.map((k) => (
+        <label>
+          {k.text}{" "}
+          <input
+            type="checkbox"
+            checked={memory()?.kanjiSeen.includes(k.text)}
+            onChange={() => toggleReadingOrKanji(k.text, "kanji")}
+          />{" "}
+        </label>
+      ))}
+      {word.kana.map((k) => (
+        <label>
+          「{k.text}
+          <input
+            type="checkbox"
+            checked={memory()?.readingsSeen.includes(k.text)}
+            onChange={() => toggleReadingOrKanji(k.text, "reading")}
+          />
+          」{" "}
+        </label>
+      ))}{" "}
       {word.sense.map((sense, n) => {
         const wholeSensePicked = alreadyPicked.find(
           (a) => a.sense === n && a.subsense === undefined
