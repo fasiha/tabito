@@ -12,10 +12,13 @@ class TabitoDb extends Dexie {
 
   constructor() {
     super("TabitoDb");
+    const vocabKeys: (keyof VocabMemory)[] = ["wordId"];
+    const sentenceKeys: (keyof SentenceMemory)[] = ["plain", "relatedWordIds"];
+    const quizKeys: (keyof Quiz)[] = ["type", "memoryKey", "style"];
     this.version(1).stores({
-      vocab: "wordId",
-      sentence: "plain",
-      quiz: "++id",
+      vocab: `${vocabKeys[0]}`,
+      sentence: `${sentenceKeys[0]}, *${sentenceKeys[1]}`,
+      quiz: `++id, ${quizKeys[0]}, ${quizKeys[1]}, ${quizKeys[2]}`,
     });
   }
 }

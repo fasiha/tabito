@@ -13,6 +13,7 @@ import { WordPicker } from "./WordPicker";
 import type {
   IchiranConjProp,
   IchiranGloss,
+  IchiranWord,
 } from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
 import { extractTags, join, prefixNumber } from "../../utils/utils";
@@ -426,18 +427,9 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
   vocab,
 }) => {
   const { ichiran, curtiz, words } = nlp;
-  if (typeof ichiran[0] === "string") {
-    return <>no Japanese</>;
-  }
-  const ichiWords = ichiran[0][0][0];
-  if (
-    plain !==
-    ichiWords
-      .map(([, x]) => ("alternative" in x ? x.alternative[0].text : x.text))
-      .join("")
-  ) {
-    return <>ichiran mismatch?</>;
-  }
+  const ichiWords: (string | IchiranWord)[] = ichiran.flatMap(
+    (i) => (typeof i === "string" ? [i] : i[0][0]) as (string | IchiranWord)[]
+  );
 
   const tags = typeof curtiz === "string" ? {} : curtiz.tags ?? {};
 
@@ -445,7 +437,12 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
 
   const jmdictSeqSeen = new Set<number>();
   let start = 0;
-  for (const [, wordOrAlt] of ichiWords) {
+  for (const iword of ichiWords) {
+    if (typeof iword === "string") {
+      start += iword.length;
+      continue;
+    }
+    const wordOrAlt = iword[1];
     const wordArr =
       "alternative" in wordOrAlt ? wordOrAlt.alternative : [wordOrAlt];
     if (!wordArr.every((w) => w.text.length === wordArr[0].text.length)) {

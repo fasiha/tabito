@@ -19,6 +19,7 @@ export interface SentenceMemory {
   type: "sentence";
   plain: string;
   personalTranslations?: string[];
+  relatedWordIds: Word["id"][];
   models: {
     meaningToSentence: EbisuModel;
   };

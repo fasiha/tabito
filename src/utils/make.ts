@@ -1,14 +1,22 @@
 import type { Word } from "curtiz-japanese-nlp";
 import type { VocabMemory } from "../interfaces/frontend";
 import type { EbisuModel } from "../interfaces/ebisu";
-import { initModel, modelToPercentileDecay } from "../ebisu/split3";
+import { initModel } from "../ebisu/split3";
 
-export function makeVocabMemory(
-  word: Word,
-  readingsSeen: string[] = [],
-  kanjiSeen: string[] = [],
-  personalDefinition?: string
-): VocabMemory {
+interface MakeVocabMemoryArgs {
+  word: Word;
+  readingsSeen: string[];
+  kanjiSeen?: string[];
+  personalDefinition?: string;
+  halflifeHours?: number;
+}
+export function makeVocabMemory({
+  word,
+  readingsSeen = [],
+  kanjiSeen = [],
+  personalDefinition,
+  halflifeHours,
+}: MakeVocabMemoryArgs): VocabMemory {
   const initKanji = kanjiSeen.length > 0 && word.kanji.length > 0;
   return {
     type: "vocab",
@@ -17,18 +25,20 @@ export function makeVocabMemory(
     kanjiSeen,
     personalDefinition,
     models: {
-      meaningToReading: makeEbisuSplit3(),
-      readingToMeaning: makeEbisuSplit3(),
-      readingMeaningToWritten: initKanji ? makeEbisuSplit3() : undefined,
-      writtenToReading: initKanji ? makeEbisuSplit3() : undefined,
+      meaningToReading: makeEbisuSplit3(halflifeHours),
+      readingToMeaning: makeEbisuSplit3(halflifeHours),
+      readingMeaningToWritten: initKanji
+        ? makeEbisuSplit3(halflifeHours)
+        : undefined,
+      writtenToReading: initKanji ? makeEbisuSplit3(halflifeHours) : undefined,
     },
   };
 }
 
-export function makeEbisuSplit3(): EbisuModel {
+export function makeEbisuSplit3(halflifeHours = 24): EbisuModel {
   const init = initModel({
     alphaBeta: 1.25,
-    halflifeHours: 24,
+    halflifeHours,
     primaryWeight: 0.35,
     secondaryWeight: 0.35,
     secondaryScale: 5,

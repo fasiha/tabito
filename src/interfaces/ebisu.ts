@@ -13,9 +13,17 @@ export interface EbisuModel {
   timestampMillis: number; // Unix millis
 }
 
-export interface EbisuUpdate {
+export interface EbisuQuiz {
+  type: "quiz";
   successes: number;
   total: number;
   q0?: number;
-  rescale?: number;
 }
+export interface EbisuLearn {
+  type: "learn";
+}
+export interface EbisuRescale {
+  type: "rescale";
+  rescale: number;
+}
+export type EbisuUpdate = EbisuLearn | EbisuQuiz | EbisuRescale;

@@ -10,7 +10,7 @@ import {
 } from "../../utils/utils";
 import { db } from "../../indexeddb";
 import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
-import { makeVocabMemory } from "../../utils/make";
+import { makeEbisuSplit3, makeVocabMemory } from "../../utils/make";
 
 import "./WordPicked.scss";
 
@@ -33,7 +33,10 @@ export const WordPicked: Component<Props> = ({
       db.vocab.delete(word.id);
     } else {
       db.vocab
-        .put(makeVocabMemory(word, [word.kana[0].text]), word.id)
+        .put(
+          makeVocabMemory({ word, readingsSeen: [word.kana[0].text] }),
+          word.id
+        )
         .then((res) => console.log("Put in Dexie", res));
     }
   };
@@ -57,14 +60,28 @@ export const WordPicked: Component<Props> = ({
         // we're adding this reading
         newVocab[readingKanjiKey].push(text);
       }
-      db.vocab.put(newVocab, word.id);
+
+      // empty means we don't know this
+      if (newVocab.readingsSeen.length === 0) {
+        db.vocab.delete(word.id);
+      } else {
+        if (newVocab.kanjiSeen.length) {
+          if (!newVocab.models.readingMeaningToWritten)
+            newVocab.models.readingMeaningToWritten = makeEbisuSplit3();
+          if (!newVocab.models.writtenToReading)
+            newVocab.models.writtenToReading = makeEbisuSplit3();
+        }
+
+        db.vocab.put(newVocab, word.id);
+      }
     } else {
       db.vocab.put(
-        makeVocabMemory(
+        makeVocabMemory({
           word,
-          readingOrKanji === "reading" ? [text] : [word.kana[0].text],
-          readingOrKanji === "kanji" ? [text] : []
-        ),
+          readingsSeen:
+            readingOrKanji === "reading" ? [text] : [word.kana[0].text],
+          kanjiSeen: readingOrKanji === "kanji" ? [text] : [],
+        }),
         word.id
       );
     }

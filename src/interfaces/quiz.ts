@@ -11,7 +11,7 @@ interface BaseQuiz {
   timestampMillis: number;
   type: MemoryType;
   memoryKey: MemoryKey;
-  style: "multipleChoice" | "typed" | "strokes";
+  style: "_learn" | "_rescale" | "multipleChoice" | "typed" | "strokes";
   data: unknown; // alternatives, timings, edit history, etc.
   update: EbisuUpdate;
 }
@@ -20,14 +20,14 @@ export interface VocabQuiz extends BaseQuiz {
   type: "vocab";
   wordId: Word["id"];
   direction: keyof VocabMemory["models"];
-  style: "multipleChoice" | "typed" | "strokes";
+  style: "_learn" | "_rescale" | "multipleChoice" | "typed" | "strokes";
 }
 
 export interface SentenceQuiz extends BaseQuiz {
   type: "sentence";
   plain: string;
   direction: keyof SentenceMemory["models"];
-  style: "typed";
+  style: "_learn" | "_rescale" | "typed";
 }
 
 export type Quiz = VocabQuiz | SentenceQuiz;
