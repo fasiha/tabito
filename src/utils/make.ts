@@ -1,5 +1,5 @@
 import type { Word } from "curtiz-japanese-nlp";
-import type { VocabMemory } from "../interfaces/frontend";
+import type { SentenceMemory, VocabMemory } from "../interfaces/frontend";
 import type { EbisuModel } from "../interfaces/ebisu";
 import { initModel } from "../ebisu/split3";
 
@@ -44,4 +44,24 @@ export function makeEbisuSplit3(halflifeHours = 24): EbisuModel {
     secondaryScale: 5,
   });
   return { version: "3-split3", model: init, timestampMillis: Date.now() };
+}
+
+interface MakeSentenceMemoryArgs {
+  plain: string;
+  relatedWordIds: Word["id"][];
+  halflifeHours?: number;
+}
+export function makeSentenceMemory({
+  plain,
+  relatedWordIds,
+  halflifeHours,
+}: MakeSentenceMemoryArgs): SentenceMemory {
+  return {
+    type: "sentence",
+    plain,
+    relatedWordIds,
+    models: {
+      meaningToSentence: makeEbisuSplit3(halflifeHours),
+    },
+  };
 }

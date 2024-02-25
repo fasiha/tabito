@@ -13,6 +13,7 @@ import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
 import { makeEbisuSplit3, makeVocabMemory } from "../../utils/make";
 
 import "./WordPicked.scss";
+import type { VocabMemory } from "../../interfaces/frontend";
 
 interface Props {
   word: Word;
@@ -216,3 +217,32 @@ export const Related: Component<{ sense: Sense }> = ({ sense }) =>
   sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
 export const Antonym: Component<{ sense: Sense }> = ({ sense }) =>
   sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;
+
+const ADD_WORD_TO_SENTENCE = true;
+const DELETE_WORD_FROM_SENTENCE = false;
+
+function updateSentenceMemoryWithVocab(
+  plain: string,
+  wordId: VocabMemory["wordId"],
+  addNotDelete: boolean
+): void {
+  db.transaction("rw", db.sentence, async () => {
+    const sentence = await db.sentence.get(plain);
+    if (sentence) {
+      if (addNotDelete) {
+        if (!sentence.relatedWordIds.includes(wordId)) {
+          sentence.relatedWordIds.push(wordId);
+          await db.sentence.put(sentence, plain);
+        }
+      } else {
+        const origLength = sentence.relatedWordIds.length;
+        sentence.relatedWordIds = sentence.relatedWordIds.filter(
+          (w) => w !== wordId
+        );
+        if (origLength !== sentence.relatedWordIds.length) {
+          await db.sentence.put(sentence, plain);
+        }
+      }
+    }
+  });
+}
