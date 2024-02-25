@@ -18,7 +18,6 @@ import type {
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
 import { extractTags, join, prefixNumber } from "../../utils/utils";
 import {
-  deconjEqual,
   grammarConjEqual,
   senseAndSubEqual,
   vocabEqual,
@@ -264,6 +263,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         } else {
           newSentence.vocab.push(vocab);
         }
+        newSentence.vocab.sort((a, b) => a.start - b.start || b.len - a.len);
       }
       if (grammar) {
         if (!newSentence.grammarConj) {
@@ -617,11 +617,12 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
         for (const { wordId, word, tags } of subresults) {
           if (jmdictSeqSeen.has(+wordId)) continue;
           jmdictSeqSeen.add(+wordId);
+          const thisStart = start; // otherwise closure below will capture original scope
           const onNewVocab = (sense: SenseAndSub) =>
             onNewVocabGrammar({
               vocab: {
                 entry: word!,
-                start,
+                start: thisStart,
                 len,
                 senses: [sense],
                 tags: extractTags(word!, tags),
@@ -629,7 +630,10 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
             });
           const alreadyPicked: SenseAndSub[] =
             vocab
-              ?.filter((v) => v.entry.id === wordId)
+              ?.filter(
+                (v) =>
+                  v.entry.id === wordId && v.start === start && v.len === len
+              )
               .flatMap((v) => v.senses) ?? [];
           cells.push({
             start,
@@ -656,7 +660,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = ({
       const grammar = {
         start,
         len,
-        lemmas: lemmas.flat(),
+        lemmas,
       };
       const handleClick = (deconj: GrammarConj["deconj"]) =>
         onNewVocabGrammar({
@@ -785,8 +789,11 @@ const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
       },
     });
   const alreadyPicked: SenseAndSub[] =
-    vocab?.filter((v) => v.entry.id === word!.id).flatMap((v) => v.senses) ??
-    [];
+    vocab
+      ?.filter(
+        (v) => v.entry.id === word!.id && v.start === start && v.len === len
+      )
+      .flatMap((v) => v.senses) ?? [];
   return word ? (
     <WordPicker
       onNewVocab={onNewVocab}

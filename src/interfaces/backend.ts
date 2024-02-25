@@ -34,7 +34,7 @@ export interface GrammarConj {
   /** number of characters */
   len: number;
 
-  lemmas: Furigana[];
+  lemmas: Furigana[][];
   deconj: AdjDeconjugated | Deconjugated;
 }
 
