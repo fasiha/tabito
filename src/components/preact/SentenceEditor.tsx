@@ -434,7 +434,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
     let start = 0;
     for (const iword of ichiWords) {
       if (typeof iword === "string") {
-        start += iword.length;
+        // `iword.length` is sometimes fake, like "、" becomes TWO characters <sad>, so increment just by one and then we'll try to recover later
+        start += 1;
         continue;
       }
       const wordOrAlt = iword[1];
@@ -444,6 +445,16 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
         throw new Error(
           "invariant fail: expect all alternatives to have same length"
         );
+      }
+
+      // because sometimes Ichiran expands punctuation, try to adjust start
+      {
+        const proposedStarts = wordArr
+          .map((w) => plain.indexOf(w.text, start))
+          .filter((x) => x >= 0);
+        if (proposedStarts.length) {
+          start = Math.min(...proposedStarts);
+        }
       }
       for (const x of wordArr) {
         // this is IchiranSingle WITH gloss
