@@ -434,7 +434,10 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
     let start = 0;
     for (const iword of ichiWords) {
       if (typeof iword === "string") {
-        // `iword.length` is sometimes fake, like "、" becomes TWO characters <sad>, so increment just by one and then we'll try to recover later
+        // `iword.length` is sometimes fake, like "、" becomes TWO
+        // characters <sad>, so increment just by one and then we'll try
+        // to recover later. See
+        // https://github.com/tshatrov/ichiran/issues/19#issuecomment-1963208246
         start += 1;
         continue;
       }
@@ -447,7 +450,9 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
         );
       }
 
-      // because sometimes Ichiran expands punctuation, try to adjust start
+      // because sometimes Ichiran expands punctuation so try to adjust
+      // start. See above and
+      // https://github.com/tshatrov/ichiran/issues/19#issuecomment-1963208246
       {
         const proposedStarts = wordArr
           .map((w) => plain.indexOf(w.text, start))
