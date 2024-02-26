@@ -2,24 +2,13 @@
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Component } from "solid-js";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
+import { FuriganaComponent } from "./FuriganaComponent";
 
 interface Props {
   lemmas: Furigana[][];
   deconj: AdjDeconjugated | Deconjugated;
   relevantFurigana: Furigana[];
 }
-
-const F: Component<{ furigana: Furigana[] }> = ({ furigana }) =>
-  furigana.map((f) =>
-    typeof f === "string" ? (
-      f
-    ) : (
-      <ruby>
-        {f.ruby}
-        <rt>{f.rt}</rt>
-      </ruby>
-    )
-  );
 
 export const GrammarConjPicked: Component<Props> = ({
   lemmas,
@@ -28,7 +17,8 @@ export const GrammarConjPicked: Component<Props> = ({
 }) => {
   return (
     <>
-      <F furigana={relevantFurigana} /> = <F furigana={lemmas[0]} /> +{" "}
+      <FuriganaComponent furigana={relevantFurigana} /> ={" "}
+      <FuriganaComponent furigana={lemmas[0]} /> +{" "}
       {"auxiliaries" in deconj && deconj.auxiliaries.length
         ? `${deconj.auxiliaries.join(" + ")} + ${deconj.conjugation}`
         : deconj.conjugation}

@@ -1,10 +1,13 @@
 /** @jsxImportSource solid-js */
-import type { Component } from "solid-js";
+import { type Component } from "solid-js";
+import { enumerateAcceptable } from "tabito-lib";
+
 import type { Sentence } from "../../interfaces/backend";
 import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
 import { db } from "../../indexeddb";
 import { furiganaToPlain } from "../../utils/utils";
 import { makeSentenceMemory } from "../../utils/make";
+import { FuriganaComponent } from "./FuriganaComponent";
 
 interface Props {
   sentence: Sentence;
@@ -12,6 +15,7 @@ interface Props {
 export const SentencePicked: Component<Props> = ({ sentence }) => {
   const plain = furiganaToPlain(sentence.furigana);
   const memory = createDexieSignalQuery(() => db.sentence.get(plain));
+  const acceptable = enumerateAcceptable(sentence);
   const toggleLearn = () => {
     if (memory()) {
       db.sentence.delete(plain);
@@ -31,7 +35,8 @@ export const SentencePicked: Component<Props> = ({ sentence }) => {
       <button onClick={toggleLearn}>
         {memory() ? "Unlearn sentence" : "Learn sentence!"}
       </button>
-      {sentence.translations?.en.length && (
+      {(sentence.translations?.en.length ||
+        memory()?.personalTranslations?.length) && (
         <details>
           <summary>Expand translations</summary>
           <ul>
@@ -44,11 +49,23 @@ export const SentencePicked: Component<Props> = ({ sentence }) => {
             <li>
               <strong>Add personal translation</strong> TODO
             </li>
-            {sentence.translations.en.map((tl) => (
+            {(sentence.translations?.en || []).map((tl) => (
               <li>{tl}</li>
             ))}
           </ul>
         </details>
+      )}
+      {acceptable.length > 1 && (
+        <div>
+          <p>Acceptable alternatives</p>
+          <ul>
+            {acceptable.slice(1).map((fs) => (
+              <li>
+                <FuriganaComponent furigana={fs} />
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
