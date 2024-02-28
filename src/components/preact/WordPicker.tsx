@@ -56,7 +56,8 @@ export const WordPicker: FunctionComponent<Props> = ({
             <Tags sense={sense} tags={tags} />
           </span>
         );
-      })}
+      })}{" "}
+      <code title={word.id}>(id)</code>
     </>
   );
 };

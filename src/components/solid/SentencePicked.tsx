@@ -57,7 +57,7 @@ export const SentencePicked: Component<Props> = ({ sentence }) => {
       )}
       {acceptable.length > 1 && (
         <div>
-          <p>Acceptable alternatives</p>
+          Acceptable alternatives
           <ul>
             {acceptable.slice(1).map((fs) => (
               <li>

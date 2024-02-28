@@ -12,7 +12,7 @@ import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
 import type {
   IchiranConjProp,
-  IchiranGloss,
+  IchiranGloss as IchiranGlossType,
   IchiranWord,
 } from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
@@ -430,7 +430,9 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
 
     const cells: Cell<VNode>[] = [];
 
-    const jmdictSeqSeen = new Set<number>();
+    const jmdictSeqSeen = new Set<string>();
+    const seenId = (id: string | number, start: number, len: number) =>
+      `${id}/${start}/${len}`;
     let start = 0;
     for (const iword of ichiWords) {
       if (typeof iword === "string") {
@@ -464,7 +466,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
       for (const x of wordArr) {
         // this is IchiranSingle WITH gloss
         if ("gloss" in x && x.gloss) {
-          jmdictSeqSeen.add(x.seq);
+          jmdictSeqSeen.add(seenId(x.seq, start, x.text.length));
           cells.push({
             start,
             len: x.text.length,
@@ -483,7 +485,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
         }
         if (x.conj?.length) {
           // IchiranSingle with NO gloss but with conj
-          jmdictSeqSeen.add(x.seq);
+          jmdictSeqSeen.add(seenId(x.seq, start, x.text.length));
           for (const conj of x.conj) {
             cells.push({
               start: start,
@@ -542,7 +544,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             // these two `if`s are very very similar to the above, but I
             // don't want to DRY this yet
             if ("gloss" in y && y.gloss) {
-              jmdictSeqSeen.add(y.seq);
+              jmdictSeqSeen.add(seenId(y.seq, yStart, len));
               cells.push({
                 start: yStart,
                 len,
@@ -560,7 +562,7 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
               });
             }
             if (y.conj.length) {
-              jmdictSeqSeen.add(y.seq);
+              jmdictSeqSeen.add(seenId(y.seq, yStart, len));
               for (const conj of y.conj) {
                 cells.push({
                   start: yStart,
@@ -626,8 +628,8 @@ const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             .map((o) => (typeof o === "string" ? o.length : o.ruby.length))
             .reduce((a, b) => a + b, 0);
           for (const { wordId, word, tags } of subresults) {
-            if (jmdictSeqSeen.has(+wordId)) continue;
-            jmdictSeqSeen.add(+wordId);
+            if (jmdictSeqSeen.has(seenId(wordId, start, len))) continue;
+            jmdictSeqSeen.add(seenId(wordId, start, len));
             const thisStart = start; // otherwise closure below will capture original scope
             const onNewVocab = (sense: SenseAndSub) =>
               onNewVocabGrammar({
@@ -767,7 +769,7 @@ function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
 
 interface IchiranGlossProps {
   /** Only used if JMdict `seq`/`word` not available */
-  origGloss: IchiranGloss[];
+  origGloss: IchiranGlossType[];
   onNewVocabGrammar: (x: VocabGrammarProps) => void;
   /** Only needed for conjugated phrases (fake Ichiran sequence IDs not
    * in JMdict) */
