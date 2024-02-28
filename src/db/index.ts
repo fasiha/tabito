@@ -2,13 +2,19 @@ import { createHash } from "crypto";
 import Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import crypto from "crypto";
 
-// import { furiganaToString } from "curtiz-japanese-nlp";
-
-import type { Sentence, Selected, Tables } from "../interfaces/backend";
+import type {
+  Sentence,
+  Selected,
+  Tables,
+  WordIdConnType,
+} from "../interfaces/backend";
 
 import path from "path";
 import { fileURLToPath } from "url";
+import type { Word } from "curtiz-japanese-nlp/interfaces";
+import { newComponentId } from "../utils/randomId";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -131,4 +137,73 @@ export function getAllPlains(): string[] {
   return (getAllPlainsStatement.all() as Tables.sentenceRow[]).map(
     (x) => x.plain
   );
+}
+
+// Connected
+
+const checkForComponents = db.prepare<{
+  type: WordIdConnType;
+  a: Word["id"];
+  b: Word["id"];
+}>(
+  `select componentId, wordId from connectedWords where type=$type and wordId in ($a, $b)`
+);
+
+const idCollision = db.prepare<{
+  type: WordIdConnType;
+  componentId: string;
+}>(
+  `select type from connectedWords where type=$type and componentId=$componentId limit 1`
+);
+
+const insertComponent = db.prepare<Required<Tables.connectedWordsRow>>(
+  `insert into connectedWords (type, componentId, wordId) values ($type, $componentId, $wordId)`
+);
+
+const mergeComponents = db.prepare<{
+  new: string;
+  old: string;
+  type: WordIdConnType;
+}>(
+  `update connectedWords set componentId=$new where componentId=$old and type=$type`
+);
+
+export function connectWordIds(
+  a: Word["id"],
+  b: Word["id"],
+  type: WordIdConnType
+) {
+  db.transaction(() => {
+    const components = checkForComponents.all({ a, b, type }) as Required<
+      Pick<Tables.connectedWordsRow, "componentId" | "wordId">
+    >[];
+    if (components.length === 0) {
+      // two brand new nodes
+      let componentId: string;
+      for (let i = 0; ; i++) {
+        componentId = newComponentId();
+        const collision = idCollision.get({ type, componentId });
+        if (!collision) break;
+        if (i > 3) throw new Error("cannot find unique component id?");
+      }
+
+      insertComponent.run({ type, componentId, wordId: a });
+      insertComponent.run({ type, componentId, wordId: b });
+    } else if (components.length === 1) {
+      insertComponent.run({
+        type,
+        componentId: components[0].componentId,
+        wordId: components[0].wordId === a ? b : a,
+      });
+    } else if (components.length === 2) {
+      if (components[0].componentId === components[1].componentId) return;
+      mergeComponents.run({
+        new: components[0].componentId,
+        old: components[1].componentId,
+        type,
+      });
+    } else {
+      throw new Error("more than two returned?");
+    }
+  });
 }

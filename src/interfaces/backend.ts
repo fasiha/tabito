@@ -54,3 +54,10 @@ export interface Sentence extends TabitoSentence {
     words: Record<string, Word>;
   };
 }
+
+export const ALLOWED_WORDID_CONNECTION_TYPES = [
+  "equivalent",
+  "confuser",
+  "related",
+] as const;
+export type WordIdConnType = (typeof ALLOWED_WORDID_CONNECTION_TYPES)[number];

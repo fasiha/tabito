@@ -5,6 +5,11 @@
 export interface _tabito_db_stateRow {
   'schemaVersion': number|bigint;
 }
+export interface connectedWordsRow {
+  'componentId'?: string;
+  'type'?: string;
+  'wordId'?: string;
+}
 export interface documentRow {
   'docName': string;
   'id'?: number|bigint;

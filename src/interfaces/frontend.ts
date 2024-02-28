@@ -7,6 +7,7 @@ export interface VocabMemory {
   readingsSeen: string[];
   kanjiSeen: string[];
   personalDefinition?: string;
+  // TODO add `senseAndSubsenseSeen` array
   models: {
     meaningToReading: EbisuModel;
     readingToMeaning: EbisuModel;

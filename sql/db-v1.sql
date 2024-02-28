@@ -22,6 +22,16 @@ create table
     unique (docName, plain)
   );
 
+create table
+  connectedWords (
+    type text not null, -- equivalent, confuser, related
+    componentId text not null,
+    wordId text not null,
+    primary key (type, componentId, wordId)
+  );
+
+create index connectedQuickcheck on connectedwords (type, wordId);
+
 -- create table
 --   user (
 --     id INTEGER PRIMARY KEY not null,
