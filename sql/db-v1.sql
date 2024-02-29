@@ -32,6 +32,14 @@ create table
 
 create index connectedQuickcheck on connectedwords (type, wordId);
 
+-- partial cache so (otherwise, go to curtiz-japanese-nlp server)
+create table
+  jmdict (
+    wordId text primary key,
+    addedMs real not null,
+    json text not null
+  );
+
 -- create table
 --   user (
 --     id INTEGER PRIMARY KEY not null,

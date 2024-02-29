@@ -119,3 +119,11 @@ export function extractTags(
 export function printXrefs(v: Xref[]) {
   return v.map((x) => x.join(",")).join(";");
 }
+
+/**
+ * More efficient than `Object.keys(obj).length === 0`
+ */
+export function objectIsEmpty(obj: Record<string, unknown>): boolean {
+  for (const _ in obj) return false;
+  return true;
+}

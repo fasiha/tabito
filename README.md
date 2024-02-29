@@ -28,13 +28,5 @@ sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded,
 
 ## Working notes
 
-After entering a sentence, it needs to hit MeCab (probabily `curtiz-japanese-nlp`?) or Ichiran to get furigana.
-
-The Sentence Editor needs to offer Furigana editing and synonym generation. This will generate data in the Tabito format (see `tabito-lib`).
-
-Then the document page needs to show the plain sentences, without furigana. Ultimately this document view will become the passive reading page, with a button to mark a sentence as 
-- "fully understood" versus 
-- "click to see furigana" vs
-- "click to see meaning".
-
-We also need to create a "review" page that'll use Ebisu v3 (probably the single-Beta power-law algorithm?) to pick the sentence most at risk of being forgotten and let you review it. That'll finally use the Tabito library.
+- in the vocab memory, track what senses we've learned
+- we need *directed* graphs to indicate which vocab "include" other smaller vocab, e.g., "かぜをひく" is a word, and reviewing it means we've also indirectly reviewed "かぜ and "ひく".

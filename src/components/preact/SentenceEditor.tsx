@@ -1,5 +1,10 @@
-import type { FunctionalComponent, VNode } from "preact";
-import { Signal, useSignal, useSignalEffect } from "@preact/signals";
+import type { FunctionComponent, FunctionalComponent, VNode } from "preact";
+import {
+  Signal,
+  useComputed,
+  useSignal,
+  useSignalEffect,
+} from "@preact/signals";
 import { addSynonym } from "tabito-lib";
 import { memo, type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
@@ -41,17 +46,55 @@ async function plainToSentenceSignal(
   }
 }
 
+async function sentenceSignalToConnectedWords(
+  wordIds: Signal<string[]>,
+  connected: Signal<Record<string, Word[]> | undefined>,
+  networkFeedback: Signal<string>
+) {
+  if (!wordIds.value.length) return;
+
+  const res = await fetch(`/api/connected-words/array`, {
+    method: "POST",
+    body: JSON.stringify({ wordIds }),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (res.ok) {
+    connected.value = await res.json();
+    networkFeedback.value = "";
+  } else {
+    networkFeedback.value = `${res.status} ${res.statusText}`;
+  }
+}
+
 export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const sentence = useSignal<Sentence | undefined>(undefined);
   const networkFeedback = useSignal("");
   const newTranslation = useSignal("");
   const synonymSentence = useSignal("");
   const synonymWord = useSignal<[string, string]>(["", ""]);
-
   const newCitation = useSignal<undefined | string>(undefined);
+
+  const connected = useSignal<Record<string, Word[]>>({});
+  const connectedNetworkFeedback = useSignal("");
 
   useSignalEffect(() => {
     plainToSentenceSignal(plain, sentence, networkFeedback);
+  });
+
+  const wordIds = useComputed(
+    () => sentence.value?.vocab?.map((v) => v.entry.id) ?? []
+  );
+  // const wordIds = useComputedArray(() => {
+  //   return sentence.value?.vocab?.map((v) => v.entry.id) ?? [];
+  // });
+
+  useSignalEffect(() => {
+    console.log("worIds", wordIds.value);
+    sentenceSignalToConnectedWords(
+      wordIds,
+      connected,
+      connectedNetworkFeedback
+    );
   });
 
   function handleInputTranslation(
@@ -298,9 +341,44 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
+      {connectedNetworkFeedback.value && (
+        <p>Network feedback 2: {connectedNetworkFeedback}</p>
+      )}
       {sentence.value && (
         <>
-          <SentenceComponent sentence={sentence.value} />
+          <h2>
+            <SentenceComponent sentence={sentence.value} />
+          </h2>
+
+          {sentence.value.vocab?.length && (
+            <ul>
+              {sentence.value.vocab?.map((v) => (
+                <li>
+                  <SimpleWord word={v.entry} />
+                  {v.senses
+                    .map((s) =>
+                      s.subsense
+                        ? v.entry.sense[s.sense].gloss[s.subsense]
+                        : v.entry.sense[s.sense].gloss
+                            .map((g) => g.text)
+                            .join(", ")
+                    )
+                    .join("; ")}
+                  {v.entry.id in connected.value && (
+                    <ul>
+                      {connected.value[v.entry.id].map((word) =>
+                        word.id !== v.entry.id ? (
+                          <li>
+                            <SimpleWord word={word} gloss />
+                          </li>
+                        ) : null
+                      )}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <NlpTable
             nlp={sentence.value.nlp}
@@ -842,3 +920,17 @@ const Formal = (
     🤵
   </span>
 );
+
+const SimpleWord: FunctionComponent<{ word: Word; gloss?: boolean }> = ({
+  word,
+  gloss,
+}) => {
+  return (
+    <>
+      {word.id} {word.kanji.map((k) => k.text).join("・")} 「
+      {word.kana.map((k) => k.text).join("・")}」{" "}
+      {gloss &&
+        word.sense.map((s) => s.gloss.map((g) => g.text).join(", ")).join("; ")}
+    </>
+  );
+};

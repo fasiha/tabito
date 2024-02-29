@@ -15,6 +15,11 @@ export interface documentRow {
   'id'?: number|bigint;
   'plain': string;
 }
+export interface jmdictRow {
+  'addedMs': number;
+  'json': string;
+  'wordId'?: string | null;
+}
 export interface sentenceRow {
   'id'?: number|bigint;
   'jsonEncoded': string;

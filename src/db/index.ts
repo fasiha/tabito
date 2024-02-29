@@ -2,7 +2,6 @@ import { createHash } from "crypto";
 import Database from "better-sqlite3";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import crypto from "crypto";
 
 import type {
   Sentence,
@@ -103,6 +102,9 @@ export function upsertSentence(sentence: Sentence) {
     plainSha256,
     jsonEncoded,
   });
+  for (const vocab of sentence.vocab ?? []) {
+    addJmdict(vocab.entry);
+  }
 }
 
 const sentenceExistsStatement = db.prepare<Pick<Tables.sentenceRow, "plain">>(
@@ -205,5 +207,86 @@ export function connectWordIds(
     } else {
       throw new Error("more than two returned?");
     }
+  });
+}
+
+const getConnectedStatement = db.prepare<{
+  wordId: Word["id"];
+  type: WordIdConnType;
+}>(`SELECT wordId
+FROM connectedWords
+WHERE type=$type AND componentId IN (
+  SELECT componentId
+  FROM connectedWords
+  WHERE type=$type AND wordId=$wordId
+);
+`);
+export function getConnectedWordIds(
+  wordId: Word["id"],
+  type: WordIdConnType
+): Word["id"][] {
+  return getConnectedStatement.pluck().all({ wordId, type }) as string[];
+}
+
+const disconnectWordIdStatement = db.prepare<{
+  wordId: Word["id"];
+  type: WordIdConnType;
+}>(`delete from connectedWords where type=$type and wordId=$wordId`);
+const twoComponentMembers = db.prepare<{
+  wordId: Word["id"];
+  type: WordIdConnType;
+}>(
+  `select componentId from connectedWords where type=$type and componentId in (
+    select componentId from connectedWords where type=$type and wordId=$wordId
+  ) limit 2`
+);
+const deleteComponent = db.prepare<{
+  componentId: string;
+  type: WordIdConnType;
+}>(`delete from connectedWords where type=$type and componentId=$componentId`);
+export function disconnectWordId(wordId: Word["id"], type: WordIdConnType) {
+  db.transaction(() => {
+    const res = twoComponentMembers.pluck().all({ type, wordId }) as string[];
+    if (res.length === 0) {
+      return;
+    } else if (res.length > 2) {
+      disconnectWordIdStatement.run({ wordId, type });
+    } else {
+      deleteComponent.run({ componentId: res[0], type });
+    }
+  });
+  return disconnectWordIdStatement.run({ wordId, type });
+}
+
+// JMDICT
+
+const getJmdictStatement = db.prepare(`select json from jmdict where wordId=?`);
+export function getJmdict(wordId: Word["id"]): Word | undefined {
+  const result = getJmdictStatement.pluck().get(wordId) as string | undefined;
+  return result ? JSON.parse(result) : undefined;
+}
+
+export function getJmdictsRaw(wordIds: Word["id"][]): string[] {
+  if (wordIds.length === 0) return [];
+  const placeholder = "?,".repeat(wordIds.length).slice(0, -1);
+  return db
+    .prepare(`select json from jmdict where wordid in (${placeholder})`)
+    .pluck(true)
+    .all(wordIds) as string[];
+}
+
+export function getJmdicts(wordIds: Word["id"][]): Word[] {
+  return getJmdictsRaw(wordIds).map((s) => JSON.parse(s)) as Word[];
+}
+
+const addJmdictStatement = db.prepare<Tables.jmdictRow>(
+  `insert into jmdict (wordId, addedMs, json) values ($wordId, $addedMs, $json)
+  on conflict do nothing`
+);
+export function addJmdict(word: Word, currentTime = Date.now()) {
+  return addJmdictStatement.run({
+    wordId: word["id"],
+    json: JSON.stringify(word),
+    addedMs: currentTime,
   });
 }
