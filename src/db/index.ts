@@ -170,12 +170,8 @@ const mergeComponents = db.prepare<{
   `update connectedWords set componentId=$new where componentId=$old and type=$type`
 );
 
-export function connectWordIds(
-  a: Word["id"],
-  b: Word["id"],
-  type: WordIdConnType
-) {
-  db.transaction(() => {
+export const connectWordIds = db.transaction(
+  (a: Word["id"], b: Word["id"], type: WordIdConnType) => {
     const components = checkForComponents.all({ a, b, type }) as Required<
       Pick<Tables.connectedWordsRow, "componentId" | "wordId">
     >[];
@@ -207,8 +203,8 @@ export function connectWordIds(
     } else {
       throw new Error("more than two returned?");
     }
-  });
-}
+  }
+);
 
 const getConnectedStatement = db.prepare<{
   wordId: Word["id"];
@@ -232,7 +228,7 @@ const disconnectWordIdStatement = db.prepare<{
   wordId: Word["id"];
   type: WordIdConnType;
 }>(`delete from connectedWords where type=$type and wordId=$wordId`);
-const twoComponentMembers = db.prepare<{
+const wordIdToTwoComponentMembers = db.prepare<{
   wordId: Word["id"];
   type: WordIdConnType;
 }>(
@@ -246,7 +242,9 @@ const deleteComponent = db.prepare<{
 }>(`delete from connectedWords where type=$type and componentId=$componentId`);
 export function disconnectWordId(wordId: Word["id"], type: WordIdConnType) {
   db.transaction(() => {
-    const res = twoComponentMembers.pluck().all({ type, wordId }) as string[];
+    const res = wordIdToTwoComponentMembers
+      .pluck()
+      .all({ type, wordId }) as string[];
     if (res.length === 0) {
       return;
     } else if (res.length > 2) {
