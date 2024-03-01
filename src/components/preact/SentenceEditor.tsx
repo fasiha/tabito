@@ -538,7 +538,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                   )}
                   {v.entry.id in parentToChildren.value && (
                     <ul>
-                      <li>Review children</li>
+                      <li>Implicit reviews</li>
                       <ul>
                         {parentToChildren.value[v.entry.id].map((word) => (
                           <li>
@@ -1104,7 +1104,16 @@ const SimpleWord: FunctionComponent<{ word: Word; gloss?: boolean }> = ({
       {word.kanji.map((k) => k.text).join("・")} 「
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {gloss &&
-        word.sense.map((s) => s.gloss.map((g) => g.text).join(", ")).join("; ")}
+        word.sense.map((s, sidx) => (
+          <>
+            {prefixNumber(sidx)}
+            {s.gloss.map((g, gidx) => (
+              <>
+                <sup>{prefixNumber(gidx)}</sup> {g.text}{" "}
+              </>
+            ))}
+          </>
+        ))}
     </>
   );
 };
