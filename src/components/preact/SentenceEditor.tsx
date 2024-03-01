@@ -84,12 +84,8 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const wordIds = useComputed(
     () => sentence.value?.vocab?.map((v) => v.entry.id) ?? []
   );
-  // const wordIds = useComputedArray(() => {
-  //   return sentence.value?.vocab?.map((v) => v.entry.id) ?? [];
-  // });
 
   useSignalEffect(() => {
-    console.log("worIds", wordIds.value);
     sentenceSignalToConnectedWords(
       wordIds,
       connected,
@@ -338,6 +334,56 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
+  const wordIdBeingDragged = useSignal<string | undefined>(undefined);
+  const wordIdUnder = useSignal<string | undefined>(undefined);
+  const dropValid = useSignal<boolean>(false);
+
+  function handleDragStart(event: TargetedEvent<HTMLButtonElement, DragEvent>) {
+    wordIdBeingDragged.value = event.currentTarget.dataset.wordid;
+  }
+
+  function handleDragOver(event: TargetedEvent<HTMLLIElement, DragEvent>) {
+    event.preventDefault();
+    const under = event.currentTarget.dataset.wordid;
+    if (under !== wordIdUnder.value) {
+      wordIdUnder.value = under;
+      if (under === wordIdBeingDragged.value) {
+        dropValid.value = false;
+      } else if (
+        !(under! in connected.value) ||
+        connected.value[under!].every((w) => w.id !== wordIdBeingDragged.value)
+      ) {
+        dropValid.value = true;
+      } else {
+        dropValid.value = false;
+      }
+    }
+  }
+
+  async function handleDrop(event: TargetedEvent<HTMLLIElement, DragEvent>) {
+    const wordIdDropped = event.currentTarget.dataset.wordid;
+    if (wordIdBeingDragged.value !== wordIdDropped && dropValid) {
+      console.log(
+        `will merge ${wordIdBeingDragged.value} into ${wordIdDropped}`
+      );
+      const fetchResult = await fetch("/api/connected-words/connect", {
+        method: "POST",
+        body: JSON.stringify({
+          wordIds: [wordIdBeingDragged.value, wordIdDropped],
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (fetchResult.ok) {
+        sentenceSignalToConnectedWords(
+          wordIds,
+          connected,
+          connectedNetworkFeedback
+        );
+      }
+    }
+    wordIdUnder.value = undefined;
+  }
+
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
@@ -350,10 +396,37 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             <SentenceComponent sentence={sentence.value} />
           </h2>
 
+          {/* Vocab selected and equivalent */}
           {sentence.value.vocab?.length && (
             <ul>
               {sentence.value.vocab?.map((v) => (
-                <li>
+                <li
+                  data-wordid={v.entry.id}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  style={{
+                    backgroundColor:
+                      v.entry.id === wordIdUnder.value
+                        ? dropValid.value
+                          ? "DarkGreen"
+                          : "DarkRed"
+                        : undefined,
+                  }}
+                >
+                  <button
+                    title="Drag"
+                    data-wordid={v.entry.id}
+                    draggable
+                    onDragStart={handleDragStart}
+                  >
+                    🔗
+                  </button>
+                  <button
+                    title="Remove"
+                    onClick={() => handleNewVocabGrammar({ vocab: v })}
+                  >
+                    ❌
+                  </button>
                   <SimpleWord word={v.entry} />
                   {v.senses
                     .map((s) =>

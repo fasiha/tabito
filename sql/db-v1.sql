@@ -24,10 +24,11 @@ create table
 
 create table
   connectedWords (
-    type text not null, -- equivalent, confuser, related
+    type text not null, -- equivalent, confuser, related?
     componentId text not null,
     wordId text not null,
-    primary key (type, componentId, wordId)
+    primary key (type, componentId, wordId),
+    unique (type, wordId)
   );
 
 create index connectedQuickcheck on connectedwords (type, wordId);
