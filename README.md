@@ -29,4 +29,5 @@ sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded,
 ## Working notes
 
 - in the vocab memory, track what senses we've learned
-- we need *directed* graphs to indicate which vocab "include" other smaller vocab, e.g., "かぜをひく" is a word, and reviewing it means we've also indirectly reviewed "かぜ and "ひく".
+- we need *directed* graphs to indicate which vocab "include" other smaller vocab, e.g., "かぜをひく" (to catch a cold) is a word, and reviewing it means we've also indirectly reviewed "かぜ (a cold) and "ひく" (to catch).
+  - However, "ひく" has *lots* of meanings. Reviewing "かぜをひく" shouldn't mean you've reviewed *all* those meanings, just the one that relates to catching (a cold). So I think we need to have multiple Ebisu models, not just for meaning-to-reading and vice versa, but per individual meanings, readings, and kanji forms we've learned?
