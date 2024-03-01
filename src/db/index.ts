@@ -8,6 +8,7 @@ import type {
   Selected,
   Tables,
   WordIdConnType,
+  ParentChildType,
 } from "../interfaces/backend";
 
 import path from "path";
@@ -287,4 +288,59 @@ export function addJmdict(word: Word, currentTime = Date.now()) {
     json: JSON.stringify(word),
     addedMs: currentTime,
   });
+}
+
+// parent child directed graph
+
+const newParentChildEdgeStatement = db.prepare<
+  Required<Tables.parentChildWordsRow>
+>(
+  `insert into parentChildWords (type, parentId, childId) values ($type, $parentId, $childId)
+  on conflict do nothing`
+);
+export function newParentChildEdge(
+  parentId: Word["id"],
+  childId: Word["id"],
+  type: ParentChildType
+) {
+  if (parentId !== childId) {
+    return newParentChildEdgeStatement.run({ type, parentId, childId });
+  }
+}
+
+const deleteParentChildEdgeStatement = db.prepare<
+  Required<Tables.parentChildWordsRow>
+>(
+  `delete from parentChildWords where type=$type and parentId=$parentId and childId=$childId`
+);
+export function deleteParentChildEdge(
+  parentId: Word["id"],
+  childId: Word["id"],
+  type: ParentChildType
+) {
+  return deleteParentChildEdgeStatement.run({ type, parentId, childId });
+}
+
+const allParentsStatement = db.prepare<
+  Required<Pick<Tables.parentChildWordsRow, "childId" | "type">>
+>(
+  `select parentId from parentChildWords where childId=$childId and type=$type`
+);
+export function allParents(
+  childId: Word["id"],
+  type: ParentChildType
+): string[] {
+  return allParentsStatement.pluck().all({ childId, type }) as string[];
+}
+
+const allChildrenStatement = db.prepare<
+  Required<Pick<Tables.parentChildWordsRow, "parentId" | "type">>
+>(
+  `select childId from parentChildWords where parentId=$parentId and type=$type`
+);
+export function allChildren(
+  parentId: Word["id"],
+  type: ParentChildType
+): string[] {
+  return allChildrenStatement.pluck().all({ parentId, type }) as string[];
 }

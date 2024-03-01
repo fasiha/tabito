@@ -33,6 +33,16 @@ create table
 
 create index connectedQuickcheck on connectedwords (type, wordId);
 
+create table
+  parentChildWords (
+    type text not null,
+    parentId text not null,
+    childId text not null,
+    primary key (type, parentId, childId)
+  );
+
+create index childToParent on parentChildWords (type, childId);
+
 -- partial cache so (otherwise, go to curtiz-japanese-nlp server)
 create table
   jmdict (

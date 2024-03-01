@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getConnectedWordIds, getJmdicts } from "../../../db";
+import { allParents, getJmdicts } from "../../../../db";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -9,10 +9,8 @@ export const POST: APIRoute = async ({ request }) => {
     const result: Record<string, Word[]> = {};
     for (const wordId of wordIds) {
       if (wordId in result) continue;
-      const thisWordIds = getConnectedWordIds(wordId, "equivalent");
-      if (thisWordIds.length) {
-        result[wordId] = getJmdicts(thisWordIds);
-      }
+      const parentIds = allParents(wordId, "includes");
+      result[wordId] = getJmdicts(parentIds);
     }
     return new Response(JSON.stringify(result), jsonOptions);
   }

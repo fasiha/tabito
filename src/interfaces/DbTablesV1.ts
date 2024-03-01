@@ -20,6 +20,11 @@ export interface jmdictRow {
   'json': string;
   'wordId'?: string | null;
 }
+export interface parentChildWordsRow {
+  'childId'?: string;
+  'parentId'?: string;
+  'type'?: string;
+}
 export interface sentenceRow {
   'id'?: number|bigint;
   'jsonEncoded': string;

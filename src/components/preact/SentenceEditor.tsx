@@ -46,23 +46,39 @@ async function plainToSentenceSignal(
   }
 }
 
-async function sentenceSignalToConnectedWords(
+async function sentenceSignalToGraphs(
   wordIds: Signal<string[]>,
-  connected: Signal<Record<string, Word[]> | undefined>,
-  networkFeedback: Signal<string>
+  connected: Signal<Record<string, Word[]>>,
+  connectedNetworkFeedback: Signal<string>,
+  parentToChildren: Signal<Record<string, Word[]>>,
+  parentToChildrenNetworkFeedback: Signal<string>
 ) {
   if (!wordIds.value.length) return;
-
-  const res = await fetch(`/api/connected-words/array`, {
-    method: "POST",
-    body: JSON.stringify({ wordIds }),
-    headers: { "Content-Type": "application/json" },
-  });
-  if (res.ok) {
-    connected.value = await res.json();
-    networkFeedback.value = "";
-  } else {
-    networkFeedback.value = `${res.status} ${res.statusText}`;
+  {
+    const res = await fetch(`/api/connected-words/array`, {
+      ...jsonHeaders,
+      method: "POST",
+      body: JSON.stringify({ wordIds }),
+    });
+    if (res.ok) {
+      connected.value = await res.json();
+      connectedNetworkFeedback.value = "";
+    } else {
+      connectedNetworkFeedback.value = `${res.status} ${res.statusText}`;
+    }
+  }
+  {
+    const res = await fetch(`/api/includes-words/children/array`, {
+      ...jsonHeaders,
+      method: "POST",
+      body: JSON.stringify({ wordIds }),
+    });
+    if (res.ok) {
+      parentToChildren.value = await res.json();
+      parentToChildrenNetworkFeedback.value = "";
+    } else {
+      parentToChildrenNetworkFeedback.value = `${res.status} ${res.statusText}`;
+    }
   }
 }
 
@@ -74,8 +90,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const synonymWord = useSignal<[string, string]>(["", ""]);
   const newCitation = useSignal<undefined | string>(undefined);
 
-  const connected = useSignal<Record<string, Word[]>>({});
+  const connected = useSignal<Record<Word["id"], Word[]>>({});
   const connectedNetworkFeedback = useSignal("");
+
+  const parentToChildren = useSignal<Record<Word["id"], Word[]>>({});
+  const parentToChildrenNetworkFeedback = useSignal("");
 
   useSignalEffect(() => {
     plainToSentenceSignal(plain, sentence, networkFeedback);
@@ -86,10 +105,12 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   );
 
   useSignalEffect(() => {
-    sentenceSignalToConnectedWords(
+    sentenceSignalToGraphs(
       wordIds,
       connected,
-      connectedNetworkFeedback
+      connectedNetworkFeedback,
+      parentToChildren,
+      parentToChildrenNetworkFeedback
     );
   });
 
@@ -337,51 +358,102 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const wordIdBeingDragged = useSignal<string | undefined>(undefined);
   const wordIdUnder = useSignal<string | undefined>(undefined);
   const dropValid = useSignal<boolean>(false);
+  const dragType = useSignal<undefined | "connected" | "parentChild">(
+    undefined
+  );
 
   function handleDragStart(event: TargetedEvent<HTMLButtonElement, DragEvent>) {
-    wordIdBeingDragged.value = event.currentTarget.dataset.wordid;
+    const targetDragType = event.currentTarget.dataset.dragtype;
+    if (targetDragType === "connected" || targetDragType === "parentChild") {
+      dragType.value = targetDragType;
+      wordIdBeingDragged.value = event.currentTarget.dataset.wordid;
+      dropValid.value = false;
+    }
   }
 
   function handleDragOver(event: TargetedEvent<HTMLLIElement, DragEvent>) {
     event.preventDefault();
     const under = event.currentTarget.dataset.wordid;
     if (under !== wordIdUnder.value) {
-      wordIdUnder.value = under;
-      if (under === wordIdBeingDragged.value) {
-        dropValid.value = false;
-      } else if (
-        !(under! in connected.value) ||
-        connected.value[under!].every((w) => w.id !== wordIdBeingDragged.value)
-      ) {
-        dropValid.value = true;
-      } else {
-        dropValid.value = false;
+      if (dragType.value === "connected") {
+        wordIdUnder.value = under;
+        if (under === wordIdBeingDragged.value) {
+          dropValid.value = false;
+        } else if (
+          !(under! in connected.value) ||
+          connected.value[under!].every(
+            (w) => w.id !== wordIdBeingDragged.value
+          )
+        ) {
+          dropValid.value = true;
+        } else {
+          dropValid.value = false;
+        }
+      } else if (dragType.value === "parentChild") {
+        wordIdUnder.value = under;
+
+        dropValid.value = under !== wordIdBeingDragged.value;
       }
     }
   }
 
   async function handleDrop(event: TargetedEvent<HTMLLIElement, DragEvent>) {
     const wordIdDropped = event.currentTarget.dataset.wordid;
-    if (wordIdBeingDragged.value !== wordIdDropped && dropValid) {
+    if (
+      dragType.value === "connected" &&
+      wordIdBeingDragged.value !== wordIdDropped &&
+      dropValid
+    ) {
       console.log(
         `will merge ${wordIdBeingDragged.value} into ${wordIdDropped}`
       );
       const fetchResult = await fetch("/api/connected-words/connect", {
+        ...jsonHeaders,
         method: "POST",
         body: JSON.stringify({
           wordIds: [wordIdBeingDragged.value, wordIdDropped],
         }),
-        headers: { "Content-Type": "application/json" },
       });
       if (fetchResult.ok) {
-        sentenceSignalToConnectedWords(
+        sentenceSignalToGraphs(
           wordIds,
           connected,
-          connectedNetworkFeedback
+          connectedNetworkFeedback,
+          parentToChildren,
+          parentToChildrenNetworkFeedback
         );
+      }
+      // TODO: update connectedNetworkFeedback
+    } else if (
+      dragType.value === "parentChild" &&
+      wordIdBeingDragged.value !== wordIdDropped &&
+      dropValid
+    ) {
+      console.log(`child=${wordIdBeingDragged.value}, parent=${wordIdDropped}`);
+      const fetchResult = await fetch("/api/includes-words/connect", {
+        ...jsonHeaders,
+        method: "POST",
+        body: JSON.stringify({
+          childId: wordIdBeingDragged.value,
+          parentId: wordIdDropped,
+        }),
+      });
+      if (fetchResult.ok) {
+        sentenceSignalToGraphs(
+          wordIds,
+          connected,
+          connectedNetworkFeedback,
+          parentToChildren,
+          parentToChildrenNetworkFeedback
+        );
+        parentToChildrenNetworkFeedback.value = "";
+      } else {
+        parentToChildrenNetworkFeedback.value = `${fetchResult.status} ${fetchResult.statusText}`;
       }
     }
     wordIdUnder.value = undefined;
+    dragType.value = undefined;
+    dropValid.value = false;
   }
 
   return (
@@ -389,6 +461,9 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
       {connectedNetworkFeedback.value && (
         <p>Network feedback 2: {connectedNetworkFeedback}</p>
+      )}
+      {parentToChildrenNetworkFeedback.value && (
+        <p>Network feedback 3: {parentToChildrenNetworkFeedback}</p>
       )}
       {sentence.value && (
         <>
@@ -414,12 +489,22 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                   }}
                 >
                   <button
-                    title="Drag"
+                    title="Drag to equivalent definition"
                     data-wordid={v.entry.id}
+                    data-dragtype={"connected"}
                     draggable
                     onDragStart={handleDragStart}
                   >
                     🔗
+                  </button>
+                  <button
+                    title="Drag to parent definition"
+                    data-wordid={v.entry.id}
+                    data-dragtype={"parentChild"}
+                    draggable
+                    onDragStart={handleDragStart}
+                  >
+                    👶
                   </button>
                   <button
                     title="Remove"
@@ -439,13 +524,28 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                     .join("; ")}
                   {v.entry.id in connected.value && (
                     <ul>
-                      {connected.value[v.entry.id].map((word) =>
-                        word.id !== v.entry.id ? (
+                      <li>Also acceptable</li>
+                      <ul>
+                        {connected.value[v.entry.id].map((word) =>
+                          word.id !== v.entry.id ? (
+                            <li>
+                              <SimpleWord word={word} gloss />
+                            </li>
+                          ) : null
+                        )}
+                      </ul>
+                    </ul>
+                  )}
+                  {v.entry.id in parentToChildren.value && (
+                    <ul>
+                      <li>Review children</li>
+                      <ul>
+                        {parentToChildren.value[v.entry.id].map((word) => (
                           <li>
                             <SimpleWord word={word} gloss />
                           </li>
-                        ) : null
-                      )}
+                        ))}
+                      </ul>
                     </ul>
                   )}
                 </li>
@@ -1000,10 +1100,13 @@ const SimpleWord: FunctionComponent<{ word: Word; gloss?: boolean }> = ({
 }) => {
   return (
     <>
-      {word.id} {word.kanji.map((k) => k.text).join("・")} 「
+      {" "}
+      {word.kanji.map((k) => k.text).join("・")} 「
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {gloss &&
         word.sense.map((s) => s.gloss.map((g) => g.text).join(", ")).join("; ")}
     </>
   );
 };
+
+const jsonHeaders = { headers: { "Content-Type": "application/json" } };
