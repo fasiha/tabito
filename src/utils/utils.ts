@@ -1,4 +1,5 @@
 import type { Furigana, Word, Xref } from "curtiz-japanese-nlp";
+import type { SenseAndSub } from "../components/commonInterfaces";
 
 export function furiganaToPlain(furigana: Furigana[]): string {
   return furigana.map((s) => (typeof s === "string" ? s : s.ruby)).join("");
@@ -126,4 +127,27 @@ export function printXrefs(v: Xref[]) {
 export function objectIsEmpty(obj: Record<string, unknown>): boolean {
   for (const _ in obj) return false;
   return true;
+}
+
+export function senseSeenClass(
+  senseIdx: number,
+  senses?: SenseAndSub[]
+): string | undefined {
+  return senses?.find(
+    ({ sense, subsense }) => sense === senseIdx && subsense === undefined
+  )
+    ? "already-picked"
+    : undefined;
+}
+
+export function subsenseSeenClass(
+  senseIdx: number,
+  subsenseIdx: number,
+  senses?: SenseAndSub[]
+): string | undefined {
+  return senses?.find(
+    ({ sense, subsense }) => sense === senseIdx && subsense === subsenseIdx
+  )
+    ? "already-picked"
+    : undefined;
 }

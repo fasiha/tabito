@@ -21,12 +21,23 @@ import type {
   IchiranWord,
 } from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
-import { extractTags, join, prefixNumber } from "../../utils/utils";
+import {
+  extractTags,
+  join,
+  prefixNumber,
+  senseSeenClass,
+  subsenseSeenClass,
+} from "../../utils/utils";
 import {
   grammarConjEqual,
   senseAndSubEqual,
   vocabEqual,
 } from "../../utils/equality";
+import type {
+  IncludesWordsChildrenArrayPost,
+  IncludesWordsChildrenArrayPostResponse,
+} from "../../pages/api/includes-words/children/array";
+import type { IncludesWordsConnectPost } from "../../pages/api/includes-words/connect";
 
 interface Props {
   plain: string;
@@ -50,7 +61,9 @@ async function sentenceSignalToGraphs(
   wordIds: Signal<string[]>,
   connected: Signal<Record<string, Word[]>>,
   connectedNetworkFeedback: Signal<string>,
-  parentToChildren: Signal<Record<string, Word[]>>,
+  parentToChildren: Signal<
+    Record<string, { word: Word; senses: SenseAndSub[] }[]>
+  >,
   parentToChildrenNetworkFeedback: Signal<string>
 ) {
   if (!wordIds.value.length) return;
@@ -68,13 +81,15 @@ async function sentenceSignalToGraphs(
     }
   }
   {
+    const body: IncludesWordsChildrenArrayPost = { wordIds: wordIds.value };
     const res = await fetch(`/api/includes-words/children/array`, {
       ...jsonHeaders,
       method: "POST",
-      body: JSON.stringify({ wordIds }),
+      body: JSON.stringify(body),
     });
     if (res.ok) {
-      parentToChildren.value = await res.json();
+      parentToChildren.value =
+        (await res.json()) as IncludesWordsChildrenArrayPostResponse;
       parentToChildrenNetworkFeedback.value = "";
     } else {
       parentToChildrenNetworkFeedback.value = `${res.status} ${res.statusText}`;
@@ -93,7 +108,9 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const connected = useSignal<Record<Word["id"], Word[]>>({});
   const connectedNetworkFeedback = useSignal("");
 
-  const parentToChildren = useSignal<Record<Word["id"], Word[]>>({});
+  const parentToChildren = useSignal<
+    Record<Word["id"], { word: Word; senses: SenseAndSub[] }[]>
+  >({});
   const parentToChildrenNetworkFeedback = useSignal("");
 
   useSignalEffect(() => {
@@ -392,7 +409,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       } else if (dragType.value === "parentChild") {
         wordIdUnder.value = under;
 
-        dropValid.value = under !== wordIdBeingDragged.value;
+        dropValid.value =
+          under !== wordIdBeingDragged.value &&
+          !!sentence.value?.vocab?.find(
+            (v) => v.entry.id === wordIdBeingDragged.value
+          )?.senses;
       }
     }
   }
@@ -430,13 +451,21 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       dropValid
     ) {
       console.log(`child=${wordIdBeingDragged.value}, parent=${wordIdDropped}`);
+      const childSenses = sentence.value?.vocab?.find(
+        (v) => v.entry.id === wordIdBeingDragged.value
+      )?.senses;
+      if (!(childSenses && wordIdDropped && wordIdBeingDragged.value)) {
+        return;
+      }
+      const body: IncludesWordsConnectPost = {
+        childId: wordIdBeingDragged.value,
+        parentId: wordIdDropped,
+        childSenses,
+      };
       const fetchResult = await fetch("/api/includes-words/connect", {
         ...jsonHeaders,
         method: "POST",
-        body: JSON.stringify({
-          childId: wordIdBeingDragged.value,
-          parentId: wordIdDropped,
-        }),
+        body: JSON.stringify(body),
       });
       if (fetchResult.ok) {
         sentenceSignalToGraphs(
@@ -540,11 +569,13 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                     <ul>
                       <li>Implicit reviews</li>
                       <ul>
-                        {parentToChildren.value[v.entry.id].map((word) => (
-                          <li>
-                            <SimpleWord word={word} gloss />
-                          </li>
-                        ))}
+                        {parentToChildren.value[v.entry.id].map(
+                          ({ word, senses }) => (
+                            <li key={word.id}>
+                              <SimpleWord word={word} gloss senses={senses} />
+                            </li>
+                          )
+                        )}
                       </ul>
                     </ul>
                   )}
@@ -1094,9 +1125,15 @@ const Formal = (
   </span>
 );
 
-const SimpleWord: FunctionComponent<{ word: Word; gloss?: boolean }> = ({
+interface SimpleWordProps {
+  word: Word;
+  senses?: SenseAndSub[];
+  gloss?: boolean;
+}
+const SimpleWord: FunctionComponent<SimpleWordProps> = ({
   word,
   gloss,
+  senses,
 }) => {
   return (
     <>
@@ -1105,14 +1142,14 @@ const SimpleWord: FunctionComponent<{ word: Word; gloss?: boolean }> = ({
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {gloss &&
         word.sense.map((s, sidx) => (
-          <>
+          <span class={senseSeenClass(sidx, senses)}>
             {prefixNumber(sidx)}
             {s.gloss.map((g, gidx) => (
-              <>
-                <sup>{prefixNumber(gidx)}</sup> {g.text}{" "}
-              </>
+              <span class={subsenseSeenClass(sidx, gidx, senses)}>
+                <sup>{prefixNumber(gidx)}</sup> {g.text}
+              </span>
             ))}
-          </>
+          </span>
         ))}
     </>
   );

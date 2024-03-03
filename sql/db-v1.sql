@@ -38,6 +38,7 @@ create table
     type text not null,
     parentId text not null,
     childId text not null,
+    childSensesJson text not null,
     primary key (type, parentId, childId)
   );
 

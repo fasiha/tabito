@@ -22,6 +22,7 @@ export interface jmdictRow {
 }
 export interface parentChildWordsRow {
   'childId'?: string;
+  'childSensesJson': string;
   'parentId'?: string;
   'type'?: string;
 }

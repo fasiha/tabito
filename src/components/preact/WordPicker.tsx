@@ -1,7 +1,11 @@
 import { type FunctionComponent } from "preact";
 import type { Sense, Word, Xref } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
-import { printXrefs } from "../../utils/utils";
+import {
+  printXrefs,
+  senseSeenClass,
+  subsenseSeenClass,
+} from "../../utils/utils";
 
 interface Props {
   word: Word;
@@ -25,22 +29,14 @@ export const WordPicker: FunctionComponent<Props> = ({
       {word.kanji.map((k) => k.text).join("・")}「
       {word.kana.map((k) => k.text).join("・")}」{" "}
       {word.sense.map((sense, n) => {
-        const wholeSenseClass = alreadyPicked.find(
-          (a) => a.sense === n && a.subsense === undefined
-        )
-          ? "already-picked"
-          : undefined;
+        const wholeSenseClass = senseSeenClass(n, alreadyPicked);
 
         return (
           <span class={wholeSenseClass} key={n}>
             {" "}
             <button onClick={() => handleSense(n)}>{n + 1}</button>
             {sense.gloss.map((g, gi) => {
-              const subSenseClass = alreadyPicked.find(
-                (a) => a.sense === n && a.subsense === gi
-              )
-                ? "already-picked"
-                : undefined;
+              const subSenseClass = subsenseSeenClass(n, gi, alreadyPicked);
 
               return (
                 <span class={subSenseClass} key={gi}>

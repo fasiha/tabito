@@ -1,17 +1,28 @@
 import type { APIRoute } from "astro";
 import { allChildren, getJmdicts } from "../../../../db";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
+import type { SenseAndSub } from "../../../../components/commonInterfaces";
+
+export interface IncludesWordsChildrenArrayPost {
+  wordIds: string[];
+}
+export type IncludesWordsChildrenArrayPostResponse = Record<
+  string,
+  { word: Word; senses: SenseAndSub[] }[]
+>;
 
 export const POST: APIRoute = async ({ request }) => {
-  const { wordIds } = await request.json();
+  const { wordIds } = (await request.json()) as IncludesWordsChildrenArrayPost;
 
   if (Array.isArray(wordIds) && wordIds.every((s) => typeof s === "string")) {
-    const result: Record<string, Word[]> = {};
+    const result: IncludesWordsChildrenArrayPostResponse = {};
     for (const wordId of wordIds) {
       if (wordId in result) continue;
-      const childrenIds = allChildren(wordId, "includes");
-      if (childrenIds.length) {
-        result[wordId] = getJmdicts(childrenIds);
+      const children = allChildren(wordId, "includes");
+      if (children.length) {
+        result[wordId] = getJmdicts(children.map((c) => c.childId)).map(
+          (word, idx) => ({ word, senses: children[idx].senses })
+        );
       }
     }
     return new Response(JSON.stringify(result), jsonOptions);

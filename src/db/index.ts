@@ -15,6 +15,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
 import { newComponentId } from "../utils/randomId";
+import type { SenseAndSub } from "../components/commonInterfaces";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -295,21 +296,29 @@ export function addJmdict(word: Word, currentTime = Date.now()) {
 const newParentChildEdgeStatement = db.prepare<
   Required<Tables.parentChildWordsRow>
 >(
-  `insert into parentChildWords (type, parentId, childId) values ($type, $parentId, $childId)
-  on conflict do nothing`
+  `insert into parentChildWords (type, parentId, childId, childSensesJson)
+  values ($type, $parentId, $childId, $childSensesJson)
+  on conflict do
+  update set childSensesJson=$childSensesJson`
 );
 export function newParentChildEdge(
   parentId: Word["id"],
   childId: Word["id"],
-  type: ParentChildType
+  type: ParentChildType,
+  childSenses: SenseAndSub[]
 ) {
   if (parentId !== childId) {
-    return newParentChildEdgeStatement.run({ type, parentId, childId });
+    return newParentChildEdgeStatement.run({
+      type,
+      parentId,
+      childId,
+      childSensesJson: JSON.stringify(childSenses),
+    });
   }
 }
 
 const deleteParentChildEdgeStatement = db.prepare<
-  Required<Tables.parentChildWordsRow>
+  Required<Pick<Tables.parentChildWordsRow, "childId" | "parentId" | "type">>
 >(
   `delete from parentChildWords where type=$type and parentId=$parentId and childId=$childId`
 );
@@ -336,11 +345,18 @@ export function allParents(
 const allChildrenStatement = db.prepare<
   Required<Pick<Tables.parentChildWordsRow, "parentId" | "type">>
 >(
-  `select childId from parentChildWords where parentId=$parentId and type=$type`
+  `select childId, childSensesJson from parentChildWords where parentId=$parentId and type=$type`
 );
 export function allChildren(
   parentId: Word["id"],
   type: ParentChildType
-): string[] {
-  return allChildrenStatement.pluck().all({ parentId, type }) as string[];
+): { childId: string; senses: SenseAndSub[] }[] {
+  const idsAndJson = allChildrenStatement.raw().all({ parentId, type }) as [
+    string,
+    string
+  ][];
+  return idsAndJson.map(([childId, json]) => ({
+    childId,
+    senses: JSON.parse(json),
+  }));
 }
