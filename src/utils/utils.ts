@@ -151,3 +151,15 @@ export function subsenseSeenClass(
     ? "already-picked"
     : undefined;
 }
+
+function furiganaIdxToPlain(
+  furigana: Furigana[][],
+  startIdx: number = 0,
+  endIdx: undefined | number = undefined
+): string {
+  return furigana
+    .slice(startIdx, endIdx)
+    .flat()
+    .map((o) => (typeof o === "string" ? o : o.ruby))
+    .join("");
+}
