@@ -2,12 +2,9 @@ import type { FunctionalComponent } from "preact";
 import type { Sentence } from "../../interfaces/backend";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
 import { WordPicker } from "./WordPicker";
-import type {
-  IchiranConjProp,
-  IchiranGloss as IchiranGlossType,
-} from "../../nlp-wrappers/ichiran-types";
+import type { IchiranGloss as IchiranGlossType } from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
-import { extractTags, join } from "../../utils/utils";
+import { extractTags } from "../../utils/utils";
 
 interface IchiranGlossProps {
   /** Only used if JMdict `seq`/`word` not available */
@@ -63,22 +60,3 @@ export const IchiranGloss: FunctionalComponent<IchiranGlossProps> = ({
     </>
   );
 };
-export const ConjProp = (prop: IchiranConjProp[]) => (
-  <em>
-    {join(
-      prop.map((p) => (
-        <>
-          [{p.pos}: {p.type}
-          {p.fml && Formal}]
-        </>
-      )),
-      "; "
-    )}{" "}
-  </em>
-);
-const Formal = (
-  <span class="unitalicize-emoji" title="Formal">
-    {" "}
-    🤵
-  </span>
-);

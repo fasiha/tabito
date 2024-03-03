@@ -6,11 +6,14 @@ import type { ContextCloze } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
 import { Furigana as FuriganaComponent } from "./Furigana";
 import { WordPicker } from "./WordPicker";
-import type { IchiranWord } from "../../nlp-wrappers/ichiran-types";
+import type {
+  IchiranConjProp,
+  IchiranWord,
+} from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
 import { extractTags, join, prefixNumber } from "../../utils/utils";
 import { grammarConjEqual } from "../../utils/equality";
-import { IchiranGloss, ConjProp } from "./IchiranGloss";
+import { IchiranGloss } from "./IchiranGloss";
 
 interface NlpTableProps {
   grammarConj: Sentence["grammarConj"];
@@ -71,19 +74,22 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             start,
             len: x.text.length,
             content: (
-              <IchiranGloss
-                origGloss={x.gloss}
-                word={words[x.seq]}
-                tags={tags}
-                onNewVocabGrammar={onNewVocabGrammar}
-                start={start}
-                len={x.text.length}
-                vocab={vocab}
-              />
+              <>
+                {x.counter && <em>({x.counter.value}) </em>}
+                <IchiranGloss
+                  origGloss={x.gloss}
+                  word={words[x.seq]}
+                  tags={tags}
+                  onNewVocabGrammar={onNewVocabGrammar}
+                  start={start}
+                  len={x.text.length}
+                  vocab={vocab}
+                />
+              </>
             ),
           });
         }
-        if (x.conj?.length) {
+        if ("conj" in x && x.conj?.length) {
           // IchiranSingle with NO gloss but with conj
           jmdictSeqSeen.add(seenId(x.seq, start, x.text.length));
           for (const conj of x.conj) {
@@ -208,19 +214,13 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
     start = 0;
     if (typeof curtiz !== "string") {
       for (const { startIdx, results } of curtiz.hits) {
-        for (const { endIdx, run, results: subresults } of results) {
-          if (typeof run === "string") {
-            start = plain.indexOf(run, start);
-          } else {
-            const clozeHit = plain.indexOf(
-              `${run.left}${run.cloze}${run.right}`,
-              start
-            );
-            if (clozeHit < start) {
-              throw new Error("unable to find cloze");
-            }
-            start = clozeHit + run.left.length;
-          }
+        for (const { endIdx, results: subresults } of results) {
+          start = curtiz.furigana
+            .slice(0, startIdx)
+            .flat()
+            .map((s) => (typeof s === "string" ? s.length : s.ruby.length))
+            .reduce((prev, curr) => prev + curr, 0);
+
           const len = curtiz.furigana
             .slice(startIdx, endIdx)
             .flat()
@@ -351,3 +351,23 @@ function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
   }
   return d.conjugation;
 }
+
+export const ConjProp = (prop: IchiranConjProp[]) => (
+  <em>
+    {join(
+      prop.map((p) => (
+        <>
+          [{p.pos}: {p.type}
+          {p.fml && Formal}]
+        </>
+      )),
+      "; "
+    )}{" "}
+  </em>
+);
+const Formal = (
+  <span class="unitalicize-emoji" title="Formal">
+    {" "}
+    🤵
+  </span>
+);

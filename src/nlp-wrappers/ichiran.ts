@@ -1065,3 +1065,342 @@ const example2: Ichiran = [
     ],
   ],
 ];
+
+const counterValue: Ichiran = [
+  [
+    [
+      [
+        [
+          "yasumin",
+          {
+            reading: "ヤスミン",
+            text: "ヤスミン",
+            kana: "ヤスミン",
+            score: 0,
+          },
+          [],
+        ],
+        [
+          "wa",
+          {
+            reading: "は",
+            text: "は",
+            kana: "‌は",
+            score: 11,
+            seq: 2028920,
+            gloss: [
+              {
+                pos: "[prt]",
+                gloss: "indicates sentence topic",
+                info: "pronounced わ in modern Japanese",
+              },
+              {
+                pos: "[prt]",
+                gloss:
+                  "indicates contrast with another option (stated or unstated)",
+              },
+              {
+                pos: "[prt]",
+                gloss: "adds emphasis",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "ichinichi/tsuitachi",
+          {
+            alternative: [
+              {
+                reading: "一日 【いちにち】",
+                text: "一日",
+                kana: "いちにち",
+                score: 208,
+                seq: 1576260,
+                gloss: [
+                  {
+                    pos: "[n,adv]",
+                    gloss: "one day",
+                  },
+                  {
+                    pos: "[adv,n]",
+                    gloss:
+                      "all day (long); the whole day; from morning till night",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "1st day of the month",
+                  },
+                ],
+                conj: [],
+              },
+              {
+                reading: "一日 【ついたち】",
+                text: "一日",
+                kana: "ついたち",
+                score: 143,
+                seq: 2225040,
+                gloss: [
+                  {
+                    pos: "[n]",
+                    gloss: "1st day of the month",
+                  },
+                  {
+                    pos: "[n]",
+                    gloss: "first 10 days of the lunar month",
+                  },
+                ],
+                conj: [],
+              },
+            ],
+          },
+          [],
+        ],
+        [
+          "ni",
+          {
+            reading: "に",
+            text: "に",
+            kana: "に",
+            score: 11,
+            seq: 2028990,
+            gloss: [
+              {
+                pos: "[prt]",
+                gloss: "at (place, time); in; on; during",
+              },
+              {
+                pos: "[prt]",
+                gloss: "to (direction, state); toward; into",
+              },
+              {
+                pos: "[prt]",
+                gloss: "for (purpose)",
+              },
+              {
+                pos: "[prt]",
+                gloss: "because of (reason); for; with",
+              },
+              {
+                pos: "[prt]",
+                gloss: "by; from",
+              },
+              {
+                pos: "[prt]",
+                gloss: "as (i.e. in the role of)",
+              },
+              {
+                pos: "[prt]",
+                gloss: 'per; in; for; a (e.g. "once a month")',
+              },
+              {
+                pos: "[prt]",
+                gloss: "and; in addition to",
+              },
+              {
+                pos: "[prt]",
+                gloss: "if; although",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "gokai",
+          {
+            reading: "五回 【ごかい】",
+            text: "五回",
+            kana: "ごかい",
+            score: 221,
+            counter: {
+              value: "Value: 5",
+              ordinal: [],
+            },
+            seq: 1199330,
+            gloss: [
+              {
+                pos: "[ctr]",
+                gloss: "counter for occurrences",
+              },
+            ],
+          },
+          [],
+        ],
+        [
+          "oinori",
+          {
+            reading: "お祈り 【おいのり】",
+            text: "お祈り",
+            kana: "おいのり",
+            score: 264,
+            seq: 2269380,
+            gloss: [
+              {
+                pos: "[n]",
+                gloss: "prayer; supplication",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "suru",
+          {
+            reading: "する",
+            text: "する",
+            kana: "する",
+            score: 40,
+            seq: 1157170,
+            gloss: [
+              {
+                pos: "[vs-i]",
+                gloss: "to do; to carry out; to perform",
+              },
+              {
+                pos: "[vs-i]",
+                gloss: "to cause to become; to make (into); to turn (into)",
+              },
+              {
+                pos: "[vs-i]",
+                gloss: "to serve as; to act as; to work as",
+              },
+              {
+                pos: "[vs-i]",
+                gloss: "to wear (clothes, a facial expression, etc.)",
+              },
+              {
+                pos: "[vs-i]",
+                gloss:
+                  "to judge as being; to view as being; to think of as; to treat as; to use as",
+                info: "as 〜にする,〜とする",
+              },
+              {
+                pos: "[vs-i]",
+                gloss: "to decide on; to choose",
+                info: "as 〜にする",
+              },
+              {
+                pos: "[vs-i,vi]",
+                gloss: "to be sensed (of a smell, noise, etc.)",
+                info: "as 〜がする",
+              },
+              {
+                pos: "[vs-i,vi]",
+                gloss: "to be (in a state, condition, etc.)",
+              },
+              {
+                pos: "[vs-i,vi]",
+                gloss: "to be worth; to cost",
+              },
+              {
+                pos: "[vs-i,vi]",
+                gloss: "to pass (of time); to elapse",
+              },
+              {
+                pos: "[vs-i,vt]",
+                gloss: "to place, or raise, person A to a post or status B",
+                info: "as AをBにする",
+              },
+              {
+                pos: "[vs-i,vt]",
+                gloss:
+                  "to transform A to B; to make A into B; to exchange A for B",
+                info: "as AをBにする",
+              },
+              {
+                pos: "[vs-i,vt]",
+                gloss:
+                  "to make use of A for B; to view A as B; to handle A as if it were B",
+                info: "as AをBにする",
+              },
+              {
+                pos: "[vs-i,vt]",
+                gloss: "to feel A about B",
+                info: "as AをBにする",
+              },
+              {
+                pos: "[suf,vs-i]",
+                gloss:
+                  'verbalizing suffix (applies to nouns noted in this dictionary with the part of speech "vs")',
+              },
+              {
+                pos: "[aux-v,vs-i]",
+                gloss:
+                  'creates a humble verb (after a noun prefixed with "o" or "go")',
+              },
+              {
+                pos: "[aux-v,vs-i]",
+                gloss:
+                  "to be just about to; to be just starting to; to try to; to attempt to",
+                info: "as 〜うとする,〜ようとする",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "sō",
+          {
+            reading: "そう",
+            text: "そう",
+            kana: "そう",
+            score: 40,
+            seq: 1006610,
+            gloss: [
+              {
+                pos: "[aux,adj-na]",
+                gloss:
+                  "appearing that; seeming that; looking like; having the appearance of",
+                info: "after -masu stem or adj. stem",
+              },
+            ],
+            conj: [],
+          },
+          [],
+        ],
+        [
+          "desu",
+          {
+            reading: "です",
+            text: "です",
+            kana: "です",
+            score: 64,
+            seq: 1628500,
+            gloss: [
+              {
+                pos: "[cop]",
+                gloss: "be; is",
+              },
+            ],
+            conj: [
+              {
+                prop: [
+                  {
+                    pos: "cop",
+                    type: "Non-past",
+                    fml: true,
+                  },
+                ],
+                reading: "だ",
+                gloss: [
+                  {
+                    pos: "[cop,cop-da]",
+                    gloss: "be; is",
+                    info: "plain copula",
+                  },
+                ],
+                readok: true,
+              },
+            ],
+          },
+          [],
+        ],
+      ],
+      -1117,
+    ],
+  ],
+];

@@ -5,10 +5,11 @@ import Basic from "../layouts/Basic.astro";
 
 import StaticSentence from "../components/StaticSentenceSsr.astro";
 import { clearDocument } from "../db";
+import StaticSentenceSsr from "../components/StaticSentenceSsr.astro";
 
-const documentName = "Genki";
+const d = "Genki";
 
-clearDocument(documentName);
+clearDocument(d);
 ---
 
 <style>
@@ -17,166 +18,73 @@ clearDocument(documentName);
   }
 </style>
 
-<Basic title={documentName}>
-  <h1>{documentName}</h1>
+<Basic title={d}>
+  <h1>{d}</h1>
   <div class="paragraph">
     Here's a basic demo sentence I want to remember: <StaticSentence
       plain="うどんを食べた"
-      docName={documentName}
+      d={d}
     />
   </div>
   <div class="paragraph">
     I didn't know this about たくさん: it can be used as an adverb and a noun
     and an adjective. This sentence can be shuffled around two ways, though only
     one will be visible: <StaticSentence
-      docName={documentName}
+      d={d}
       plain="京都でたくさん写真を撮りました"
     />
   </div>
   <div class="paragraph">
     Consider several sentences in one:
-    <StaticSentence
-      docName={documentName}
-      plain="これは兄が予約した旅館です"
-    />. Here are two sentences in one:
-    <StaticSentence docName={documentName} plain="音が好き" />. And consider
-    this:
-    <StaticSentence docName={documentName} plain="死んじまえ" />
-    <StaticSentence docName={documentName} plain="触ったら死んだ" />
-    <StaticSentence docName={documentName} plain="いつ彼にあげるか分からない" />
+    <StaticSentence d={d} plain="これは兄が予約した旅館です" />. Here are two
+    sentences in one:
+    <StaticSentence d={d} plain="音が好き" />. And consider this:
+    <StaticSentence d={d} plain="死んじまえ" />
+    <StaticSentence d={d} plain="触ったら死んだ" />
+    <StaticSentence d={d} plain="いつ彼にあげるか分からない" />
+  </div>
+  <div class="paragraph">
+    From Genki II Workbook, Lesson 17 worksheet (page 44):
+    <ul>
+      <li>
+        <StaticSentence d={d} plain="ヤスミンは一日に五回お祈りするそうです" />
+      </li>
+      <li><StaticSentence d={d} plain="友達の寮は汚くないそうです" /></li>
+      <li>
+        <StaticSentence d={d} plain="たけしは旅行会社に就職したそうです" />
+      </li>
+      <li><StaticSentence d={d} plain="映画館は混んでいなかったそうです" /></li>
+      <li>
+        <StaticSentence
+          d={d}
+          plain="明日試験だから、夜ソラが勉強しなければいけないそうです"
+        />
+      </li>
+      <li><StaticSentence d={d} plain="ケンの大家さんはケチだそうです" /></li>
+    </ul>
+  </div>
+  <div class="paragraph">
+    Here's my story from Genki II Workbook, page 42:
+    <ul>
+      <li>
+        <StaticSentence d={d} plain="パルクールの大会にピザ屋さんがいました" />
+      </li>
+      <li><StaticSentence d={d} plain="少年はスライスを買いたかったです" /></li>
+      <li>
+        <StaticSentence
+          d={d}
+          plain="でも二十ドル札だけあってピザ屋さんはお釣りがありませんでした"
+        />
+      </li>
+      <li>
+        <StaticSentence
+          d={d}
+          plain="お金持ちだから、カードで少年にピザを買ってあげました"
+        />
+      </li>
+    </ul>
   </div>
   <div>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（筆跡音）" /></li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（夏目美緒）ハァ…" />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（森川葉月のくしゃみ）" />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（鼻をすする音）" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（森川睦月）" /></li>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="お姉ちゃん、かぜひいた？"
-        />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="（葉月）明日は終業式なのにね"
-        />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（相馬陽斗）ハァ…" />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（電車の走行音）" />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="（父親）家 見えてきたぞ"
-        />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（泉瑛太）どれ？" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（父親）" /></li>
-      <li>
-        <StaticSentence docName={documentName} plain="正面のほう 大きいやつ" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（瑛太）あ…" /></li>
-      <li>
-        <StaticSentence docName={documentName} plain="あんなとこ 住むの…" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="昨日" /></li>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="中学時代の友人はおると？"
-        />
-      </li>
-      <li>
-        <StaticSentence docName={documentName} plain="4年会ってない奴がおる" />
-      </li>
-      <li><StaticSentence docName={documentName} plain="薄情なやつばい" /></li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（渡辺）今日で" /></li>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="２学期も終わりなわけだが―"
-        />
-      </li>
-      <li><StaticSentence docName={documentName} plain="就職するヤツも" /></li>
-      <li><StaticSentence docName={documentName} plain="進学するヤツも―" /></li>
-      <li>
-        <StaticSentence docName={documentName} plain="高校生でいられる時間は" />
-      </li>
-      <li>
-        <StaticSentence docName={documentName} plain="残り僅かだからな―" />
-      </li>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="残った時間をどう過ごすのかも"
-        />
-      </li>
-      <li><StaticSentence docName={documentName} plain="よーく考えて" /></li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="冬休みを迎えるんだぞ" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（チャイム）" /></li>
-      <li>
-        <StaticSentence docName={documentName} plain="（男子生徒）起立" />
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <StaticSentence docName={documentName} plain="（シャッター音）" />
-      </li>
-    </ul>
-    <ul>
-      <li><StaticSentence docName={documentName} plain="（猿渡順平）" /></li>
-      <li>
-        <StaticSentence
-          docName={documentName}
-          plain="陽斗よ～ 今日もやんだろ？"
-        />
-      </li>
-    </ul>
+    <StaticSentence d={d} plain="お姉ちゃん、かぜひいた？" />
   </div>
 </Basic>

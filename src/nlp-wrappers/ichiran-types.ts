@@ -21,12 +21,18 @@ export interface IchiranConjVia {
   via: IchiranConj[];
 }
 
+export interface IchiranCounter {
+  value: string;
+  ordinal: unknown[];
+}
+
 export interface IchiranBasic {
   reading: string;
   text: string;
   kana: string;
   score: number;
   suffix?: string;
+  counter?: IchiranCounter;
 }
 
 export interface IchiranSingle extends IchiranBasic {
@@ -44,7 +50,9 @@ export type Exclusive<T, U> = T | U extends object
       | (T & Partial<Record<Exclude<keyof U, keyof T>, never>>)
       | (U & Partial<Record<Exclude<keyof T, keyof U>, never>>)
   : never;
-export type IchiranHit = Exclusive<IchiranCompound, IchiranSingle>;
+export type IchiranHit =
+  | IchiranBasic
+  | Exclusive<IchiranCompound, IchiranSingle>;
 export type IchiranHitOrAlt = IchiranHit | { alternative: IchiranHit[] };
 
 export type IchiranWord = [string, IchiranHitOrAlt, []];

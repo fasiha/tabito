@@ -9,10 +9,10 @@ import { SentenceAnnotations } from "./solid/SentenceAnnotations";
 
 interface Props {
   plain: string;
-  docName: string;
+  d: string;
 }
 
-const { plain, docName } = Astro.props;
+const { plain, d: docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
 const sentence = getSentence(plain, false);
