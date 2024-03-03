@@ -163,3 +163,16 @@ function furiganaIdxToPlain(
     .map((o) => (typeof o === "string" ? o : o.ruby))
     .join("");
 }
+
+export function dedupeBy<T, U>(v: T[], key: (x: T) => U): T[] {
+  const seen = new Set<U>();
+  const ret: T[] = [];
+  for (const x of v) {
+    const y = key(x);
+    if (!seen.has(y)) {
+      seen.add(y);
+      ret.push(x);
+    }
+  }
+  return ret;
+}

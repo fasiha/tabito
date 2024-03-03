@@ -24,6 +24,7 @@ import type {
 import type { IncludesWordsConnectPost } from "../../pages/api/includes-words/connect";
 import { SimpleWord } from "./SimpleWord";
 import { NlpTable } from "./NlpTable";
+import { dedupeBy } from "../../utils/utils";
 
 interface Props {
   plain: string;
@@ -436,16 +437,27 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       wordIdBeingDragged.value !== wordIdDropped &&
       dropValid
     ) {
-      console.log(`child=${wordIdBeingDragged.value}, parent=${wordIdDropped}`);
-      const childSenses = sentence.value?.vocab?.find(
-        (v) => v.entry.id === wordIdBeingDragged.value
+      const parentId = wordIdDropped;
+      const childId = wordIdBeingDragged.value;
+      console.log(`child=${childId}, parent=${parentId}`);
+
+      const newChildSenses = sentence.value?.vocab?.find(
+        (v) => v.entry.id === childId
       )?.senses;
-      if (!(childSenses && wordIdDropped && wordIdBeingDragged.value)) {
+      const origChildSenses = parentToChildren.value[parentId ?? ""]?.find(
+        (w) => w.word.id === childId
+      )?.senses;
+      const childSenses = dedupeBy(
+        (newChildSenses || []).concat(origChildSenses || []),
+        (s) => `${s.sense}/${s.subsense ?? -1}`
+      );
+
+      if (!(childSenses.length && parentId && childId)) {
         return;
       }
       const body: IncludesWordsConnectPost = {
-        childId: wordIdBeingDragged.value,
-        parentId: wordIdDropped,
+        childId,
+        parentId,
         childSenses,
       };
       const fetchResult = await fetch("/api/includes-words/connect", {
@@ -531,7 +543,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                   {v.senses
                     .map((s) =>
                       s.subsense
-                        ? v.entry.sense[s.sense].gloss[s.subsense]
+                        ? v.entry.sense[s.sense].gloss[s.subsense].text
                         : v.entry.sense[s.sense].gloss
                             .map((g) => g.text)
                             .join(", ")
