@@ -2,7 +2,7 @@
 import { type Component } from "solid-js";
 import { enumerateAcceptable } from "tabito-lib";
 
-import type { Sentence } from "../../interfaces/backend";
+import type { Sentence, WithoutNlp } from "../../interfaces/backend";
 import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
 import { db } from "../../indexeddb";
 import { furiganaToPlain } from "../../utils/utils";
@@ -10,7 +10,7 @@ import { makeSentenceMemory } from "../../utils/make";
 import { FuriganaComponent } from "./FuriganaComponent";
 
 interface Props {
-  sentence: Sentence;
+  sentence: WithoutNlp<Sentence>;
 }
 export const SentencePicked: Component<Props> = ({ sentence }) => {
   const plain = furiganaToPlain(sentence.furigana);

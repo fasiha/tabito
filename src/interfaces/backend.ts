@@ -64,3 +64,5 @@ export type WordIdConnType = (typeof ALLOWED_WORDID_CONNECTION_TYPES)[number];
 
 export const ALLOWED_PARENT_CHILD_TYPES = ["includes"] as const;
 export type ParentChildType = (typeof ALLOWED_PARENT_CHILD_TYPES)[number];
+
+export type WithoutNlp<T> = Omit<T, "nlp">;

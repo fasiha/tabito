@@ -6,6 +6,10 @@ import "../styles/editor.css";
 import { enrollSentenceIntoDoc, getSentence } from "../db";
 import { Sentence } from "./preact/Sentence";
 import { SentenceAnnotations } from "./solid/SentenceAnnotations";
+import type {
+  WithoutNlp,
+  Sentence as SentenceType,
+} from "../interfaces/backend";
 
 interface Props {
   plain: string;
@@ -15,14 +19,19 @@ interface Props {
 const { plain, d: docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
-const sentence = getSentence(plain, false);
+const sentence: WithoutNlp<SentenceType> | undefined = getSentence(
+  plain,
+  false
+);
+if (sentence) {
+  delete (sentence as any)["nlp"];
+}
 ---
 
 <style>
   .sentence-annotations {
     position: absolute;
-    display: block;
-    visibility: hidden;
+    display: none;
     z-index: 1;
     background: var(--background-color);
 
@@ -38,7 +47,7 @@ const sentence = getSentence(plain, false);
     left: 0;
   }
   .hover-area:hover .sentence-annotations {
-    visibility: visible;
+    display: block;
   }
 
   .hover-area {

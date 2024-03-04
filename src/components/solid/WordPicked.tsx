@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import type { Component } from "solid-js";
+import { type Component } from "solid-js";
 import type { Furigana, Sense, Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub } from "../commonInterfaces";
 import {

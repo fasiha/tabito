@@ -1,13 +1,13 @@
 /** @jsxImportSource solid-js */
 import type { Component } from "solid-js";
-import type { Sentence } from "../../interfaces/backend";
+import type { Sentence, WithoutNlp } from "../../interfaces/backend";
 import { WordPicked } from "./WordPicked";
-import { furiganaSlice, furiganaToPlain } from "../../utils/utils";
+import { furiganaSlice } from "../../utils/utils";
 import { GrammarConjPicked } from "./GrammarConjPicked";
 import { SentencePicked } from "./SentencePicked";
 
 interface Props {
-  sentence: Sentence;
+  sentence: WithoutNlp<Sentence>;
 }
 
 export const SentenceAnnotations: Component<Props> = ({ sentence }) => {
