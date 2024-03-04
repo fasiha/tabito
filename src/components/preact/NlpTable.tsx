@@ -336,7 +336,11 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
         <tbody>{table}</tbody>
       </table>
     );
-  }
+  },
+  (prev, next) =>
+    prev.grammarConj === next.grammarConj &&
+    prev.vocab === next.vocab &&
+    prev.plain === next.plain
 );
 function findClozeIdx(plain: string, run: ContextCloze): number {
   const clozeHit = plain.indexOf(`${run.left}${run.cloze}${run.right}`);

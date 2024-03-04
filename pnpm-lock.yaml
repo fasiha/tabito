@@ -36,8 +36,8 @@ dependencies:
     specifier: ^2.1.2
     version: 2.1.2
   kamiya-codec:
-    specifier: ^4.9.4
-    version: 4.9.4
+    specifier: ^4.10.0
+    version: 4.10.0
   minimize-golden-section-1d:
     specifier: ^3.0.0
     version: 3.0.0
@@ -3952,8 +3952,8 @@ packages:
       graceful-fs: 4.2.11
     dev: false
 
-  /kamiya-codec@4.9.4:
-    resolution: {integrity: sha512-RCU3UeMus9fR/YCd1H2xh3f4lq/HtdI4vYR2C5JQnT9sfRbvRmArhnfHPbfPbLnW4MwcQpPEx9GWc3xb0UHaeA==}
+  /kamiya-codec@4.10.0:
+    resolution: {integrity: sha512-CP6S8CwhfQtVg8paeHl2EoZQpU8fsGtkH9ldK+e7QFmz2Ecs6Met8Grvt+SArbJYVBdN4Dbb+ZKhPPV0yiQ26A==}
 
   /karma-safari-launcher@1.0.0(karma@6.4.3):
     resolution: {integrity: sha512-qmypLWd6F2qrDJfAETvXDfxHvKDk+nyIjpH9xIeI3/hENr0U3nuqkxaftq73PfXZ4aOuOChA6SnLW4m4AxfRjQ==}
@@ -7130,8 +7130,8 @@ packages:
       get-stdin: 7.0.0
       io-ts: 2.2.20(fp-ts@2.16.1)
       jmdict-furigana-node: github.com/fasiha/jmdict-furigana-node/5338507221e8c4506e4d3f8730d45dd019811c99
-      jmdict-simplified-node: github.com/fasiha/jmdict-simplified-node/a94e8188e254295381c65a05bb8db5e4ea51064f
-      kamiya-codec: 4.9.4
+      jmdict-simplified-node: github.com/fasiha/jmdict-simplified-node/b6f16e7398a79cc3b744702632bf82dd5b1b131c
+      kamiya-codec: 4.10.0
       mecab-emscripten-node: github.com/fasiha/mecab-emscripten-node/3962af82c0061739b12b748b3ab5dfcc22f91933
       mkdirp: 1.0.4
       node-gzip: 1.1.2
@@ -7154,10 +7154,10 @@ packages:
       strip-bom: 4.0.0
     dev: true
 
-  github.com/fasiha/jmdict-simplified-node/a94e8188e254295381c65a05bb8db5e4ea51064f:
-    resolution: {tarball: https://codeload.github.com/fasiha/jmdict-simplified-node/tar.gz/a94e8188e254295381c65a05bb8db5e4ea51064f}
+  github.com/fasiha/jmdict-simplified-node/b6f16e7398a79cc3b744702632bf82dd5b1b131c:
+    resolution: {tarball: https://codeload.github.com/fasiha/jmdict-simplified-node/tar.gz/b6f16e7398a79cc3b744702632bf82dd5b1b131c}
     name: jmdict-simplified-node
-    version: 1.1.2
+    version: 1.2.0
     dependencies:
       leveldown: 5.6.0
       levelup: 4.4.0

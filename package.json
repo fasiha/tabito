@@ -34,7 +34,7 @@
     "better-sqlite3": "^9.1.1",
     "dexie": "^3.2.5",
     "ebisu-js": "^2.1.2",
-    "kamiya-codec": "^4.9.4",
+    "kamiya-codec": "^4.10.0",
     "minimize-golden-section-1d": "^3.0.0",
     "node-fetch": "^3.3.2",
     "preact": "^10.6.5",

@@ -37,7 +37,9 @@ async function plainToSentenceSignal(
 ) {
   const res = await fetch(`/api/sentence/${plain}`);
   if (res.ok) {
-    sentence.value = await res.json();
+    const data: Sentence = await res.json();
+    data.furigana.filter((x) => x !== ""); // ignore empty strings in case we get any
+    sentence.value = data;
     networkFeedback.value = "";
   } else {
     networkFeedback.value = `${res.status} ${res.statusText}`;
