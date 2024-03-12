@@ -5,3 +5,7 @@
 .unitalicize-emoji {
   font-style: normal;
 }
+
+form {
+  display: inline;
+}

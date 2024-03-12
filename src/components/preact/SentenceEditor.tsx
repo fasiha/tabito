@@ -93,6 +93,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const synonymSentence = useSignal("");
   const synonymWord = useSignal<[string, string]>(["", ""]);
   const newCitation = useSignal<undefined | string>(undefined);
+  const newFurigana = useSignal<Record<number, string>>({});
 
   const connected = useSignal<Record<Word["id"], Word[]>>({});
   const connectedNetworkFeedback = useSignal("");
@@ -154,7 +155,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   }
 
   function handleEditCitation() {
-    newCitation.value = sentence.value?.citation || "";
+    if (newCitation.value === undefined) {
+      newCitation.value = sentence.value?.citation || "";
+    } else {
+      newCitation.value = undefined;
+    }
   }
 
   function handleInputCitation(
@@ -485,6 +490,62 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     dropValid.value = false;
   }
 
+  // new furigana
+  function handleToggleFurigana(idx: number) {
+    if (idx in newFurigana.value) {
+      const copy = { ...newFurigana.value };
+      delete copy[idx];
+      newFurigana.value = copy;
+    } else {
+      const thisFuri = sentence.value?.furigana[idx];
+      if (thisFuri && typeof thisFuri === "object" && thisFuri.rt) {
+        newFurigana.value = { ...newFurigana.value, [idx]: thisFuri.rt };
+      }
+    }
+  }
+  function handleEditFurigana(idx: number, next: string) {
+    if (idx in newFurigana.value) {
+      newFurigana.value = { ...newFurigana.value, [idx]: next };
+    }
+  }
+  async function handleSubmitFurigana(
+    idx: number,
+    ev: TargetedEvent<HTMLFormElement, Event>
+  ) {
+    ev.preventDefault();
+    const orig = sentence.value?.furigana[idx];
+    if (
+      sentence.value &&
+      newFurigana.value[idx] &&
+      newFurigana.value[idx] !==
+        (typeof orig === "object" ? orig.rt : undefined)
+    ) {
+      const body: Sentence = structuredClone(sentence.value);
+      const f = body.furigana[idx];
+      if (typeof f === "object") {
+        f.rt = newFurigana.value[idx];
+      } else {
+        throw new Error("TypeScript failed?");
+      }
+
+      const request = await fetch(`/api/sentence/${plain}`, {
+        ...jsonHeaders,
+        body: JSON.stringify({ sentence: body }),
+        method: "POST",
+      });
+      if (request.ok) {
+        sentence.value = body; // new value!
+        // clear
+        networkFeedback.value = "";
+        const copy = { ...newFurigana.value };
+        delete copy[idx];
+        newFurigana.value = copy;
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
+  }
+
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
@@ -639,12 +700,37 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           <p>Furigana:</p>
           <ul>
             {sentence.value.furigana
+              .map((f, i) => [f, i] as const)
               .filter(
-                (f): f is Exclude<Furigana, string> => typeof f !== "string"
+                (pair): pair is [Exclude<Furigana, string>, number] =>
+                  typeof pair[0] !== "string"
               )
-              .map((r) => (
+              .map(([{ ruby, rt }, idx]) => (
                 <li>
-                  {r.ruby}: {r.rt}
+                  {ruby}:{" "}
+                  {idx in newFurigana.value ? (
+                    <form onSubmit={(e) => handleSubmitFurigana(idx, e)}>
+                      <input
+                        onInput={(e) =>
+                          handleEditFurigana(idx, e.currentTarget.value)
+                        }
+                        placeholder="Reading"
+                        type="text"
+                        value={newFurigana.value[idx]}
+                      />{" "}
+                      <button type="submit">Submit</button>
+                      <button onClick={() => handleToggleFurigana(idx)}>
+                        Cancel
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      {rt}{" "}
+                      <button onClick={() => handleToggleFurigana(idx)}>
+                        Edit
+                      </button>
+                    </>
+                  )}
                 </li>
               ))}
           </ul>
@@ -682,7 +768,8 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                     type="text"
                     value={newCitation.value}
                   />{" "}
-                  <button>Submit</button>
+                  <button type="submit">Submit</button>
+                  <button onClick={handleEditCitation}>Cancel</button>
                 </form>
               </>
             )}
