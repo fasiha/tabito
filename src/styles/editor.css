@@ -9,3 +9,7 @@
 form {
   display: inline;
 }
+
+summary h3 {
+  display: inline-block;
+}

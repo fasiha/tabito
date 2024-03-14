@@ -1,4 +1,4 @@
-import type { FunctionalComponent, VNode } from "preact";
+import type { FunctionComponent, FunctionalComponent, VNode } from "preact";
 import { memo } from "preact/compat";
 import type { GrammarConj, Sentence } from "../../interfaces/backend";
 import { cellFit, type Cell } from "../../utils/cellFit";
@@ -31,8 +31,11 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
 
     const tags = typeof curtiz === "string" ? {} : curtiz.tags ?? {};
 
-    const cells: Cell<VNode>[] = [];
+    const cellsIchiran: Cell<VNode>[] = [];
+    const cellsCurtizVocab: Cell<VNode>[] = [];
+    const cellsCurtizGrammar: Cell<VNode>[] = [];
 
+    const jmdictSeqStartLenSeen = new Set<string>();
     const jmdictSeqSeen = new Set<string>();
     const seenId = (id: string | number, start: number, len: number) =>
       `${id}/${start}/${len}`;
@@ -69,8 +72,10 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
       for (const x of wordArr) {
         // this is IchiranSingle WITH gloss
         if ("gloss" in x && x.gloss) {
-          jmdictSeqSeen.add(seenId(x.seq, start, x.text.length));
-          cells.push({
+          jmdictSeqStartLenSeen.add(seenId(x.seq, start, x.text.length));
+          jmdictSeqSeen.add(x.seq.toString());
+          jmdictSeqSeen.add(words[x.seq].id ?? -1);
+          cellsIchiran.push({
             start,
             len: x.text.length,
             content: (
@@ -91,9 +96,11 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
         }
         if ("conj" in x && x.conj?.length) {
           // IchiranSingle with NO gloss but with conj
-          jmdictSeqSeen.add(seenId(x.seq, start, x.text.length));
+          jmdictSeqStartLenSeen.add(seenId(x.seq, start, x.text.length));
+          jmdictSeqSeen.add(x.seq.toString());
+          jmdictSeqSeen.add(words[x.seq].id ?? -1);
           for (const conj of x.conj) {
-            cells.push({
+            cellsIchiran.push({
               start: start,
               len: x.text.length,
               content: (
@@ -149,8 +156,10 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             // these two `if`s are very very similar to the above, but I
             // don't want to DRY this yet
             if ("gloss" in y && y.gloss) {
-              jmdictSeqSeen.add(seenId(y.seq, yStart, len));
-              cells.push({
+              jmdictSeqStartLenSeen.add(seenId(y.seq, yStart, len));
+              jmdictSeqSeen.add(y.seq.toString());
+              jmdictSeqSeen.add(words[y.seq].id ?? -1);
+              cellsIchiran.push({
                 start: yStart,
                 len,
                 content: (
@@ -167,9 +176,11 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
               });
             }
             if (y.conj.length) {
-              jmdictSeqSeen.add(seenId(y.seq, yStart, len));
+              jmdictSeqStartLenSeen.add(seenId(y.seq, yStart, len));
+              jmdictSeqSeen.add(y.seq.toString());
+              jmdictSeqSeen.add(words[y.seq].id ?? -1);
               for (const conj of y.conj) {
-                cells.push({
+                cellsIchiran.push({
                   start: yStart,
                   len: len,
                   content: (
@@ -211,7 +222,6 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
       start += wordArr[0].text.length;
     }
 
-    start = 0;
     if (typeof curtiz !== "string") {
       for (const { startIdx, results } of curtiz.hits) {
         for (const { endIdx, results: subresults } of results) {
@@ -227,8 +237,8 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             .map((o) => (typeof o === "string" ? o.length : o.ruby.length))
             .reduce((a, b) => a + b, 0);
           for (const { wordId, word, tags } of subresults) {
-            if (jmdictSeqSeen.has(seenId(wordId, start, len))) continue;
-            jmdictSeqSeen.add(seenId(wordId, start, len));
+            if (jmdictSeqStartLenSeen.has(seenId(wordId, start, len))) continue;
+            jmdictSeqStartLenSeen.add(seenId(wordId, start, len));
             const thisStart = start; // otherwise closure below will capture original scope
             const onNewVocab = (sense: SenseAndSub) =>
               onNewVocabGrammar({
@@ -247,7 +257,7 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
                     v.entry.id === wordId && v.start === start && v.len === len
                 )
                 .flatMap((v) => v.senses) ?? [];
-            cells.push({
+            const next = {
               start,
               len,
               content: (
@@ -258,7 +268,9 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
                   alreadyPicked={alreadyPicked}
                 />
               ),
-            });
+            };
+            if (jmdictSeqSeen.has(wordId)) cellsCurtizVocab.unshift(next);
+            else cellsCurtizVocab.push(next);
           }
         }
       }
@@ -304,37 +316,40 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             </ul>
           </>
         );
-        cells.push({ start, len, content });
+        cellsCurtizGrammar.push({ start, len, content });
       }
-    }
-
-    const table: VNode[] = [];
-    for (const [rowId, row] of cellFit(cells).entries()) {
-      const tds = Array.from(Array(plain.length), (_, i) => <td key={i}></td>);
-      for (let i = row.length - 1; i >= 0; i--) {
-        const x = row[i];
-        tds.splice(
-          x.start,
-          x.len,
-          <td key={x.start} colspan={x.len}>
-            <div class="cell">{x.content}</div>
-          </td>
-        );
-      }
-      table.push(<tr key={rowId}>{tds}</tr>);
     }
 
     return (
-      <table>
-        <thead>
-          <tr>
-            {plain.split("").map((c, i) => (
-              <td key={i}>{c}</td>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{table}</tbody>
-      </table>
+      <>
+        <details open>
+          <summary>
+            <h3>Ichiran vocab</h3>
+          </summary>
+          <PlainHeadTable plain={plain}>
+            {cellsToTable(plain, cellsIchiran)}
+          </PlainHeadTable>
+        </details>
+
+        <details open>
+          <summary>
+            <h3>Curtiz grammar</h3>
+          </summary>
+          <PlainHeadTable plain={plain}>
+            {cellsToTable(plain, cellsCurtizGrammar)}
+          </PlainHeadTable>
+        </details>
+
+        <details open>
+          <summary>
+            <h3>Curtiz vocab</h3>
+          </summary>
+          <PlainHeadTable plain={plain}>
+            {cellsToTable(plain, cellsCurtizVocab)}
+          </PlainHeadTable>
+        </details>
+        <pre>{JSON.stringify(Array.from(jmdictSeqSeen), null, 1)}</pre>
+      </>
     );
   },
   (prev, next) =>
@@ -342,6 +357,44 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
     prev.vocab === next.vocab &&
     prev.plain === next.plain
 );
+
+const PlainHeadTable: FunctionComponent<{
+  plain: string;
+  children: VNode[];
+}> = ({ plain, children }) => {
+  return (
+    <table>
+      <thead>
+        <tr>
+          {plain.split("").map((c, i) => (
+            <td key={i}>{c}</td>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{children}</tbody>
+    </table>
+  );
+};
+
+function cellsToTable(plain: string, cells: Cell<VNode>[]) {
+  const table: VNode[] = [];
+  for (const [rowId, row] of cellFit(cells).entries()) {
+    const tds = Array.from(Array(plain.length), (_, i) => <td key={i}></td>);
+    for (let i = row.length - 1; i >= 0; i--) {
+      const x = row[i];
+      tds.splice(
+        x.start,
+        x.len,
+        <td key={x.start} colspan={x.len}>
+          <div class="cell">{x.content}</div>
+        </td>
+      );
+    }
+    table.push(<tr key={rowId}>{tds}</tr>);
+  }
+  return table;
+}
+
 function findClozeIdx(plain: string, run: ContextCloze): number {
   const clozeHit = plain.indexOf(`${run.left}${run.cloze}${run.right}`);
   if (clozeHit >= 0) {
