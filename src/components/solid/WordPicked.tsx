@@ -146,7 +146,7 @@ export const WordPicked: Component<Props> = ({
               ))}
               <sub>
                 <Related sense={sense} /> <Antonym sense={sense} />{" "}
-                <Tags sense={sense} tags={tags} />
+                <Tags sense={sense} tags={tags} /> <Info sense={sense} />
               </sub>{" "}
             </>
           );
@@ -212,7 +212,9 @@ const tagFields = {
   partOfSpeech: "🫦",
 } as const;
 
-export const Related: Component<{ sense: Sense }> = ({ sense }) =>
+const Related: Component<{ sense: Sense }> = ({ sense }) =>
   sense.related.length > 0 ? <>(👉 {printXrefs(sense.related)})</> : null;
-export const Antonym: Component<{ sense: Sense }> = ({ sense }) =>
+const Antonym: Component<{ sense: Sense }> = ({ sense }) =>
   sense.antonym.length > 0 ? <>(👉 {printXrefs(sense.antonym)})</> : null;
+const Info: Component<{ sense: Sense }> = ({ sense }) =>
+  sense.info?.length ? <>[📣 {sense.info.join(";")}]</> : null;
