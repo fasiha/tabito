@@ -348,7 +348,6 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
             {cellsToTable(plain, cellsCurtizVocab)}
           </PlainHeadTable>
         </details>
-        <pre>{JSON.stringify(Array.from(jmdictSeqSeen), null, 1)}</pre>
       </>
     );
   },
