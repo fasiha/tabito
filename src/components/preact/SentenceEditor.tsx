@@ -5,7 +5,7 @@ import {
   useSignal,
   useSignalEffect,
 } from "@preact/signals";
-import { addSynonym } from "tabito-lib";
+import { addSynonym, validateSynonyms } from "tabito-lib";
 import { type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
@@ -271,15 +271,19 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     ev: TargetedEvent<HTMLFormElement, SubmitEvent>
   ) {
     ev.preventDefault();
-    if (sentence.value && synonymWord.value[0] && synonymWord.value[1]) {
-      const furiganaResponse = await fetch(
-        `/api/furigana/${synonymWord.value[1]}`
-      );
-      if (furiganaResponse.ok) {
-        const synFurigana = await furiganaResponse.json();
-        const newSynonyms = (sentence.value.synonyms ?? []).concat([
-          [synonymWord.value[0], synFurigana],
-        ]);
+    if (sentence.value && synonymWord.value[0]) {
+      const furiganaResponse = synonymWord.value[1]
+        ? await fetch(`/api/furigana/${synonymWord.value[1]}`)
+        : undefined;
+      if (furiganaResponse === undefined || furiganaResponse.ok) {
+        const newSynonyms = sentence.value.synonyms ?? [];
+        if (furiganaResponse) {
+          const synFurigana: Furigana[] = await furiganaResponse.json();
+          newSynonyms.push([synonymWord.value[0], synFurigana]);
+        } else {
+          newSynonyms.push([synonymWord.value[0], []]);
+        }
+
         const newSentence: Sentence = {
           ...sentence.value,
           synonyms: newSynonyms,
@@ -653,11 +657,22 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             grammarConj={sentence.value.grammarConj}
           />
 
-          <p>Synonyms:</p>
+          <p>
+            Synonyms (plain: {plain}, boundaries:{" "}
+            {sentence.value.furigana
+              .map((f) => (typeof f === "string" ? f : f.ruby))
+              .join("|")}{" "}
+            ):
+          </p>
           <ul>
             {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
               <li>
-                {syn}: <SentenceComponent sentence={{ furigana: alt }} />{" "}
+                {syn}:{" "}
+                {alt.length ? (
+                  <SentenceComponent sentence={{ furigana: alt }} />
+                ) : (
+                  "-"
+                )}{" "}
                 <button onClick={() => handleDeleteSynonym(syn, alt)}>
                   Delete
                 </button>
@@ -689,7 +704,13 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
                   value={synonymWord.value[1]}
                 />{" "}
                 <button
-                  disabled={!(synonymWord.value[0] && synonymWord.value[1])}
+                  disabled={
+                    !synonymWord.value[0] ||
+                    !validateSynonyms({
+                      furigana: sentence.value.furigana,
+                      synonyms: [[synonymWord.value[0], []]],
+                    })
+                  }
                 >
                   Submit
                 </button>

@@ -51,8 +51,8 @@ dependencies:
     specifier: ^1.8.15
     version: 1.8.15
   tabito-lib:
-    specifier: github:fasiha/tabito-lib
-    version: github.com/fasiha/tabito-lib/85b29bd6bff6c369522956bbe73fdb0386851b01
+    specifier: ^1.3.0
+    version: 1.3.0
   typescript:
     specifier: ^5.2.2
     version: 5.2.2
@@ -6139,6 +6139,10 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  /tabito-lib@1.3.0:
+    resolution: {integrity: sha512-A894vr9osPp1SoTa3C261ZcAtqkVl5qBFzwsjCj4vKOSTiPXv9wsuB9k9Mt51gliv2AraK/c73APj3WxnpnzJQ==}
+    dev: false
+
   /tar-fs@2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
     requiresBuild: true
@@ -7169,9 +7173,3 @@ packages:
     version: 1.0.0
     hasBin: true
     dev: true
-
-  github.com/fasiha/tabito-lib/85b29bd6bff6c369522956bbe73fdb0386851b01:
-    resolution: {tarball: https://codeload.github.com/fasiha/tabito-lib/tar.gz/85b29bd6bff6c369522956bbe73fdb0386851b01}
-    name: tabito-lib
-    version: 1.2.0
-    dev: false
