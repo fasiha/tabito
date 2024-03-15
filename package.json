@@ -30,7 +30,7 @@
     "@astrojs/solid-js": "^4.0.1",
     "@preact/signals": "^1.2.1",
     "@types/node-fetch": "^2.6.9",
-    "astro": "^4.4.0",
+    "astro": "^4.5.4",
     "better-sqlite3": "^9.1.1",
     "dexie": "^3.2.5",
     "ebisu-js": "^2.1.2",

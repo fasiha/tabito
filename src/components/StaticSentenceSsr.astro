@@ -31,7 +31,7 @@ if (sentence) {
 <style>
   .sentence-annotations {
     position: absolute;
-    display: none;
+    visibility: hidden;
     z-index: 1;
     background: var(--background-color);
 
@@ -47,7 +47,7 @@ if (sentence) {
     left: 0;
   }
   .hover-area:hover .sentence-annotations {
-    display: block;
+    visibility: visible;
   }
 
   .hover-area {
@@ -55,18 +55,18 @@ if (sentence) {
   }
 </style>
 
-<div class="hover-area">
-  <span class="sentence-container">
-    {sentence ? <Sentence sentence={sentence} /> : plain}
+<span class="sentence-container">
+  {sentence ? <Sentence sentence={sentence} /> : plain}
+  <div class="hover-area">
     <a href={`/edit-sentence/${plain}`}>
-      {sentence ? "📝" : "❓"}
+      {sentence ? (sentence?.translations ? "📝" : "❓") : "❌"}
     </a>
-  </span>
-  {
-    sentence && (
-      <div class="sentence-annotations">
-        <SentenceAnnotations sentence={sentence} client:visible />
-      </div>
-    )
-  }
-</div>
+    {
+      sentence && (
+        <div class="sentence-annotations">
+          <SentenceAnnotations sentence={sentence} client:visible />
+        </div>
+      )
+    }
+  </div>
+</span>
