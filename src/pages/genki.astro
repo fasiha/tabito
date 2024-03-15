@@ -3,9 +3,8 @@ export const prerender = true;
 
 import Basic from "../layouts/Basic.astro";
 
-import StaticSentence from "../components/StaticSentenceSsr.astro";
+import S from "../components/StaticSentenceSsr.astro";
 import { clearDocument } from "../db";
-import StaticSentenceSsr from "../components/StaticSentenceSsr.astro";
 
 const d = "Genki";
 
@@ -16,12 +15,16 @@ clearDocument(d);
   div.paragraph {
     margin: 1em 0;
   }
+  blockquote {
+    border-left: 8px solid #333;
+    padding: 0.1em 1rem;
+  }
 </style>
 
 <Basic title={d}>
   <h1>{d}</h1>
   <div class="paragraph">
-    Here's a basic demo sentence I want to remember: <StaticSentence
+    Here's a basic demo sentence I want to remember: <S
       plain="うどんを食べた"
       d={d}
     />
@@ -29,62 +32,123 @@ clearDocument(d);
   <div class="paragraph">
     I didn't know this about たくさん: it can be used as an adverb and a noun
     and an adjective. This sentence can be shuffled around two ways, though only
-    one will be visible: <StaticSentence
-      d={d}
-      plain="京都でたくさん写真を撮りました"
-    />
+    one will be visible: <S d={d} plain="京都でたくさん写真を撮りました" />
   </div>
   <div class="paragraph">
     Consider several sentences in one:
-    <StaticSentence d={d} plain="これは兄が予約した旅館です" />. Here are two
-    sentences in one:
-    <StaticSentence d={d} plain="音が好き" />. And consider this:
-    <StaticSentence d={d} plain="死んじまえ" />
-    <StaticSentence d={d} plain="触ったら死んだ" />
-    <StaticSentence d={d} plain="いつ彼にあげるか分からない" />
+    <S d={d} plain="これは兄が予約した旅館です" />. Here are two sentences in
+    one:
+    <S d={d} plain="音が好き" />. And consider this:
+    <S d={d} plain="死んじまえ" />
+    <S d={d} plain="触ったら死んだ" />
+    <S d={d} plain="いつ彼にあげるか分からない" />
   </div>
   <div class="paragraph">
     From Genki II Workbook, Lesson 17 worksheet (page 44):
     <ul>
       <li>
-        <StaticSentence d={d} plain="ヤスミンは一日に五回お祈りするそうです" />
+        <S d={d} plain="ヤスミンは一日に五回お祈りするそうです" />
       </li>
-      <li><StaticSentence d={d} plain="友達の寮は汚くないそうです" /></li>
+      <li><S d={d} plain="友達の寮は汚くないそうです" /></li>
       <li>
-        <StaticSentence d={d} plain="たけしは旅行会社に就職したそうです" />
+        <S d={d} plain="たけしは旅行会社に就職したそうです" />
       </li>
-      <li><StaticSentence d={d} plain="映画館は混んでいなかったそうです" /></li>
+      <li><S d={d} plain="映画館は混んでいなかったそうです" /></li>
       <li>
-        <StaticSentence
+        <S
           d={d}
           plain="明日試験だから、夜ソラが勉強しなければいけないそうです"
         />
       </li>
-      <li><StaticSentence d={d} plain="ケンの大家さんはケチだそうです" /></li>
+      <li><S d={d} plain="ケンの大家さんはケチだそうです" /></li>
     </ul>
   </div>
   <div class="paragraph">
     Here's my story from Genki II Workbook, page 42:
     <ul>
       <li>
-        <StaticSentence d={d} plain="パルクールの大会にピザ屋さんがいました" />
+        <S d={d} plain="パルクールの大会にピザ屋さんがいました" />
       </li>
-      <li><StaticSentence d={d} plain="少年はスライスを買いたかったです" /></li>
+      <li><S d={d} plain="少年はスライスを買いたかったです" /></li>
       <li>
-        <StaticSentence
+        <S
           d={d}
           plain="でも二十ドル札だけあってピザ屋さんはお釣りがありませんでした"
         />
       </li>
       <li>
-        <StaticSentence
-          d={d}
-          plain="お金持ちだから、カードで少年にピザを買ってあげました"
-        />
+        <S d={d} plain="お金持ちだから、カードで少年にピザを買ってあげました" />
       </li>
     </ul>
   </div>
-  <div>
-    <StaticSentence d={d} plain="お姉ちゃん、かぜひいた？" />
+  <div class="paragraph">
+    Here are some great questions to practice くれる・あげる・もらう:
+  </div>
+  <div class="paragraph">
+    <S d={d} plain="友達が落ち込んでいる時、友達に何をしてあげますか" />. <S
+      d={d}
+      plain="友達の宿題や仕事を手伝ってあげる"
+    />
+  </div>
+  <div class="p">
+    <S d={d} plain="寂しい時、誰に何をしてもらいたいですか" />. <S
+      d={d}
+      plain="家族と一緒に話してもらいたい"
+    />
+  </div>
+
+  <div class="paragraph">
+    <S d={d} plain="子供の時、家族は何をしてくれましたか" />。
+    <S d={d} plain="美味しいご飯を作ってくれました" />
+    <blockquote>
+      <small>
+        <strong>Notes</strong> I was wondering if "Xの時" was more or less common
+        than "X時" so I looked up <a
+          href="https://nlb.ninjal.ac.jp/headword/N.00435/">時 on NINJAL</a
+        > and while it does say that
+        <ul>
+          <li>"<ruby>名詞<rt>めいし</rt></ruby>＋時" = 4,894 frequency</li>
+          <li>"名詞＋の＋時" = 44 frequency</li>
+        </ul>
+        <p>(名詞="noun"), the vast majority of "X時" is</p>
+        <ul>
+          <li>
+            numbers like "時９〜１７時", i.e., じ not とき, and set phrases like
+          </li>
+          <li>
+            <ruby>夕<rt>ゆう</rt></ruby><ruby>暮<rt>ぐ</rt></ruby>れ<ruby
+              >時<rt>どき</rt></ruby
+            > (dusk)
+          </li>
+          <li>
+            <ruby>梅<rt>つ</rt></ruby><ruby>雨<rt>ゆ</rt></ruby><ruby
+              >時<rt>どき</rt></ruby
+            > (rainy season)
+          </li>
+          <li>
+            <ruby>昼<rt>ひる</rt></ruby><ruby>時<rt>どき</rt></ruby> (lunchtime),
+            etc.
+          </li>
+        </ul>
+        <p>So this sentence doesn't allow you to give "子供時" by itself.</p>
+      </small>
+    </blockquote>
+  </div>
+
+  <div class="paragraph">
+    <S d={d} plain="どんな時、感動しましたか" />.
+    <S d={d} plain="いい本を読んだ時、感動します" />
+  </div><div class="paragraph">
+    Q. <S d={d} plain="よくなきますか" />.
+    <S d={d} plain="どんな時、泣きますか" />. A.
+    <S d={d} plain="あまり泣きません" />
+    <S d={d} plain="悲しいアニメを見た時、時々泣きます" />
+  </div>
+  <div class="paragraph">
+    <S d={d} plain="道に迷った時、どうしますか" />.
+    <S d={d} plain="スマホで目的地を調べます" />
+  </div>
+  <div class="paragraph">
+    <S d={d} plain="お姉ちゃん、かぜひいた？" />
   </div>
 </Basic>
