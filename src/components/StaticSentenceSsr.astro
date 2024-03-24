@@ -7,7 +7,7 @@ import { enrollSentenceIntoDoc, getSentence } from "../db";
 import { Sentence } from "./preact/Sentence";
 import { SentenceAnnotations } from "./solid/SentenceAnnotations";
 import type {
-  WithoutNlp,
+  AnnotatedSentence,
   Sentence as SentenceType,
 } from "../interfaces/backend";
 
@@ -19,11 +19,10 @@ interface Props {
 const { plain, d: docName } = Astro.props;
 
 enrollSentenceIntoDoc(plain, docName);
-const sentence: WithoutNlp<SentenceType> | undefined = getSentence(
-  plain,
-  false
-);
+const sentence: AnnotatedSentence | undefined = getSentence(plain, false);
 if (sentence) {
+  const curtiz = (sentence as SentenceType).nlp.curtiz;
+  if (typeof curtiz === "object") sentence.kanjidic = curtiz.kanjidic;
   delete (sentence as any)["nlp"];
 }
 ---
@@ -45,6 +44,8 @@ if (sentence) {
       box-shadow 0.3s;
 
     left: 0;
+    max-height: 75vh;
+    overflow-y: scroll;
   }
   .hover-area:hover .sentence-annotations {
     visibility: visible;

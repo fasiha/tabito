@@ -2,33 +2,22 @@
 export const prerender = true;
 
 import Basic from "../../layouts/Basic.astro";
-
 import S from "../../components/StaticSentenceSsr.astro";
 import { clearDocument } from "../../db";
+
+import "./genki.css";
+
+import L16_1 from "./16-1.astro";
+import L16_2 from "./16-2.astro";
+import L16_3 from "./16-3.astro";
+import L16_4 from "./16-4.astro";
+
+import L17_1 from "./17-1.astro";
 
 const d = "Genki";
 
 clearDocument(d);
 ---
-
-<style>
-  h1,
-  h2,
-  h3,
-  h4 {
-    background-color: green;
-    display: inline;
-    padding: 0px 0.5em;
-  }
-
-  div.p {
-    margin: 1em 0;
-  }
-  blockquote {
-    border-left: 8px solid #333;
-    padding: 0.1em 1rem;
-  }
-</style>
 
 <Basic title={d}>
   <h1>{d}</h1>
@@ -56,198 +45,16 @@ clearDocument(d);
       <S d={d} plain="触ったら死んだ" />
       <S d={d} plain="いつ彼にあげるか分からない" />
     </div>
-  </section>
-
-  <section>
-    <h2>L16, §1. くれる・あげる・もらう</h2>
-    <div class="p">
-      For me it's easy to remember the directionality of these words.
-    </div>
-    <ul>
-      <li>あげる is always leaving me—I'm generously emitting goodwill.</li>
-      <li>
-        もらう and くれる are always inbound to me—I'm receiving goodwill from
-        others.
-      </li>
-    </ul>
-    <div class="p">But then there's a few different mental models.</div>
-    <ul>
-      <li>
-        "To give" is literally the meaning of あげる and くれる. "giver が
-        recipient に something を (あげる or くれる)"
-      </li>
-      <li>
-        "To receive" is literally もらう, and the recipient is the subject.
-        "recipient が giver に something を もらう"
-      </li>
-    </ul>
-    <div class="p">
-      Another typology the cleaves the three in a different way is
-    </div>
-    <ul>
-      <li>
-        あげる and もらう both take <ruby>私<rt>わたし</rt></ruby> ("me") as the
-        subject. "<ruby>私<rt>わたし</rt></ruby> が something を (あげる or もらう)"
-      </li>
-      <li>
-        In contrast, the "other party" is the subject of くれる. "they が <ruby
-          >私<rt>わたし</rt></ruby
-        > に くれる"
-      </li>
-    </ul>
 
     <div class="p">
-      Here's my story from Genki II Workbook, page 42:
-      <ul>
-        <li>
-          <S d={d} plain="パルクールの大会にピザ屋さんがいました" />
-        </li>
-        <li><S d={d} plain="少年はスライスを買いたかったです" /></li>
-        <li>
-          <S
-            d={d}
-            plain="でも二十ドル札だけあってピザ屋さんはお釣りがありませんでした"
-          />
-        </li>
-        <li>
-          <S
-            d={d}
-            plain="お金持ちだから、カードで少年にピザを買ってあげました"
-          />
-        </li>
-      </ul>
-    </div>
-    <div class="p">
-      Here are some great questions to practice くれる・あげる・もらう:
-    </div>
-    <div class="p">
-      <S d={d} plain="友達が落ち込んでいる時、友達に何をしてあげますか" />. <S
-        d={d}
-        plain="友達の宿題や仕事を手伝ってあげる"
-      />
-    </div>
-    <div class="p">
-      <S d={d} plain="寂しい時、誰に何をしてもらいたいですか" />. <S
-        d={d}
-        plain="家族と一緒に話してもらいたい"
-      />
-    </div>
-
-    <div class="p">
-      <S d={d} plain="子供の時、家族は何をしてくれましたか" />。
-      <S d={d} plain="美味しいご飯を作ってくれました" />
-      <blockquote>
-        <details>
-          <summary>Notes</summary>
-          I was wondering if "Xの時" was more or less common than "X時" so I looked
-          up <a href="https://nlb.ninjal.ac.jp/headword/N.00435/"
-            >時 on NINJAL</a
-          > and while it does say that
-          <ul>
-            <li>"<ruby>名詞<rt>めいし</rt></ruby>＋時" = 4,894 frequency</li>
-            <li>"名詞＋の＋時" = 44 frequency</li>
-          </ul>
-          <p>(名詞="noun"), the vast majority of "X時" is</p>
-          <ul>
-            <li>
-              numbers like "時９〜１７時", i.e., じ not とき, and set phrases
-              like
-            </li>
-            <li>
-              <ruby>夕<rt>ゆう</rt></ruby><ruby>暮<rt>ぐ</rt></ruby>れ<ruby
-                >時<rt>どき</rt></ruby
-              > (dusk)
-            </li>
-            <li>
-              <ruby>梅<rt>つ</rt></ruby><ruby>雨<rt>ゆ</rt></ruby><ruby
-                >時<rt>どき</rt></ruby
-              > (rainy season)
-            </li>
-            <li>
-              <ruby>昼<rt>ひる</rt></ruby><ruby>時<rt>どき</rt></ruby> (lunchtime),
-              etc.
-            </li>
-          </ul>
-          <p>So this sentence doesn't allow you to give "子供時" by itself.</p>
-        </details>
-      </blockquote>
+      <S d={d} plain="お姉ちゃん、かぜひいた？" />
     </div>
   </section>
 
-  <section>
-    <h2>L16, §2. Requests</h2>
-    <div class="p">Casual, to your friend:</div>
-    <ul>
-      <li><S d={d} plain="お金を貸してくれない？" /></li>
-      <li><S d={d} plain="日本語を直してくれない？" /></li>
-    </ul>
-    <div class="p">Medium-polite, to your host family:</div>
-    <ul>
-      <li>
-        <S d={d} plain="明日七時に起こしてくれませんか" />
-      </li>
-      <li>
-        <S d={d} plain="もっとゆっくり話してくれませんか" />
-      </li>
-    </ul>
+  <L16_1 d={d} />
+  <L16_2 d={d} />
+  <L16_3 d={d} />
+  <L16_4 d={d} />
 
-    <div class="p">Polite, to your professor:</div>
-    <ul>
-      <li>
-        <S d={d} plain="推薦状を書いていただけませんか" />
-      </li>
-      <li>
-        <S d={d} plain="英語に訳していただけませんか" />
-      </li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>L16.3. Hope</h2>
-    <div class="p">
-      <S d={d} plain="大学院に入学したい" />。
-      <S d={d} plain="推薦状がもらえるといいんですが" />
-    </div>
-  </section>
-
-  <section>
-    <h2>L17, §1</h2>
-    <div class="p">
-      From Genki II Workbook, Lesson 17 worksheet (page 44):
-      <ul>
-        <li>
-          <S d={d} plain="ヤスミンは一日に五回お祈りするそうです" />
-        </li>
-        <li><S d={d} plain="友達の寮は汚くないそうです" /></li>
-        <li>
-          <S d={d} plain="たけしは旅行会社に就職したそうです" />
-        </li>
-        <li><S d={d} plain="映画館は混んでいなかったそうです" /></li>
-        <li>
-          <S
-            d={d}
-            plain="明日試験だから、夜ソラが勉強しなければいけないそうです"
-          />
-        </li>
-        <li><S d={d} plain="ケンの大家さんはケチだそうです" /></li>
-      </ul>
-    </div>
-  </section>
-
-  <div class="p">
-    <S d={d} plain="どんな時、感動しましたか" />.
-    <S d={d} plain="いい本を読んだ時、感動します" />
-  </div><div class="p">
-    Q. <S d={d} plain="よくなきますか" />.
-    <S d={d} plain="どんな時、泣きますか" />. A.
-    <S d={d} plain="あまり泣きません" />
-    <S d={d} plain="悲しいアニメを見た時、時々泣きます" />
-  </div>
-  <div class="p">
-    <S d={d} plain="道に迷った時、どうしますか" />.
-    <S d={d} plain="スマホで目的地を調べます" />
-  </div>
-  <div class="p">
-    <S d={d} plain="お姉ちゃん、かぜひいた？" />
-  </div>
+  <L17_1 d={d} />
 </Basic>

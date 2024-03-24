@@ -1,0 +1,24 @@
+h1,
+h2,
+h3,
+h4 {
+  background-color: lightgreen;
+  display: inline;
+  padding: 0px 0.5em;
+}
+@media (prefers-color-scheme: dark) {
+  h1,
+  h2,
+  h3,
+  h4 {
+    background-color: green;
+  }
+}
+
+div.p {
+  margin: 1em 0;
+}
+blockquote {
+  border-left: 8px solid #333;
+  padding: 0.1em 1rem;
+}

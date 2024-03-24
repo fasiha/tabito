@@ -1,16 +1,18 @@
 /** @jsxImportSource solid-js */
 import type { Component } from "solid-js";
-import type { Sentence, WithoutNlp } from "../../interfaces/backend";
+import type { AnnotatedSentence } from "../../interfaces/backend";
 import { WordPicked } from "./WordPicked";
-import { furiganaSlice } from "../../utils/utils";
+import { furiganaSlice, furiganaToPlain } from "../../utils/utils";
 import { GrammarConjPicked } from "./GrammarConjPicked";
 import { SentencePicked } from "./SentencePicked";
+import { Kanjidic } from "./Kanjidic";
 
 interface Props {
-  sentence: WithoutNlp<Sentence>;
+  sentence: AnnotatedSentence;
 }
 
 export const SentenceAnnotations: Component<Props> = ({ sentence }) => {
+  const plain = furiganaToPlain(sentence.furigana);
   return (
     <>
       <SentencePicked sentence={sentence} />
@@ -44,6 +46,7 @@ export const SentenceAnnotations: Component<Props> = ({ sentence }) => {
           </li>
         ))}
       </ul>
+      <Kanjidic plain={plain} kanjidic={sentence.kanjidic} />
     </>
   );
 };
