@@ -1,0 +1,32 @@
+---
+import S from "../../components/StaticSentenceSsr.astro";
+
+interface Props {
+  d: string;
+}
+const { d } = Astro.props;
+---
+
+<section>
+  <h2>L17, §1</h2>
+  <div class="p">
+    From Genki II Workbook, Lesson 17 worksheet (page 44):
+    <ul>
+      <li>
+        <S d={d} plain="ヤスミンは一日に五回お祈りするそうです" />
+      </li>
+      <li><S d={d} plain="友達の寮は汚くないそうです" /></li>
+      <li>
+        <S d={d} plain="たけしは旅行会社に就職したそうです" />
+      </li>
+      <li><S d={d} plain="映画館は混んでいなかったそうです" /></li>
+      <li>
+        <S
+          d={d}
+          plain="明日試験だから、夜ソラが勉強しなければいけないそうです"
+        />
+      </li>
+      <li><S d={d} plain="ケンの大家さんはケチだそうです" /></li>
+    </ul>
+  </div>
+</section>

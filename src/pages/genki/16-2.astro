@@ -1,0 +1,36 @@
+---
+import S from "../../components/StaticSentenceSsr.astro";
+
+interface Props {
+  d: string;
+}
+const { d } = Astro.props;
+---
+
+<section>
+  <h2>L16, §2. Requests</h2>
+  <div class="p">Casual, to your friend:</div>
+  <ul>
+    <li><S d={d} plain="お金を貸してくれない？" /></li>
+    <li><S d={d} plain="日本語を直してくれない？" /></li>
+  </ul>
+  <div class="p">Medium-polite, to your host family:</div>
+  <ul>
+    <li>
+      <S d={d} plain="明日七時に起こしてくれませんか" />
+    </li>
+    <li>
+      <S d={d} plain="もっとゆっくり話してくれませんか" />
+    </li>
+  </ul>
+
+  <div class="p">Polite, to your professor:</div>
+  <ul>
+    <li>
+      <S d={d} plain="推薦状を書いていただけませんか" />
+    </li>
+    <li>
+      <S d={d} plain="英語に訳していただけませんか" />
+    </li>
+  </ul>
+</section>

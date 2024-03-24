@@ -1,0 +1,31 @@
+---
+import S from "../../components/StaticSentenceSsr.astro";
+
+interface Props {
+  d: string;
+}
+const { d } = Astro.props;
+---
+
+<section>
+  <h2>L16.3. Hope</h2>
+  <div class="p">
+    <S d={d} plain="大学院に入学したいです" />。
+    <S d={d} plain="推薦状をもらえるといいんですが" />
+  </div>
+
+  <div class="p">
+    <S d={d} plain="明朝試験があります" />。
+    <S d={d} plain="朝寝坊しないといいんですが" />
+  </div>
+
+  <div class="p">
+    <S d={d} plain="明日発表しなきゃいけない" />。
+    <S d={d} plain="緊張しないといいんだけど" />
+  </div>
+
+  <div class="p">
+    <S d={d} plain="バーベキューする予定だ" />。
+    <S d={d} plain="雨が降らないといいんだけど" />
+  </div>
+</section>

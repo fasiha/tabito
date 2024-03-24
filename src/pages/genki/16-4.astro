@@ -1,0 +1,55 @@
+---
+import S from "../../components/StaticSentenceSsr.astro";
+
+interface Props {
+  d: string;
+}
+const { d } = Astro.props;
+---
+
+<section>
+  <h2>L16.4. 時</h2>
+  <div class="p">
+    時 is in a quartet, along with なら, たら, and と, that tend to be used for
+    conditions. Recall that its construction is "A 時, B", and it has an
+    interesting twist where "A" is
+    <ul>
+      <li>
+        past tense if A has to happen before B: <S
+          d={d}
+          plain="日本に行った時、旅館に泊まりたい"
+        />
+      </li>
+      <li>
+        present if A is in the future relative to B: <S
+          d={d}
+          plain="昨夜寝る時、歯磨きしなかった"
+        />
+      </li>
+    </ul>
+  </div>
+
+  <div class="p">
+    <S d={d} plain="ボランティア活動に参加した時、色々な人に会った" />
+  </div>
+  <div class="p"><S d={d} plain="学校に行く時、バスに乗る" /></div>
+  <div class="p"><S d={d} plain="この車を買う時、銀行にお金を借りた" /></div>
+  <div class="p">
+    <S d={d} plain="私が友達にプレゼントをもらった時、嬉しかった" />
+  </div>
+
+  <div class="p">More simpler usages:</div>
+  <div class="p">
+    <S d={d} plain="どんな時、感動しましたか" />.
+    <S d={d} plain="いい本を読んだ時、感動します" />
+  </div><div class="p">
+    Q. <S d={d} plain="よくなきますか" />.
+    <S d={d} plain="どんな時、泣きますか" />. A.
+    <S d={d} plain="あまり泣きません" />
+    <S d={d} plain="悲しいアニメを見た時、時々泣きます" />
+  </div>
+  <div class="p">
+    <S d={d} plain="道に迷った時、どうしますか" />.
+    <S d={d} plain="スマホで目的地を調べます" />
+  </div>
+</section>
