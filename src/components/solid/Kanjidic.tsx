@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import type { AnnotatedSentence } from "../../interfaces/backend";
 import type { v1ResSentenceAnalyzed } from "curtiz-japanese-nlp/interfaces";
 import type { SimpleCharacter } from "curtiz-japanese-nlp/kanjidic";
+import { hasHiragana, hasKatakana } from "curtiz-utils";
 
 interface Props {
   kanjidic: AnnotatedSentence["kanjidic"];
@@ -43,7 +44,7 @@ const KanjidicChild: Component<KanjidicChildProps> = ({ root }) => {
     <li>
       {renderKanjidicRoot(root.nodeMapped)}
       <ul>
-        {root.children.map((child, i) => (
+        {root.children.map((child) => (
           <KanjidicChild root={child} />
         ))}
       </ul>
@@ -51,10 +52,38 @@ const KanjidicChild: Component<KanjidicChildProps> = ({ root }) => {
   );
 };
 function renderKanjidicRoot(k: SimpleCharacter) {
-  const readings = k.readings.length ? `「${k.readings.join("・")}」` : "";
-  const ret = `${k.literal} ${readings} ${k.meanings.join("; ")}`;
-  if (k.nanori.length) {
-    return ret + ` (名: ${k.nanori.join("・")})`;
-  }
+  const readings = k.readings.length ? (
+    <>
+      「
+      {k.readings.map((r, i) => (
+        <span
+          class={
+            hasHiragana(r) ? "kunyomi" : hasKatakana(r) ? "onyomi" : undefined
+          }
+        >
+          {r}
+          {i < k.readings.length - 1 ? "・" : ""}
+        </span>
+      ))}
+      」
+    </>
+  ) : null;
+  const nanori = k.nanori.length ? (
+    <span class="nanori">
+      (名:{" "}
+      {k.nanori.map((n, i) => (
+        <>
+          {n}
+          {i < k.nanori.length - 1 ? "・" : ""}
+        </>
+      ))}
+      )
+    </span>
+  ) : null;
+  const ret = (
+    <>
+      {k.literal} {readings} {k.meanings.join("; ")} {nanori}
+    </>
+  );
   return ret;
 }

@@ -29,6 +29,9 @@ dependencies:
   better-sqlite3:
     specifier: ^9.1.1
     version: 9.1.1
+  curtiz-utils:
+    specifier: github:fasiha/curtiz-utils
+    version: github.com/fasiha/curtiz-utils/3df4aab40d8169acd0b4e088f01384257edb6470
   dexie:
     specifier: ^3.2.5
     version: 3.2.5(karma@6.4.3)
@@ -7326,7 +7329,6 @@ packages:
     resolution: {tarball: https://codeload.github.com/fasiha/curtiz-utils/tar.gz/3df4aab40d8169acd0b4e088f01384257edb6470}
     name: curtiz-utils
     version: 1.0.0
-    dev: true
 
   github.com/fasiha/jmdict-furigana-node/5338507221e8c4506e4d3f8730d45dd019811c99:
     resolution: {tarball: https://codeload.github.com/fasiha/jmdict-furigana-node/tar.gz/5338507221e8c4506e4d3f8730d45dd019811c99}

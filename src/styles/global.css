@@ -10,6 +10,10 @@
   --shadow-color: rgba(0, 0, 0, 0.2);
 
   --important: red;
+  /* lol from https://github.com/sdras/night-owl-vscode-theme/blob/main/themes/Night%20Owl-Light-color-theme.json */
+  --important-a: #4876d6;
+  --important-b: #994cc3;
+  --unimportant: #989fb1;
 }
 body {
   /* max-width: 650px; */
@@ -39,6 +43,10 @@ h3 {
     --shadow-color: rgba(255, 255, 255, 0.1);
 
     --important: red;
+    /* and from https://github.com/sdras/night-owl-vscode-theme/blob/main/themes/Night%20Owl-color-theme.json */
+    --important-a: #82aaff;
+    --important-b: #c792ea;
+    --unimportant: #637777;
   }
 
   body {

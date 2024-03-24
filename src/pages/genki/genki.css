@@ -22,3 +22,13 @@ blockquote {
   border-left: 8px solid #333;
   padding: 0.1em 1rem;
 }
+
+.kunyomi {
+  color: var(--important-a);
+}
+.onyomi {
+  color: var(--important-b);
+}
+.nanori {
+  color: var(--unimportant);
+}

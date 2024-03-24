@@ -32,6 +32,7 @@
     "@types/node-fetch": "^2.6.9",
     "astro": "^4.5.4",
     "better-sqlite3": "^9.1.1",
+    "curtiz-utils": "github:fasiha/curtiz-utils",
     "dexie": "^3.2.5",
     "ebisu-js": "^2.1.2",
     "kamiya-codec": "^4.10.0",
