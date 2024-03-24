@@ -6,7 +6,7 @@ import {
   useSignalEffect,
 } from "@preact/signals";
 import { addSynonym, validateSynonyms } from "tabito-lib";
-import { type TargetedEvent } from "preact/compat";
+import { memo, type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Sentence } from "../../interfaces/backend";
@@ -566,88 +566,17 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           </h2>
 
           {/* Vocab selected and equivalent */}
-          {sentence.value.vocab?.length && (
-            <ul>
-              {sentence.value.vocab?.map((v) => (
-                <li
-                  data-wordid={v.entry.id}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  style={{
-                    backgroundColor:
-                      v.entry.id === wordIdUnder.value
-                        ? dropValid.value
-                          ? "DarkGreen"
-                          : "DarkRed"
-                        : undefined,
-                  }}
-                >
-                  <button
-                    title="Drag to equivalent definition"
-                    data-wordid={v.entry.id}
-                    data-dragtype={"connected"}
-                    draggable
-                    onDragStart={handleDragStart}
-                  >
-                    🔗
-                  </button>
-                  <button
-                    title="Drag to parent definition"
-                    data-wordid={v.entry.id}
-                    data-dragtype={"parentChild"}
-                    draggable
-                    onDragStart={handleDragStart}
-                  >
-                    👶
-                  </button>
-                  <button
-                    title="Remove"
-                    onClick={() => handleNewVocabGrammar({ vocab: v })}
-                  >
-                    ❌
-                  </button>
-                  <SimpleWord word={v.entry} />
-                  {v.senses
-                    .map((s) =>
-                      s.subsense
-                        ? v.entry.sense[s.sense].gloss[s.subsense].text
-                        : v.entry.sense[s.sense].gloss
-                            .map((g) => g.text)
-                            .join(", ")
-                    )
-                    .join("; ")}
-                  {v.entry.id in connected.value && (
-                    <ul>
-                      <li>Also acceptable</li>
-                      <ul>
-                        {connected.value[v.entry.id].map((word) =>
-                          word.id !== v.entry.id ? (
-                            <li>
-                              <SimpleWord word={word} gloss />
-                            </li>
-                          ) : null
-                        )}
-                      </ul>
-                    </ul>
-                  )}
-                  {v.entry.id in parentToChildren.value && (
-                    <ul>
-                      <li>Implicit reviews</li>
-                      <ul>
-                        {parentToChildren.value[v.entry.id].map(
-                          ({ word, senses }) => (
-                            <li key={word.id}>
-                              <SimpleWord word={word} gloss senses={senses} />
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          <VocabList
+            sentence={sentence}
+            handleDragOver={handleDragOver}
+            handleDrop={handleDrop}
+            wordIdUnder={wordIdUnder}
+            dropValid={dropValid}
+            handleDragStart={handleDragStart}
+            handleNewVocabGrammar={handleNewVocabGrammar}
+            connected={connected}
+            parentToChildren={parentToChildren}
+          />
 
           <NlpTable
             nlp={sentence.value.nlp}
@@ -802,3 +731,116 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 };
 
 const jsonHeaders = { headers: { "Content-Type": "application/json" } };
+
+interface VocabListProps {
+  sentence: Signal<Sentence | undefined>;
+  handleDragOver: (event: TargetedEvent<HTMLLIElement, DragEvent>) => void;
+  handleDrop: (event: TargetedEvent<HTMLLIElement, DragEvent>) => Promise<void>;
+  wordIdUnder: Signal<string | undefined>;
+  dropValid: Signal<boolean>;
+  handleDragStart: (event: TargetedEvent<HTMLButtonElement, DragEvent>) => void;
+  handleNewVocabGrammar: ({
+    vocab,
+    grammar,
+  }: VocabGrammarProps) => Promise<void>;
+  connected: Signal<Record<string, Word[]>>;
+  parentToChildren: Signal<
+    Record<string, { word: Word; senses: SenseAndSub[] }[]>
+  >;
+}
+
+const VocabList: FunctionalComponent<VocabListProps> = memo(
+  ({
+    sentence,
+    handleDragOver,
+    handleDrop,
+    wordIdUnder,
+    dropValid,
+    handleDragStart,
+    handleNewVocabGrammar,
+    connected,
+    parentToChildren,
+  }) => {
+    if (!sentence.value?.vocab?.length) return null;
+    return (
+      <ul>
+        {sentence.value.vocab.map((v) => (
+          <li
+            data-wordid={v.entry.id}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            style={{
+              backgroundColor:
+                v.entry.id === wordIdUnder.value
+                  ? dropValid.value
+                    ? "DarkGreen"
+                    : "DarkRed"
+                  : undefined,
+            }}
+          >
+            <button
+              title="Drag to equivalent definition"
+              data-wordid={v.entry.id}
+              data-dragtype={"connected"}
+              draggable
+              onDragStart={handleDragStart}
+            >
+              🔗
+            </button>
+            <button
+              title="Drag to parent definition"
+              data-wordid={v.entry.id}
+              data-dragtype={"parentChild"}
+              draggable
+              onDragStart={handleDragStart}
+            >
+              👶
+            </button>
+            <button
+              title="Remove"
+              onClick={() => handleNewVocabGrammar({ vocab: v })}
+            >
+              ❌
+            </button>
+            <SimpleWord word={v.entry} />
+            {v.senses
+              .map((s) =>
+                s.subsense
+                  ? v.entry.sense[s.sense].gloss[s.subsense].text
+                  : v.entry.sense[s.sense].gloss.map((g) => g.text).join(", ")
+              )
+              .join("; ")}
+            {v.entry.id in connected.value && (
+              <ul>
+                <li>Also acceptable</li>
+                <ul>
+                  {connected.value[v.entry.id].map((word) =>
+                    word.id !== v.entry.id ? (
+                      <li>
+                        <SimpleWord word={word} gloss />
+                      </li>
+                    ) : null
+                  )}
+                </ul>
+              </ul>
+            )}
+            {v.entry.id in parentToChildren.value && (
+              <ul>
+                <li>Implicit reviews</li>
+                <ul>
+                  {parentToChildren.value[v.entry.id].map(
+                    ({ word, senses }) => (
+                      <li key={word.id}>
+                        <SimpleWord word={word} gloss senses={senses} />
+                      </li>
+                    )
+                  )}
+                </ul>
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+);
