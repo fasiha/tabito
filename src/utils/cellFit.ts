@@ -1,7 +1,8 @@
-export interface Cell<T = unknown> {
+export interface Cell<T = unknown, Extra = unknown> {
   start: number;
   len: number;
   content: T;
+  extra: Extra;
 }
 export function cellFit<T>(cells: Cell<T>[]): Cell<T>[][] {
   const rows: Cell<T>[][] = [];
@@ -51,30 +52,30 @@ if (import.meta.vitest) {
   describe("cellFit", () => {
     it("fits cells side by side", () => {
       const cells: Cell[] = [
-        { start: 0, len: 1, content: "a" },
-        { start: 1, len: 1, content: "b" },
+        { start: 0, len: 1, extra: undefined, content: "a" },
+        { start: 1, len: 1, extra: undefined, content: "b" },
       ];
       expect(cellFit(cells)).toStrictEqual([[cells[0], cells[1]]]);
     });
     it("puts cells below each other", () => {
       const cells: Cell[] = [
-        { start: 0, len: 1, content: "a" },
-        { start: 0, len: 1, content: "b" },
-        { start: 1, len: 1, content: "c" },
+        { start: 0, len: 1, extra: undefined, content: "a" },
+        { start: 0, len: 1, extra: undefined, content: "b" },
+        { start: 1, len: 1, extra: undefined, content: "c" },
       ];
       expect(cellFit(cells)).toStrictEqual([[cells[0], cells[2]], [cells[1]]]);
     });
     it("handles wide cells too up and down", () => {
       const cells: Cell[] = [
-        { start: 0, len: 5, content: "a" },
-        { start: 0, len: 1, content: "b" },
+        { start: 0, len: 5, extra: undefined, content: "a" },
+        { start: 0, len: 1, extra: undefined, content: "b" },
       ];
       expect(cellFit(cells)).toStrictEqual([[cells[0]], [cells[1]]]);
     });
     it("handles wide cells too left and right", () => {
       const cells: Cell[] = [
-        { start: 0, len: 5, content: "a" },
-        { start: 10, len: 5, content: "b" },
+        { start: 0, len: 5, extra: undefined, content: "a" },
+        { start: 10, len: 5, extra: undefined, content: "b" },
       ];
       expect(cellFit(cells)).toStrictEqual([[cells[0], cells[1]]]);
     });

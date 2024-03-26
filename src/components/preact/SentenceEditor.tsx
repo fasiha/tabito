@@ -1,4 +1,4 @@
-import type { FunctionalComponent } from "preact";
+import type { FunctionalComponent, VNode } from "preact";
 import {
   Signal,
   useComputed,
@@ -6,13 +6,14 @@ import {
   useSignalEffect,
 } from "@preact/signals";
 import { addSynonym, validateSynonyms } from "tabito-lib";
-import { memo, type TargetedEvent } from "preact/compat";
+import { memo, useMemo, type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
-import type { Sentence } from "../../interfaces/backend";
+import type { GrammarConj, Sentence } from "../../interfaces/backend";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
 import {
+  deconjEqual,
   grammarConjEqual,
   senseAndSubEqual,
   vocabEqual,
@@ -24,7 +25,9 @@ import type {
 import type { IncludesWordsConnectPost } from "../../pages/api/includes-words/connect";
 import { SimpleWord } from "./SimpleWord";
 import { NlpTable } from "./NlpTable";
-import { dedupeBy } from "../../utils/utils";
+import { parseNlp } from "./parseNlp";
+import { dedupeBy, furiganaToPlain } from "../../utils/utils";
+import type { Cell } from "../../utils/cellFit";
 
 interface Props {
   plain: string;
@@ -32,7 +35,7 @@ interface Props {
 
 async function plainToSentenceSignal(
   plain: string,
-  sentence: Signal<Sentence | undefined>,
+  sentence: Pick<Signal<Sentence | undefined>, "value">,
   networkFeedback: Signal<string>
 ) {
   const res = await fetch(`/api/sentence/${plain}`);
@@ -94,9 +97,9 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const synonymWord = useSignal<[string, string]>(["", ""]);
   const newCitation = useSignal<undefined | string>(undefined);
   const newFurigana = useSignal<Record<number, string>>({});
-
   const connected = useSignal<Record<Word["id"], Word[]>>({});
   const connectedNetworkFeedback = useSignal("");
+  const importFrom = useSignal<string>("");
 
   const parentToChildren = useSignal<
     Record<Word["id"], { word: Word; senses: SenseAndSub[] }[]>
@@ -120,6 +123,23 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       parentToChildrenNetworkFeedback
     );
   });
+
+  const nlp = useMemo(() => {
+    if (sentence.value) {
+      return parseNlp({
+        plain,
+        nlp: sentence.value.nlp,
+        vocab: sentence.value.vocab,
+        grammarConj: sentence.value.grammarConj,
+        onNewVocabGrammar: handleNewVocabGrammar,
+      });
+    }
+  }, [
+    plain,
+    sentence.value?.nlp,
+    sentence.value?.vocab,
+    sentence.value?.grammarConj,
+  ]);
 
   function handleInputTranslation(
     ev: TargetedEvent<HTMLInputElement, InputEvent>
@@ -550,6 +570,48 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
+  function handleEditImportFrom(
+    event: TargetedEvent<HTMLInputElement, InputEvent>
+  ) {
+    importFrom.value = event.currentTarget.value;
+  }
+
+  async function handleSubmitImportFrom(
+    event: TargetedEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    event.preventDefault();
+    const fakeOldSentence = { value: undefined };
+    // download old sentence data
+    await plainToSentenceSignal(
+      importFrom.value,
+      fakeOldSentence,
+      networkFeedback
+    );
+    if (fakeOldSentence.value && sentence.value && nlp) {
+      const newSentence = copyAnnotations(
+        fakeOldSentence.value,
+        sentence.value,
+        nlp.cellsIchiran,
+        nlp.cellsCurtizVocab,
+        nlp.cellsCurtizGrammar
+      );
+
+      const request = await fetch(`/api/sentence/${plain}`, {
+        body: JSON.stringify({ sentence: newSentence }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (request.ok) {
+        sentence.value = newSentence; // new value!
+        // clear
+        networkFeedback.value = "";
+        importFrom.value = "";
+      } else {
+        networkFeedback.value = `${request.status} ${request.statusText}. Retry?`;
+      }
+    }
+  }
+
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
@@ -579,11 +641,10 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           />
 
           <NlpTable
-            nlp={sentence.value.nlp}
-            onNewVocabGrammar={handleNewVocabGrammar}
             plain={plain}
-            vocab={sentence.value.vocab}
-            grammarConj={sentence.value.grammarConj}
+            cellsIchiran={nlp!.cellsIchiran}
+            cellsCurtizVocab={nlp!.cellsCurtizVocab}
+            cellsCurtizGrammar={nlp!.cellsCurtizGrammar}
           />
 
           <p>
@@ -724,6 +785,19 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
               </>
             )}
           </p>
+          <p>
+            Import from{" "}
+            <form onSubmit={handleSubmitImportFrom}>
+              <input
+                type="text"
+                value={importFrom}
+                onInput={handleEditImportFrom}
+              />
+              <button type="submit" disabled={!importFrom.value}>
+                Submit
+              </button>
+            </form>
+          </p>
         </>
       )}
     </div>
@@ -844,3 +918,66 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
     );
   }
 );
+
+/**
+ * Pure function, returns new copy of `nextOrig`
+ */
+function copyAnnotations(
+  prev: Sentence,
+  nextOrig: Sentence,
+  cellsIchiran: Cell<VNode<{}>, Word>[],
+  cellsCurtizVocab: Cell<VNode, Word>[],
+  cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[]
+) {
+  const next = structuredClone(nextOrig);
+
+  const prevPlain = furiganaToPlain(prev.furigana);
+  const nextPlain = furiganaToPlain(next.furigana);
+
+  // copy some basics
+  if (prev.translations) {
+    if (!next.translations) next.translations = { en: [] };
+    next.translations.en = next.translations.en.concat(prev.translations.en);
+  }
+  if (!next.citation && prev.citation) next.citation = prev.citation;
+
+  // copy vocab
+  for (const v of prev.vocab || []) {
+    const prevSnippet = prevPlain.slice(v.start, v.start + v.len);
+    const hit = cellsIchiran.concat(cellsCurtizVocab).find((x) => {
+      const thisSnippet = nextPlain.slice(x.start, x.start + x.len);
+      return prevSnippet === thisSnippet && x.extra.id === v.entry.id;
+    });
+    if (hit) {
+      if (!next.vocab) next.vocab = [];
+      next.vocab.push({
+        ...v,
+        start: hit.start,
+        len: hit.len,
+      });
+    }
+  }
+
+  // copy grammar conjugations (very similar to above, just slightly
+  // different matcher function)
+  for (const c of prev.grammarConj || []) {
+    const prevSnippet = prevPlain.slice(c.start, c.start + c.len);
+    const hit = cellsCurtizGrammar.find((x) => {
+      const thisSnippet = nextPlain.slice(x.start, x.start + x.len);
+      return (
+        prevSnippet === thisSnippet &&
+        x.extra.some((dec) => deconjEqual(dec, c.deconj))
+      );
+    });
+    if (hit) {
+      if (!next.grammarConj) next.grammarConj = [];
+      next.grammarConj.push({
+        ...c,
+        start: hit.start,
+        len: hit.len,
+      });
+    }
+  }
+
+  return next;
+}

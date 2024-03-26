@@ -36,7 +36,8 @@ export function grammarConjEqual(a: GrammarConj, b: GrammarConj): boolean {
     a.start === b.start &&
     a.len === b.len &&
     deconjEqual(a.deconj, b.deconj) &&
-    furiganaEqual(a.lemmas, b.lemmas)
+    a.lemmas.length === b.lemmas.length &&
+    a.lemmas.every((x, i) => furiganaEqual(x, b.lemmas[i]))
   );
 }
 
