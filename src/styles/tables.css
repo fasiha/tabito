@@ -1,19 +1,19 @@
-table,
-td {
+table.nlp-table,
+table.nlp-table td {
   border: 1px solid gray;
   border-collapse: collapse;
 }
 
-td {
+table.nlp-table td {
   min-width: 6rem;
   max-width: 6rem;
 }
-td div.cell {
+table.nlp-table td div.cell {
   font-size: small;
   height: 7rem;
   overflow: scroll;
 }
 
-td:empty {
+table.nlp-table td:empty {
   border: none;
 }

@@ -13,3 +13,53 @@ form {
 summary h3 {
   display: inline-block;
 }
+
+/* JDEPP */
+table.jdepp {
+  --b: 1px; /* the thickness */
+  border-spacing: 0;
+  border-spacing: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.jdepp td.box-drawing {
+  width: 2em;
+  text-align: center;
+  background-color: darkorange;
+}
+.jdepp td.bunsetsu {
+  text-align: right;
+}
+
+.box-drawing-7 {
+  clip-path: polygon(
+    0% calc(50% - var(--b)),
+    0% calc(50% + var(--b)),
+    calc(50% - var(--b)) calc(50% + var(--b)),
+    calc(50% - var(--b)) 100%,
+    calc(50% + var(--b)) 100%,
+    calc(50% + var(--b)) calc(50% - var(--b))
+  );
+}
+
+.box-drawing-T {
+  clip-path: polygon(
+    0% calc(50% - var(--b)),
+    0% calc(50% + var(--b)),
+    calc(50% - var(--b)) calc(50% + var(--b)),
+    calc(50% - var(--b)) 100%,
+    calc(50% + var(--b)) 100%,
+    calc(50% + var(--b)) 0%,
+    calc(50% - var(--b)) 0%,
+    calc(50% - var(--b)) calc(50% - var(--b))
+  );
+}
+
+.box-drawing-1 {
+  clip-path: polygon(
+    calc(50% - var(--b)) 0%,
+    calc(50% - var(--b)) 100%,
+    calc(50% + var(--b)) 100%,
+    calc(50% + var(--b)) 0%
+  );
+}

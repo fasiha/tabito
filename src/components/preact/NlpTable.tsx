@@ -1,8 +1,7 @@
 import type { FunctionComponent, FunctionalComponent, VNode } from "preact";
 import { memo } from "preact/compat";
-import type { GrammarConj, Sentence } from "../../interfaces/backend";
+import type { GrammarConj } from "../../interfaces/backend";
 import { cellFit, type Cell } from "../../utils/cellFit";
-import type { VocabGrammarProps } from "../commonInterfaces";
 import type { Word } from "curtiz-japanese-nlp";
 
 export interface NlpTableProps {
@@ -56,7 +55,7 @@ const PlainHeadTable: FunctionComponent<{
   children: VNode[];
 }> = ({ plain, children }) => {
   return (
-    <table>
+    <table class="nlp-table">
       <thead>
         <tr>
           {plain.split("").map((c, i) => (

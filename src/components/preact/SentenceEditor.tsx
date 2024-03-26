@@ -28,6 +28,7 @@ import { NlpTable } from "./NlpTable";
 import { parseNlp } from "./parseNlp";
 import { dedupeBy, furiganaToPlain } from "../../utils/utils";
 import type { Cell } from "../../utils/cellFit";
+import { Jdepp } from "./Jdepp";
 
 interface Props {
   plain: string;
@@ -623,6 +624,12 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       )}
       {sentence.value && (
         <>
+          {typeof sentence.value.nlp.curtiz !== "string" && (
+            <Jdepp
+              furigana={sentence.value.nlp.curtiz.furigana}
+              origBunsetsus={sentence.value.nlp.curtiz.bunsetsus}
+            />
+          )}
           <h2>
             <SentenceComponent sentence={sentence.value} />
           </h2>

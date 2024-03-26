@@ -131,7 +131,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
       if ("gloss" in x && x.gloss) {
         jmdictSeqStartLenSeen.add(seenId(x.seq, start, x.text.length));
         jmdictSeqSeen.add(x.seq.toString());
-        jmdictSeqSeen.add(words[x.seq].id ?? -1);
+        jmdictSeqSeen.add(words[x.seq]?.id ?? -1);
         cellsIchiran.push({
           start,
           len: x.text.length,
@@ -156,7 +156,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
         // IchiranSingle with NO gloss but with conj
         jmdictSeqStartLenSeen.add(seenId(x.seq, start, x.text.length));
         jmdictSeqSeen.add(x.seq.toString());
-        jmdictSeqSeen.add(words[x.seq].id ?? -1);
+        jmdictSeqSeen.add(words[x.seq]?.id ?? -1);
         for (const conj of x.conj) {
           cellsIchiran.push({
             start: start,
@@ -217,7 +217,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
           if ("gloss" in y && y.gloss) {
             jmdictSeqStartLenSeen.add(seenId(y.seq, yStart, len));
             jmdictSeqSeen.add(y.seq.toString());
-            jmdictSeqSeen.add(words[y.seq].id ?? -1);
+            jmdictSeqSeen.add(words[y.seq]?.id ?? -1);
             cellsIchiran.push({
               start: yStart,
               len,
@@ -238,7 +238,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
           if (y.conj.length) {
             jmdictSeqStartLenSeen.add(seenId(y.seq, yStart, len));
             jmdictSeqSeen.add(y.seq.toString());
-            jmdictSeqSeen.add(words[y.seq].id ?? -1);
+            jmdictSeqSeen.add(words[y.seq]?.id ?? -1);
             for (const conj of y.conj) {
               cellsIchiran.push({
                 start: yStart,
