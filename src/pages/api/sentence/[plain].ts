@@ -1,11 +1,29 @@
 import type { APIRoute } from "astro";
-import { getSentence, upsertSentence } from "../../../db";
+import { getSentence, hasJmdicts, upsertSentence } from "../../../db";
+import type { Sentence } from "../../../interfaces/backend";
 
-const DONT_PARSE = true;
+export interface GetResponse {
+  sentence: Sentence;
+  seenWordIds: Record<string, true>;
+}
 export const GET: APIRoute = ({ params }) => {
   const { plain } = params;
   if (plain) {
-    return new Response(getSentence(plain, DONT_PARSE) as string, {
+    const sentence = getSentence(plain);
+    if (!sentence) {
+      return new Response(null, { status: 404, statusText: "Not found" });
+    }
+    let seenWordIds: Record<string, true> = {};
+    if (typeof sentence.nlp.curtiz !== "string") {
+      const allWordIds = sentence.nlp.curtiz.hits.flatMap((h) =>
+        h.results.flatMap((r) => r.results.map((w) => w.wordId))
+      );
+      seenWordIds = Object.fromEntries(
+        hasJmdicts(allWordIds).map((id) => [id, true])
+      );
+    }
+    const body: GetResponse = { sentence, seenWordIds };
+    return new Response(JSON.stringify(body), {
       headers: {
         "Content-Type": "application/json",
       },

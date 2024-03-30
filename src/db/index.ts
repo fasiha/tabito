@@ -122,7 +122,7 @@ const getSentenceFromPlainStatement = db.prepare<
 const getSentenceFromIdStatement = db.prepare<Pick<Tables.sentenceRow, "id">>(
   `select jsonEncoded from sentence where id=$id`
 );
-export function getSentence<T extends boolean>(
+export function getSentence<T extends boolean = false>(
   plainOrId: string | number,
   dontParse?: T
 ): undefined | (T extends false ? Sentence : string) {
@@ -266,17 +266,28 @@ export function getJmdict(wordId: Word["id"]): Word | undefined {
   return result ? JSON.parse(result) : undefined;
 }
 
-export function getJmdictsRaw(wordIds: Word["id"][]): string[] {
+function getJmdictsHelper(
+  wordIds: Word["id"][],
+  type: "json" | "wordId"
+): string[] {
+  if (type !== "json" && type !== "wordId") throw new Error("invalid type");
   if (wordIds.length === 0) return [];
   const placeholder = "?,".repeat(wordIds.length).slice(0, -1);
   return db
-    .prepare(`select json from jmdict where wordid in (${placeholder})`)
+    .prepare(`select ${type} from jmdict where wordId in (${placeholder})`)
     .pluck(true)
     .all(wordIds) as string[];
+}
+export function getJmdictsRaw(wordIds: Word["id"][]): string[] {
+  return getJmdictsHelper(wordIds, "json");
 }
 
 export function getJmdicts(wordIds: Word["id"][]): Word[] {
   return getJmdictsRaw(wordIds).map((s) => JSON.parse(s)) as Word[];
+}
+
+export function hasJmdicts(wordIds: Word["id"][]): Word["id"][] {
+  return getJmdictsHelper(wordIds, "wordId");
 }
 
 const addJmdictStatement = db.prepare<Tables.jmdictRow>(

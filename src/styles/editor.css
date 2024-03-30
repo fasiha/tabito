@@ -1,3 +1,7 @@
+.xref-definition {
+  color: var(--unimportant);
+}
+
 .already-picked {
   text-decoration: underline;
 }

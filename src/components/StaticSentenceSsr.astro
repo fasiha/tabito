@@ -21,7 +21,7 @@ const { plain, d: docName } = Astro.props;
 enrollSentenceIntoDoc(plain, docName);
 const sentence: AnnotatedSentence | undefined = getSentence(plain, false);
 if (sentence) {
-  const curtiz = (sentence as SentenceType).nlp.curtiz;
+  const curtiz = (sentence as SentenceType).nlp?.curtiz;
   if (typeof curtiz === "object") sentence.kanjidic = curtiz.kanjidic;
   delete (sentence as any)["nlp"];
 }

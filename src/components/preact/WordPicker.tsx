@@ -12,6 +12,7 @@ interface Props {
   tags: Record<string, string>;
   onNewVocab: (x: SenseAndSub) => void;
   alreadyPicked: SenseAndSub[];
+  isXref?: boolean;
 }
 
 export const WordPicker: FunctionComponent<Props> = ({
@@ -19,6 +20,7 @@ export const WordPicker: FunctionComponent<Props> = ({
   tags,
   onNewVocab,
   alreadyPicked,
+  isXref,
 }) => {
   const handleSense = (sense: number) => onNewVocab({ sense });
   const handleSubSense = (sense: number, subsense: number) =>
@@ -57,11 +59,12 @@ export const WordPicker: FunctionComponent<Props> = ({
   }
 
   return (
-    <>
+    <span class={isXref ? "xref-definition" : undefined}>
+      {isXref ? <>🖇️ </> : null}
       {word.kanji.map((k) => k.text).join("・")}「
       {word.kana.map((k) => k.text).join("・")}」 {senseNodes}{" "}
-      <code title={word.id}>(id)</code>
-    </>
+      <code>{word.id}</code>
+    </span>
   );
 };
 

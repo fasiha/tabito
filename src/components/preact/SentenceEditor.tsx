@@ -29,6 +29,7 @@ import { parseNlp } from "./parseNlp";
 import { dedupeBy, furiganaToPlain } from "../../utils/utils";
 import type { Cell } from "../../utils/cellFit";
 import { Jdepp } from "./Jdepp";
+import type { GetResponse } from "../../pages/api/sentence/[plain]";
 
 interface Props {
   plain: string;
@@ -37,13 +38,16 @@ interface Props {
 async function plainToSentenceSignal(
   plain: string,
   sentence: Pick<Signal<Sentence | undefined>, "value">,
-  networkFeedback: Signal<string>
+  networkFeedback: Signal<string>,
+  seenWordIds?: Signal<Record<string, true>>
 ) {
   const res = await fetch(`/api/sentence/${plain}`);
   if (res.ok) {
-    const data: Sentence = await res.json();
-    data.furigana.filter((x) => x !== ""); // ignore empty strings in case we get any
-    sentence.value = data;
+    const { sentence: sentenceObj, seenWordIds: seenWordIdsObj }: GetResponse =
+      await res.json();
+    sentenceObj.furigana.filter((x) => x !== ""); // ignore empty strings in case we get any
+    sentence.value = sentenceObj;
+    if (seenWordIds) seenWordIds.value = seenWordIdsObj;
     networkFeedback.value = "";
   } else {
     networkFeedback.value = `${res.status} ${res.statusText}`;
@@ -92,6 +96,7 @@ async function sentenceSignalToGraphs(
 
 export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const sentence = useSignal<Sentence | undefined>(undefined);
+  const seenWordIds = useSignal<Record<string, true>>({});
   const networkFeedback = useSignal("");
   const newTranslation = useSignal("");
   const synonymSentence = useSignal("");
@@ -108,7 +113,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const parentToChildrenNetworkFeedback = useSignal("");
 
   useSignalEffect(() => {
-    plainToSentenceSignal(plain, sentence, networkFeedback);
+    plainToSentenceSignal(plain, sentence, networkFeedback, seenWordIds);
   });
 
   const wordIds = useComputed(
@@ -652,6 +657,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             cellsIchiran={nlp!.cellsIchiran}
             cellsCurtizVocab={nlp!.cellsCurtizVocab}
             cellsCurtizGrammar={nlp!.cellsCurtizGrammar}
+            seenWordIds={seenWordIds.value}
           />
 
           <p>
@@ -932,8 +938,8 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
 function copyAnnotations(
   prev: Sentence,
   nextOrig: Sentence,
-  cellsIchiran: Cell<VNode<{}>, Word>[],
-  cellsCurtizVocab: Cell<VNode, Word>[],
+  cellsIchiran: Cell<VNode<{}>, { word: Word }>[],
+  cellsCurtizVocab: Cell<VNode, { word: Word }>[],
   cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[]
 ) {
   const next = structuredClone(nextOrig);
@@ -953,7 +959,7 @@ function copyAnnotations(
     const prevSnippet = prevPlain.slice(v.start, v.start + v.len);
     const hit = cellsIchiran.concat(cellsCurtizVocab).find((x) => {
       const thisSnippet = nextPlain.slice(x.start, x.start + x.len);
-      return prevSnippet === thisSnippet && x.extra.id === v.entry.id;
+      return prevSnippet === thisSnippet && x.extra.word.id === v.entry.id;
     });
     if (hit) {
       if (!next.vocab) next.vocab = [];

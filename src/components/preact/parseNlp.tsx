@@ -23,8 +23,8 @@ export interface Props {
 }
 
 export function parseNlp(props: Props): {
-  cellsIchiran: Cell<VNode<{}>, Word>[];
-  cellsCurtizVocab: Cell<VNode, Word>[];
+  cellsIchiran: Cell<VNode<{}>, { word: Word }>[];
+  cellsCurtizVocab: Cell<VNode, { word: Word; isXref?: boolean }>[];
   cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[];
 } {
   const {
@@ -88,7 +88,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
   const { nlp, onNewVocabGrammar, plain, vocab } = args;
   const { words, ichiran } = nlp;
 
-  const cellsIchiran: Cell<VNode, Word>[] = [];
+  const cellsIchiran: Cell<VNode, { word: Word }>[] = [];
   const jmdictSeqStartLenSeen = new Set<string>();
   const jmdictSeqSeen = new Set<string>();
 
@@ -135,7 +135,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
         cellsIchiran.push({
           start,
           len: x.text.length,
-          extra: words[x.seq],
+          extra: { word: words[x.seq] },
           content: (
             <>
               {x.counter && <em>({x.counter.value}) </em>}
@@ -161,7 +161,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
           cellsIchiran.push({
             start: start,
             len: x.text.length,
-            extra: words[x.seq],
+            extra: { word: words[x.seq] },
             content: (
               <>
                 {x.suffix && <strong>{x.suffix} </strong>}
@@ -221,7 +221,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
             cellsIchiran.push({
               start: yStart,
               len,
-              extra: words[y.seq],
+              extra: { word: words[y.seq] },
               content: (
                 <IchiranGloss
                   origGloss={y.gloss}
@@ -243,7 +243,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
               cellsIchiran.push({
                 start: yStart,
                 len: len,
-                extra: words[y.seq],
+                extra: { word: words[y.seq] },
                 content: (
                   <>
                     {y.suffix && <strong>{y.suffix} </strong>}
@@ -292,7 +292,7 @@ function parseCurtiz(
   const { nlp, onNewVocabGrammar, plain, vocab, grammarConj } = args;
   const { curtiz } = nlp;
 
-  const cellsCurtizVocab: Cell<VNode, Word>[] = [];
+  const cellsCurtizVocab: Cell<VNode, { word: Word; isXref?: boolean }>[] = [];
   const cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[] = [];
   let start = 0;
   if (typeof curtiz !== "string") {
@@ -309,7 +309,7 @@ function parseCurtiz(
           .flat()
           .map((o) => (typeof o === "string" ? o.length : o.ruby.length))
           .reduce((a, b) => a + b, 0);
-        for (const { wordId, word, tags } of subresults) {
+        for (const { wordId, word, tags, isXref } of subresults) {
           if (jmdictSeqStartLenSeen.has(seenId(wordId, start, len))) continue;
           jmdictSeqStartLenSeen.add(seenId(wordId, start, len));
           const thisStart = start; // otherwise closure below will capture original scope
@@ -333,13 +333,14 @@ function parseCurtiz(
           const next = {
             start,
             len,
-            extra: word!,
+            extra: { word: word!, isXref },
             content: (
               <WordPicker
                 onNewVocab={onNewVocab}
                 word={word!}
                 tags={tags}
                 alreadyPicked={alreadyPicked}
+                isXref={isXref}
               />
             ),
           };
@@ -366,7 +367,7 @@ function parseCurtiz(
         });
       const content = (
         <>
-          🟡 <FuriganaComponent furigana={lemmas[0]} /> →{" "}
+          <FuriganaComponent furigana={lemmas[0]} /> →{" "}
           <FuriganaComponent
             furigana={curtiz.furigana.slice(startIdx, endIdx).flat()}
           />{" "}

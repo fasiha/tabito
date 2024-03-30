@@ -6,12 +6,19 @@ import type { Word } from "curtiz-japanese-nlp";
 
 export interface NlpTableProps {
   plain: string;
-  cellsIchiran: Cell<VNode<{}>, Word>[];
-  cellsCurtizVocab: Cell<VNode, Word>[];
+  cellsIchiran: Cell<VNode<{}>, { word: Word }>[];
+  cellsCurtizVocab: Cell<VNode, { word: Word; isXref?: boolean }>[];
   cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[];
+  seenWordIds?: Record<string, true>;
 }
 export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
-  ({ plain, cellsIchiran, cellsCurtizVocab, cellsCurtizGrammar }) => {
+  ({
+    plain,
+    cellsIchiran,
+    cellsCurtizVocab,
+    cellsCurtizGrammar,
+    seenWordIds = {},
+  }) => {
     return (
       <>
         <details open>
@@ -29,6 +36,22 @@ export const NlpTable: FunctionalComponent<NlpTableProps> = memo(
           </summary>
           <PlainHeadTable plain={plain}>
             {cellsToTable(plain, cellsCurtizGrammar)}
+          </PlainHeadTable>
+        </details>
+
+        <details open>
+          <summary>
+            <h3>Previously-seen Curtiz vocab</h3>
+          </summary>
+          <PlainHeadTable plain={plain}>
+            {cellsToTable(
+              plain,
+              cellsCurtizVocab
+                .filter(
+                  ({ extra }) => extra.word.id in seenWordIds && !extra.isXref
+                )
+                .sort((a, b) => b.len - a.len)
+            )}
           </PlainHeadTable>
         </details>
 
