@@ -1,0 +1,34 @@
+---
+import S from "../../components/StaticSentenceSsr.astro";
+
+interface Props {
+  d: string;
+}
+const { d } = Astro.props;
+---
+
+<section>
+  <h2>L17, §4</h2>
+  <div class="p">
+    From Genki II Workbook, Lesson 17.3 worksheet (page 46):
+    <ul>
+      <li><S d={d} plain="空港に迎えに来なくてもいいです" /></li>
+      <li>
+        <S d={d} plain="今日おごります" />。<S
+          d={d}
+          plain="払わなくてもいいです"
+        />
+      </li>
+      <li><S d={d} plain="宿題がないから今夜勉強しなくてもいいです" /></li>
+      <li>
+        <S d={d} plain="あのホテルは混んでいませんから予約しなくてもいいです" />
+      </li>
+      <li>
+        <S d={d} plain="家でお皿を洗わなくてもいいです" />。<S
+          d={d}
+          plain="ホストファミリーが洗ってくれます"
+        />
+      </li>
+    </ul>
+  </div>
+</section>
