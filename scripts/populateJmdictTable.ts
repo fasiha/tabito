@@ -6,11 +6,11 @@ npx esbuild --external:better-sqlite3 --bundle scripts/populateJmdictTable.ts --
 import { db, addJmdict, getAllPlains, getSentence } from "../src/db";
 
 // first delete all jmdicts
-db.prepare("DELETE FROM jmdict").run();
+await db.deleteFrom("jmdict").execute();
 
-const plains = getAllPlains();
+const plains = await getAllPlains();
 for (const plain of plains) {
-  const sentence = getSentence(plain);
+  const sentence = await getSentence(plain);
   if (sentence && typeof sentence === "object") {
     const { vocab = [] } = sentence;
     for (const v of vocab) {

@@ -17,30 +17,22 @@ import L17_4 from "./17-4.astro";
 
 const d = "Genki";
 
-clearDocument(d);
+await clearDocument(d);
 ---
 
 <Basic title={d}>
   <h1>{d}</h1>
   <section>
     <div class="p">
-      Here's a basic demo sentence I want to remember: <S
-        plain="うどんを食べた"
-        d={d}
-      />
+      Here's a basic demo sentence I want to remember: <S plain="うどんを食べた" d={d} />
     </div>
     <div class="p">
-      I didn't know this about たくさん: it can be used as an adverb and a noun
-      and an adjective. This sentence can be shuffled around two ways, though
-      only one will be visible: <S
-        d={d}
-        plain="京都でたくさん写真を撮りました"
-      />
+      I didn't know this about たくさん: it can be used as an adverb and a noun and an adjective. This sentence can be
+      shuffled around two ways, though only one will be visible: <S d={d} plain="京都でたくさん写真を撮りました" />
     </div>
     <div class="p">
       Consider several sentences in one:
-      <S d={d} plain="これは兄が予約した旅館です" />. Here are two sentences in
-      one:
+      <S d={d} plain="これは兄が予約した旅館です" />. Here are two sentences in one:
       <S d={d} plain="音が好き" />. And consider this:
       <S d={d} plain="死んじまえ" />
       <S d={d} plain="触ったら死んだ" />
@@ -63,49 +55,28 @@ clearDocument(d);
       <S d={d} plain="チーターは、とても早く走ることで知られています" />
       <S d={d} plain="どうして、そんなに早く走ることができるのでしょう" />
 
-      <S
-        d={d}
-        plain="チーターの体は、頭が小さく、胴や足が細くなっていて、走りやすいようにできているのです"
-      />
-      <S
-        d={d}
-        plain="チーターの体は、頭が小さく、胴や足が細く、なっていて、走りやすいようにできているのです"
-      />
+      <S d={d} plain="チーターの体は、頭が小さく、胴や足が細くなっていて、走りやすいようにできているのです" />
+      <S d={d} plain="チーターの体は、頭が小さく、胴や足が細く、なっていて、走りやすいようにできているのです" />
 
       <S d={d} plain="チーターは、爪を出したまま走ります" />
-      <S
-        d={d}
-        plain="爪を地面に突き刺して走るので、滑らずに地面を走っていくことができます"
-      />
-      <S
-        d={d}
-        plain="そのため、けるたびに早さが増して、獲物に近づくことができるのです"
-      />
+      <S d={d} plain="爪を地面に突き刺して走るので、滑らずに地面を走っていくことができます" />
+      <S d={d} plain="そのため、けるたびに早さが増して、獲物に近づくことができるのです" />
     </div>
     <p>
-      More Yomu Drill stories:春の、はじめの、話です。
-      山のてっぺんから、まん月が 顔を
+      More Yomu Drill stories:春の、はじめの、話です。 山のてっぺんから、まん月が 顔を
       出して「ハックション。」と、くしゃみをしました。今夜は、とても寒いのです。ふもとの村のうめの枝でも、誰かが、「クション。」と、くしゃみをしています。
-      誰かな？梅の花です。昨日、あんまり暖かだったので、ほろほろっと、たった一つ、白い
-      梅の
-      花が咲いたのです。「クション。」と、くしゃみが聞こえました。見ると、梅の
-      花の すぐ そばで、てんとう虫が ふるえて
-      います。「あらら。てんとう虫。今ごろは まだ、みんな いっしょに ねむって
-      いるんじゃ なかったの。」 梅の 花は、びっくりして
-      たずねました。「僕、すっかり 春だと 思ったの。昨日、あんなに
-      暖かだったでしょう。ねどこから 飛び出して、あっちこっち 遊んでたの。」
+      誰かな？梅の花です。昨日、あんまり暖かだったので、ほろほろっと、たった一つ、白い 梅の
+      花が咲いたのです。「クション。」と、くしゃみが聞こえました。見ると、梅の 花の すぐ そばで、てんとう虫が ふるえて
+      います。「あらら。てんとう虫。今ごろは まだ、みんな いっしょに ねむって いるんじゃ なかったの。」 梅の
+      花は、びっくりして たずねました。「僕、すっかり 春だと 思ったの。昨日、あんなに 暖かだったでしょう。ねどこから
+      飛び出して、あっちこっち 遊んでたの。」
     </p>
 
     <p>
-      Potentially relevant entries in <em
-        >Dictionary of Basic/Intermediate/Advanced Japanese Grammar</em
-      >
+      Potentially relevant entries in <em>Dictionary of Basic/Intermediate/Advanced Japanese Grammar</em>
     </p>
     <ul>
-      <li>
-        "koto de" (intermediate): "a compound particle which indicates a means
-        or a clause"
-      </li>
+      <li>"koto de" (intermediate): "a compound particle which indicates a means or a clause"</li>
     </ul>
   </section>
 

@@ -16,28 +16,18 @@ export function rawToIchiran(raw: string): Promise<{
   // docker exec -it ichiran-main-1 ichiran-cli -f "京都でたくさん写真を撮りました"
 
   return new Promise((resolve, reject) => {
-    let spawned = spawn("docker", [
-      "exec",
-      "ichiran-main-1",
-      "ichiran-cli",
-      "-f",
-      raw,
-    ]);
+    let spawned = spawn("docker", ["exec", "ichiran-main-1", "ichiran-cli", "-f", raw]);
     spawned.stdin.end();
     let arr: string[] = [];
-    spawned.stdout.on("data", (data: Buffer) =>
-      arr.push(data.toString("utf8"))
-    );
+    spawned.stdout.on("data", (data: Buffer) => arr.push(data.toString("utf8")));
     spawned.on("close", (code: number) => {
       if (code !== 0) {
-        reject(code);
+        reject(`Ichiran error ${code}, is the container running?`);
       }
 
       try {
         const seqs = new Set<number>();
-        const ichiran: Ichiran = JSON.parse(arr.join(""), (key, value) =>
-          seqAwareReviver(key, value, seqs)
-        );
+        const ichiran: Ichiran = JSON.parse(arr.join(""), (key, value) => seqAwareReviver(key, value, seqs));
         const jmdictSeqs = [...seqs];
         getRootJmdictSeqs(jmdictSeqs).then((seqMap) => {
           resolve({ ichiran, jmdictSeqs, seqMap });
@@ -57,9 +47,7 @@ export function rawToIchiran(raw: string): Promise<{
  * This function digs through the database (via Docker) to map such
  * sequence numbers to JMdict-native roots
  */
-export async function getRootJmdictSeqs(
-  seqs: number[]
-): Promise<Record<number, number>> {
+export async function getRootJmdictSeqs(seqs: number[]): Promise<Record<number, number>> {
   // docker exec -it ichiran-pg-1 psql -U postgres -h 127.0.0.1 jmdict --csv -t  -c "select \"from\" from conjugation where seq in (10132248, 10149587, -123)"
 
   // If this gets slow, cuz we're asking for like thousands of seqs in
@@ -85,9 +73,7 @@ export async function getRootJmdictSeqs(
     ]);
     spawned.stdin.end();
     let arr: string[] = [];
-    spawned.stdout.on("data", (data: Buffer) =>
-      arr.push(data.toString("utf8"))
-    );
+    spawned.stdout.on("data", (data: Buffer) => arr.push(data.toString("utf8")));
     spawned.on("close", (code: number) => {
       if (code !== 0) {
         reject(code);
@@ -99,8 +85,8 @@ export async function getRootJmdictSeqs(
             .join("")
             .split("\n")
             .filter((x) => x) // use this instead of `trim` because we want `''` to map to `[]`
-            .map((l) => l.split(",").map((x) => Number(x)) as [number, number])
-        )
+            .map((l) => l.split(",").map((x) => Number(x)) as [number, number]),
+        ),
       );
     });
   });
@@ -177,8 +163,7 @@ const conj2: Ichiran = [
                       },
                       {
                         pos: "[v5u,aux-v]",
-                        gloss:
-                          "to do accidentally; to do without meaning to; to happen to do",
+                        gloss: "to do accidentally; to do without meaning to; to happen to do",
                       },
                     ],
                     readok: true,
@@ -207,8 +192,7 @@ const conj2: Ichiran = [
                           },
                           {
                             pos: "[v5u,aux-v]",
-                            gloss:
-                              "to do accidentally; to do without meaning to; to happen to do",
+                            gloss: "to do accidentally; to do without meaning to; to happen to do",
                           },
                         ],
                         readok: true,
@@ -341,8 +325,7 @@ const alt: Ichiran = [
             gloss: [
               {
                 pos: "[adj-na,n]",
-                gloss:
-                  "liking; being fond of; to one's liking; to one's taste; preferred; favourite",
+                gloss: "liking; being fond of; to one's liking; to one's taste; preferred; favourite",
               },
               {
                 pos: "[adj-na,n]",
@@ -467,8 +450,7 @@ const multiline: Ichiran = [
               },
               {
                 pos: "[n-suf]",
-                gloss:
-                  "during (a certain time when one did or is doing something); under (construction, etc.); while",
+                gloss: "during (a certain time when one did or is doing something); under (construction, etc.); while",
               },
               {
                 pos: "[n-suf]",
@@ -620,8 +602,7 @@ const example: Ichiran = [
             gloss: [
               {
                 pos: "[adj-no,adj-na,n,adv]",
-                gloss:
-                  "a lot; lots; plenty; many; a large number; much; a great deal; a good deal",
+                gloss: "a lot; lots; plenty; many; a large number; much; a great deal; a good deal",
               },
               {
                 pos: "[adj-no,adj-na,n,adv]",
@@ -700,8 +681,7 @@ const example: Ichiran = [
         [
           "torimashita",
           {
-            reading:
-              "\u64ae\u308a\u307e\u3057\u305f \u3010\u3068\u308a\u307e\u3057\u305f\u3011",
+            reading: "\u64ae\u308a\u307e\u3057\u305f \u3010\u3068\u308a\u307e\u3057\u305f\u3011",
             text: "\u64ae\u308a\u307e\u3057\u305f",
             kana: "\u3068\u308a\u307e\u3057\u305f",
             score: 1380,
@@ -800,8 +780,7 @@ const example2: Ichiran = [
               },
               {
                 pos: "[prt]",
-                gloss:
-                  "indicates contrast with another option (stated or unstated)",
+                gloss: "indicates contrast with another option (stated or unstated)",
               },
               {
                 pos: "[prt]",
@@ -864,8 +843,7 @@ const example2: Ichiran = [
         [
           "yoyaku shita",
           {
-            reading:
-              "\u4e88\u7d04\u3057\u305f \u3010\u3088\u3084\u304f \u3057\u305f\u3011",
+            reading: "\u4e88\u7d04\u3057\u305f \u3010\u3088\u3084\u304f \u3057\u305f\u3011",
             text: "\u4e88\u7d04\u3057\u305f",
             kana: "\u3088\u3084\u304f \u3057\u305f",
             score: 640,
@@ -888,8 +866,7 @@ const example2: Ichiran = [
                   },
                   {
                     pos: "[vt,vs,n]",
-                    gloss:
-                      "programming (e.g. a device); setting (e.g. a timer)",
+                    gloss: "programming (e.g. a device); setting (e.g. a timer)",
                   },
                 ],
                 conj: [],
@@ -917,8 +894,7 @@ const example2: Ichiran = [
                       },
                       {
                         pos: "[vs-i]",
-                        gloss:
-                          "to cause to become; to make (into); to turn (into)",
+                        gloss: "to cause to become; to make (into); to turn (into)",
                       },
                       {
                         pos: "[vs-i]",
@@ -930,8 +906,7 @@ const example2: Ichiran = [
                       },
                       {
                         pos: "[vs-i]",
-                        gloss:
-                          "to judge as being; to view as being; to think of as; to treat as; to use as",
+                        gloss: "to judge as being; to view as being; to think of as; to treat as; to use as",
                         info: "as \u301c\u306b\u3059\u308b,\u301c\u3068\u3059\u308b",
                       },
                       {
@@ -958,20 +933,17 @@ const example2: Ichiran = [
                       },
                       {
                         pos: "[vs-i,vt]",
-                        gloss:
-                          "to place, or raise, person A to a post or status B",
+                        gloss: "to place, or raise, person A to a post or status B",
                         info: "as A\u3092B\u306b\u3059\u308b",
                       },
                       {
                         pos: "[vs-i,vt]",
-                        gloss:
-                          "to transform A to B; to make A into B; to exchange A for B",
+                        gloss: "to transform A to B; to make A into B; to exchange A for B",
                         info: "as A\u3092B\u306b\u3059\u308b",
                       },
                       {
                         pos: "[vs-i,vt]",
-                        gloss:
-                          "to make use of A for B; to view A as B; to handle A as if it were B",
+                        gloss: "to make use of A for B; to view A as B; to handle A as if it were B",
                         info: "as A\u3092B\u306b\u3059\u308b",
                       },
                       {
@@ -986,13 +958,11 @@ const example2: Ichiran = [
                       },
                       {
                         pos: "[aux-v,vs-i]",
-                        gloss:
-                          'creates a humble verb (after a noun prefixed with "o" or "go")',
+                        gloss: 'creates a humble verb (after a noun prefixed with "o" or "go")',
                       },
                       {
                         pos: "[aux-v,vs-i]",
-                        gloss:
-                          "to be just about to; to be just starting to; to try to; to attempt to",
+                        gloss: "to be just about to; to be just starting to; to try to; to attempt to",
                         info: "as \u301c\u3046\u3068\u3059\u308b,\u301c\u3088\u3046\u3068\u3059\u308b",
                       },
                     ],
@@ -1015,8 +985,7 @@ const example2: Ichiran = [
             gloss: [
               {
                 pos: "[n]",
-                gloss:
-                  "ryokan; traditional inn; Japanese-style lodging, usu. professionally-run",
+                gloss: "ryokan; traditional inn; Japanese-style lodging, usu. professionally-run",
               },
             ],
             conj: [],
@@ -1096,8 +1065,7 @@ const counterValue: Ichiran = [
               },
               {
                 pos: "[prt]",
-                gloss:
-                  "indicates contrast with another option (stated or unstated)",
+                gloss: "indicates contrast with another option (stated or unstated)",
               },
               {
                 pos: "[prt]",
@@ -1125,8 +1093,7 @@ const counterValue: Ichiran = [
                   },
                   {
                     pos: "[adv,n]",
-                    gloss:
-                      "all day (long); the whole day; from morning till night",
+                    gloss: "all day (long); the whole day; from morning till night",
                   },
                   {
                     pos: "[n]",
@@ -1273,8 +1240,7 @@ const counterValue: Ichiran = [
               },
               {
                 pos: "[vs-i]",
-                gloss:
-                  "to judge as being; to view as being; to think of as; to treat as; to use as",
+                gloss: "to judge as being; to view as being; to think of as; to treat as; to use as",
                 info: "as 〜にする,〜とする",
               },
               {
@@ -1306,14 +1272,12 @@ const counterValue: Ichiran = [
               },
               {
                 pos: "[vs-i,vt]",
-                gloss:
-                  "to transform A to B; to make A into B; to exchange A for B",
+                gloss: "to transform A to B; to make A into B; to exchange A for B",
                 info: "as AをBにする",
               },
               {
                 pos: "[vs-i,vt]",
-                gloss:
-                  "to make use of A for B; to view A as B; to handle A as if it were B",
+                gloss: "to make use of A for B; to view A as B; to handle A as if it were B",
                 info: "as AをBにする",
               },
               {
@@ -1323,18 +1287,15 @@ const counterValue: Ichiran = [
               },
               {
                 pos: "[suf,vs-i]",
-                gloss:
-                  'verbalizing suffix (applies to nouns noted in this dictionary with the part of speech "vs")',
+                gloss: 'verbalizing suffix (applies to nouns noted in this dictionary with the part of speech "vs")',
               },
               {
                 pos: "[aux-v,vs-i]",
-                gloss:
-                  'creates a humble verb (after a noun prefixed with "o" or "go")',
+                gloss: 'creates a humble verb (after a noun prefixed with "o" or "go")',
               },
               {
                 pos: "[aux-v,vs-i]",
-                gloss:
-                  "to be just about to; to be just starting to; to try to; to attempt to",
+                gloss: "to be just about to; to be just starting to; to try to; to attempt to",
                 info: "as 〜うとする,〜ようとする",
               },
             ],
@@ -1353,8 +1314,7 @@ const counterValue: Ichiran = [
             gloss: [
               {
                 pos: "[aux,adj-na]",
-                gloss:
-                  "appearing that; seeming that; looking like; having the appearance of",
+                gloss: "appearing that; seeming that; looking like; having the appearance of",
                 info: "after -masu stem or adj. stem",
               },
             ],

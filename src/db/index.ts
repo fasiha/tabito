@@ -1,373 +1,259 @@
-import { createHash } from "crypto";
-import Database from "better-sqlite3";
-import { readFileSync } from "fs";
-import { resolve } from "path";
-
-import type {
-  Sentence,
-  Selected,
-  Tables,
-  WordIdConnType,
-  ParentChildType,
-} from "../interfaces/backend";
-
-import path from "path";
-import { fileURLToPath } from "url";
-import type { Word } from "curtiz-japanese-nlp/interfaces";
+import "dotenv/config";
+import { createHash } from "node:crypto";
+import SQLite from "better-sqlite3";
+import { Kysely, SqliteDialect } from "kysely";
+import type { DB } from "./db";
+import type { ParentChildType, Sentence, WordIdConnType } from "../interfaces/backend";
+import type { Word } from "curtiz-japanese-nlp";
 import { newComponentId } from "../utils/randomId";
 import type { SenseAndSub } from "../components/commonInterfaces";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+if (!process.env.DATABASE_URL) throw new Error("no url?");
+const dialect = new SqliteDialect({
+  database: new SQLite(process.env.DATABASE_URL),
+});
 
-// We have a very basic system of handling database schema upgrades. This code will work with
-// databases with this schema version
-const SCHEMA_VERSION_REQUIRED = 1;
+export const db = new Kysely<DB>({ dialect });
 
-// Let's load the database
-export const db = new Database(process.env.TABITO_DB || "sentences.db");
-db.pragma("journal_mode = WAL");
+const ver = await db.selectFrom("_tabito_db_state").select("schemaVersion").executeTakeFirstOrThrow();
+// change this as the schema migrates?
+if (ver.schemaVersion !== 1) throw new Error("bad ver?");
 
-// Let's check whether this database has anything in it
-{
-  const s = db.prepare(
-    `SELECT name FROM sqlite_master WHERE type='table' AND name=?`
-  );
-  // Is this a Tabito database?
-  const hit = s.get("_tabito_db_state");
-  if (hit) {
-    // Yes. So ensure it's the correct version, else bail; implement up/down migration later
-    dbVersionCheck(db);
-  } else {
-    // nope this is a fresh/clean database. Initialize it with our schema
-    db.exec(
-      readFileSync(
-        resolve(
-          __dirname,
-          "..",
-          "..",
-          "sql",
-          `db-v${SCHEMA_VERSION_REQUIRED}.sql`
-        ),
-        "utf8"
-      )
-    );
-    dbVersionCheck(db);
-  }
-  function dbVersionCheck(thisDb: typeof db) {
-    const s = thisDb.prepare(`select schemaVersion from _tabito_db_state`);
-    const dbState = s.get() as Selected<Tables._tabito_db_stateRow>;
-    if (dbState?.schemaVersion !== SCHEMA_VERSION_REQUIRED) {
-      throw new Error("db wrong version: need " + SCHEMA_VERSION_REQUIRED);
-    }
-  }
-}
-
-// Functions
-
-const clearDocumentStatement = db.prepare<Pick<Tables.documentRow, "docName">>(
-  `delete from document where docName=$docName`
-);
+// HELPERS
 export function clearDocument(docName: string) {
-  return clearDocumentStatement.run({ docName });
+  return db.deleteFrom("document").where("docName", "=", docName).execute();
 }
 
-const enrollSentenceIntoDocStatement =
-  db.prepare<Tables.documentRow>(`insert into document
-(docName, plain)
-values
-($docName, $plain)`);
 export function enrollSentenceIntoDoc(plain: string, docName: string) {
-  return enrollSentenceIntoDocStatement.run({ plain, docName });
+  return db.insertInto("document").values({ docName, plain, addedMs: Date.now() }).execute();
 }
 
-const upsertSentenceStatement =
-  db.prepare<Tables.sentenceRow>(`insert into sentence 
-(jsonEncoded, plain, plainSha256) 
-values
-($jsonEncoded, $plain, $plainSha256)
-on conflict do
-update set
-  jsonEncoded=$jsonEncoded, 
-  plain=$plain, 
-  plainSha256=$plainSha256
-where 
-  plain=$plain`);
-export function upsertSentence(sentence: Sentence) {
-  const plain = sentence.furigana
-    .map((f) => (typeof f === "string" ? f : f.ruby))
-    .join("");
+export async function upsertSentence(sentence: Sentence) {
+  const plain = sentence.furigana.map((f) => (typeof f === "string" ? f : f.ruby)).join("");
   const plainSha256 = createHash("sha256").update(plain).digest("base64url");
   const jsonEncoded = JSON.stringify(sentence);
-  upsertSentenceStatement.run({
-    plain,
-    plainSha256,
-    jsonEncoded,
-  });
+  const values = { jsonEncoded, plain, plainSha256, addedMs: Date.now() };
+  await db
+    .insertInto("sentence")
+    .values(values)
+    .onConflict((oc) => oc.column("plain").doUpdateSet(values))
+    .execute();
   for (const vocab of sentence.vocab ?? []) {
-    addJmdict(vocab.entry);
+    await addJmdict(vocab.entry);
   }
 }
 
-const sentenceExistsStatement = db.prepare<Pick<Tables.sentenceRow, "plain">>(
-  `select id from sentence where plain=$plain`
-);
-export function sentenceExists(plain: string): boolean {
-  return !!sentenceExistsStatement.get({ plain });
+export async function sentenceExists(plain: string): Promise<boolean> {
+  return !!(await db.selectFrom("sentence").select("id").where("plain", "=", plain).executeTakeFirst());
 }
 
-const getSentenceFromPlainStatement = db.prepare<
-  Pick<Tables.sentenceRow, "plain">
->(`select jsonEncoded from sentence where plain=$plain`);
-const getSentenceFromIdStatement = db.prepare<Pick<Tables.sentenceRow, "id">>(
-  `select jsonEncoded from sentence where id=$id`
-);
-export function getSentence<T extends boolean = false>(
+export async function getSentence<T extends boolean = false>(
   plainOrId: string | number,
-  dontParse?: T
-): undefined | (T extends false ? Sentence : string) {
-  const result = (
-    typeof plainOrId === "string"
-      ? getSentenceFromPlainStatement.get({ plain: plainOrId })
-      : getSentenceFromIdStatement.get({ id: plainOrId })
-  ) as undefined | { jsonEncoded: string };
-  if (result)
-    return dontParse ? result.jsonEncoded : JSON.parse(result.jsonEncoded);
+  dontParse?: T,
+): Promise<undefined | (T extends false ? Sentence : string)> {
+  const result = await db
+    .selectFrom("sentence")
+    .select("jsonEncoded")
+    .where(typeof plainOrId === "string" ? "plain" : "id", "=", plainOrId)
+    .executeTakeFirst();
+
+  if (result) return dontParse ? result.jsonEncoded : JSON.parse(result.jsonEncoded);
   return undefined;
 }
 
-const getAllPlainsStatement = db.prepare(`select plain from sentence`);
-export function getAllPlains(): string[] {
-  return (getAllPlainsStatement.all() as Tables.sentenceRow[]).map(
-    (x) => x.plain
-  );
+export async function getAllPlains(): Promise<string[]> {
+  return (await db.selectFrom("sentence").select("plain").execute()).map((x) => x.plain);
 }
 
 // Connected
 
-const checkForComponents = db.prepare<{
-  type: WordIdConnType;
-  a: Word["id"];
-  b: Word["id"];
-}>(
-  `select componentId, wordId from connectedWords where type=$type and wordId in ($a, $b)`
-);
-
-const idCollision = db.prepare<{
-  type: WordIdConnType;
-  componentId: string;
-}>(
-  `select type from connectedWords where type=$type and componentId=$componentId limit 1`
-);
-
-const insertComponent = db.prepare<Required<Tables.connectedWordsRow>>(
-  `insert into connectedWords (type, componentId, wordId) values ($type, $componentId, $wordId)`
-);
-
-const mergeComponents = db.prepare<{
-  new: string;
-  old: string;
-  type: WordIdConnType;
-}>(
-  `update connectedWords set componentId=$new where componentId=$old and type=$type`
-);
-
-export const connectWordIds = db.transaction(
-  (a: Word["id"], b: Word["id"], type: WordIdConnType) => {
-    const components = checkForComponents.all({ a, b, type }) as Required<
-      Pick<Tables.connectedWordsRow, "componentId" | "wordId">
-    >[];
+export const connectWordIds = async (a: Word["id"], b: Word["id"], type: WordIdConnType) => {
+  return db.transaction().execute(async (dbtx) => {
+    const components = await dbtx
+      .selectFrom("connectedWords")
+      .select(["componentId", "wordId"])
+      .where("type", "=", type)
+      .where("wordId", "in", [a, b])
+      .execute();
     if (components.length === 0) {
       // two brand new nodes
       let componentId: string;
       for (let i = 0; ; i++) {
         componentId = newComponentId();
-        const collision = idCollision.get({ type, componentId });
+
+        const collision = await dbtx
+          .selectFrom("connectedWords")
+          .select("type")
+          .where("type", "=", type)
+          .where("componentId", "=", componentId)
+          .executeTakeFirst();
         if (!collision) break;
         if (i > 3) throw new Error("cannot find unique component id?");
       }
 
-      insertComponent.run({ type, componentId, wordId: a });
-      insertComponent.run({ type, componentId, wordId: b });
+      const addedMs = Date.now();
+      await dbtx
+        .insertInto("connectedWords")
+        .values([
+          { type, componentId, wordId: a, addedMs },
+          { type, componentId, wordId: b, addedMs },
+        ])
+        .execute();
     } else if (components.length === 1) {
-      insertComponent.run({
-        type,
-        componentId: components[0].componentId,
-        wordId: components[0].wordId === a ? b : a,
-      });
+      await dbtx
+        .insertInto("connectedWords")
+        .values([
+          {
+            type,
+            componentId: components[0].componentId,
+            wordId: components[0].wordId === a ? b : a,
+            addedMs: Date.now(),
+          },
+        ])
+        .execute();
     } else if (components.length === 2) {
       if (components[0].componentId === components[1].componentId) return;
-      mergeComponents.run({
-        new: components[0].componentId,
-        old: components[1].componentId,
-        type,
-      });
+
+      const keep = components[0].componentId;
+      const erase = components[1].componentId;
+      dbtx
+        .updateTable("connectedWords")
+        .set("componentId", keep)
+        .where("componentId", "=", erase)
+        .where("type", "=", type)
+        .execute();
     } else {
       throw new Error("more than two returned?");
     }
-  }
-);
+  });
+};
 
-const getConnectedStatement = db.prepare<{
-  wordId: Word["id"];
-  type: WordIdConnType;
-}>(`SELECT wordId
-FROM connectedWords
-WHERE type=$type AND componentId IN (
-  SELECT componentId
-  FROM connectedWords
-  WHERE type=$type AND wordId=$wordId
-);
-`);
-export function getConnectedWordIds(
-  wordId: Word["id"],
-  type: WordIdConnType
-): Word["id"][] {
-  return getConnectedStatement.pluck().all({ wordId, type }) as string[];
+export async function getConnectedWordIds(wordId: Word["id"], type: WordIdConnType): Promise<Word["id"][]> {
+  const subquery = db
+    .selectFrom("connectedWords")
+    .select("componentId")
+    .where("type", "=", type)
+    .where("wordId", "=", wordId)
+    .limit(1); // limit is unnecessary since a `wordId` can only appear once in one kind of `type`
+  return (
+    await db
+      .selectFrom("connectedWords")
+      .select("wordId")
+      .where("type", "=", type)
+      .where("componentId", "in", subquery)
+      .execute()
+  ).map((o) => o.wordId);
 }
 
-const disconnectWordIdStatement = db.prepare<{
-  wordId: Word["id"];
-  type: WordIdConnType;
-}>(`delete from connectedWords where type=$type and wordId=$wordId`);
-const wordIdToTwoComponentMembers = db.prepare<{
-  wordId: Word["id"];
-  type: WordIdConnType;
-}>(
-  `select componentId from connectedWords where type=$type and componentId in (
-    select componentId from connectedWords where type=$type and wordId=$wordId
-  ) limit 2`
-);
-const deleteComponent = db.prepare<{
-  componentId: string;
-  type: WordIdConnType;
-}>(`delete from connectedWords where type=$type and componentId=$componentId`);
-export function disconnectWordId(wordId: Word["id"], type: WordIdConnType) {
-  db.transaction(() => {
-    const res = wordIdToTwoComponentMembers
-      .pluck()
-      .all({ type, wordId }) as string[];
+export async function disconnectWordId(wordId: Word["id"], type: WordIdConnType) {
+  await db.transaction().execute(async (dbtx) => {
+    const res = await dbtx
+      .selectFrom("connectedWords")
+      .select("componentId")
+      .where("type", "=", type)
+      .where(
+        "componentId",
+        "in",
+        dbtx
+          .selectFrom("connectedWords")
+          .select("componentId")
+          .where("type", "=", type)
+          .where("wordId", "=", wordId)
+          .limit(1), // as above, limit is technically unnecessary
+      )
+      .limit(3) // not <=2: we need to know if the whole component can be deleted (<=2 nodes)
+      .execute();
+
     if (res.length === 0) {
       return;
     } else if (res.length > 2) {
-      disconnectWordIdStatement.run({ wordId, type });
+      // disconnect just this word from the larger component
+      await dbtx.deleteFrom("connectedWords").where("type", "=", type).where("wordId", "=", wordId).execute();
     } else {
-      deleteComponent.run({ componentId: res[0], type });
+      // component with only 1-2 elements: delete whole component (no need to keep 1-element components)
+      await dbtx
+        .deleteFrom("connectedWords")
+        .where("type", "=", type)
+        .where("componentId", "=", res[0].componentId)
+        .execute();
     }
   });
-  return disconnectWordIdStatement.run({ wordId, type });
 }
 
 // JMDICT
 
-const getJmdictStatement = db.prepare(`select json from jmdict where wordId=?`);
-export function getJmdict(wordId: Word["id"]): Word | undefined {
-  const result = getJmdictStatement.pluck().get(wordId) as string | undefined;
-  return result ? JSON.parse(result) : undefined;
+export async function getJmdict(wordId: Word["id"]): Promise<Word | undefined> {
+  const res = await db.selectFrom("jmdict").select("json").where("wordId", "=", wordId).executeTakeFirst();
+  return res ? JSON.parse(res.json) : undefined;
 }
 
-function getJmdictsHelper(
-  wordIds: Word["id"][],
-  type: "json" | "wordId"
-): string[] {
-  if (type !== "json" && type !== "wordId") throw new Error("invalid type");
-  if (wordIds.length === 0) return [];
-  const placeholder = "?,".repeat(wordIds.length).slice(0, -1);
-  return db
-    .prepare(`select ${type} from jmdict where wordId in (${placeholder})`)
-    .pluck(true)
-    .all(wordIds) as string[];
-}
-export function getJmdictsRaw(wordIds: Word["id"][]): string[] {
-  return getJmdictsHelper(wordIds, "json");
+export async function getJmdictsRaw(wordIds: Word["id"][]): Promise<string[]> {
+  return (await db.selectFrom("jmdict").select("json").where("wordId", "in", wordIds).execute()).map((o) => o.json);
 }
 
-export function getJmdicts(wordIds: Word["id"][]): Word[] {
-  return getJmdictsRaw(wordIds).map((s) => JSON.parse(s)) as Word[];
+export async function getJmdicts(wordIds: Word["id"][]): Promise<Word[]> {
+  return (await getJmdictsRaw(wordIds)).map((s) => JSON.parse(s)) as Word[];
 }
 
-export function hasJmdicts(wordIds: Word["id"][]): Word["id"][] {
-  return getJmdictsHelper(wordIds, "wordId");
+export async function hasJmdicts(wordIds: Word["id"][]): Promise<Word["id"][]> {
+  return (await db.selectFrom("jmdict").select("wordId").where("wordId", "in", wordIds).execute()).map((o) => o.wordId);
 }
 
-const addJmdictStatement = db.prepare<Tables.jmdictRow>(
-  `insert into jmdict (wordId, addedMs, json) values ($wordId, $addedMs, $json)
-  on conflict do nothing`
-);
-export function addJmdict(word: Word, currentTime = Date.now()) {
-  return addJmdictStatement.run({
-    wordId: word["id"],
-    json: JSON.stringify(word),
-    addedMs: currentTime,
-  });
+export async function addJmdict(word: Word, addedMs = Date.now()) {
+  await db
+    .insertInto("jmdict")
+    .values({ wordId: word.id, json: JSON.stringify(word), addedMs })
+    .onConflict((oc) => oc.doNothing()) // maybe overwrite in case the definitions are edited over time?
+    .execute();
 }
 
 // parent child directed graph
 
-const newParentChildEdgeStatement = db.prepare<
-  Required<Tables.parentChildWordsRow>
->(
-  `insert into parentChildWords (type, parentId, childId, childSensesJson)
-  values ($type, $parentId, $childId, $childSensesJson)
-  on conflict do
-  update set childSensesJson=$childSensesJson`
-);
-export function newParentChildEdge(
+export async function newParentChildEdge(
   parentId: Word["id"],
   childId: Word["id"],
   type: ParentChildType,
-  childSenses: SenseAndSub[]
+  childSenses: SenseAndSub[],
 ) {
   if (parentId !== childId) {
-    return newParentChildEdgeStatement.run({
-      type,
-      parentId,
-      childId,
-      childSensesJson: JSON.stringify(childSenses),
-    });
+    const childSensesJson = JSON.stringify(childSenses);
+    await db
+      .insertInto("parentChildWords")
+      .values({ type, parentId, childId, childSensesJson, addedMs: Date.now() })
+      .onConflict((oc) => oc.doUpdateSet({ childSensesJson }))
+      .execute();
   }
 }
 
-const deleteParentChildEdgeStatement = db.prepare<
-  Required<Pick<Tables.parentChildWordsRow, "childId" | "parentId" | "type">>
->(
-  `delete from parentChildWords where type=$type and parentId=$parentId and childId=$childId`
-);
-export function deleteParentChildEdge(
-  parentId: Word["id"],
-  childId: Word["id"],
-  type: ParentChildType
-) {
-  return deleteParentChildEdgeStatement.run({ type, parentId, childId });
+export async function deleteParentChildEdge(parentId: Word["id"], childId: Word["id"], type: ParentChildType) {
+  await db
+    .deleteFrom("parentChildWords")
+    .where("type", "=", type)
+    .where("parentId", "=", parentId)
+    .where("childId", "=", childId)
+    .execute();
 }
 
-const allParentsStatement = db.prepare<
-  Required<Pick<Tables.parentChildWordsRow, "childId" | "type">>
->(
-  `select parentId from parentChildWords where childId=$childId and type=$type`
-);
-export function allParents(
-  childId: Word["id"],
-  type: ParentChildType
-): string[] {
-  return allParentsStatement.pluck().all({ childId, type }) as string[];
+export async function allParents(childId: Word["id"], type: ParentChildType): Promise<string[]> {
+  return (
+    await db
+      .selectFrom("parentChildWords")
+      .select("parentId")
+      .where("childId", "=", childId)
+      .where("type", "=", type)
+      .execute()
+  ).map((o) => o.parentId);
 }
 
-const allChildrenStatement = db.prepare<
-  Required<Pick<Tables.parentChildWordsRow, "parentId" | "type">>
->(
-  `select childId, childSensesJson from parentChildWords where parentId=$parentId and type=$type`
-);
-export function allChildren(
+export async function allChildren(
   parentId: Word["id"],
-  type: ParentChildType
-): { childId: string; senses: SenseAndSub[] }[] {
-  const idsAndJson = allChildrenStatement.raw().all({ parentId, type }) as [
-    string,
-    string
-  ][];
-  return idsAndJson.map(([childId, json]) => ({
-    childId,
-    senses: JSON.parse(json),
-  }));
+  type: ParentChildType,
+): Promise<{ childId: string; senses: SenseAndSub[] }[]> {
+  const idsAndJson = await db
+    .selectFrom("parentChildWords")
+    .select(["childId", "childSensesJson"])
+    .where("parentId", "=", parentId)
+    .where("type", "=", type)
+    .execute();
+  return idsAndJson.map((x) => ({ childId: x.childId, senses: JSON.parse(x.childSensesJson) }));
 }

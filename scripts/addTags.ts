@@ -39,8 +39,7 @@ const tags = {
   "v5k-s": "Godan verb - Iku/Yuku special class",
   horse: "horse racing",
   ornith: "ornithology",
-  "v2w-s":
-    "Nidan verb (lower class) with 'u' ending and 'we' conjugation (archaic)",
+  "v2w-s": "Nidan verb (lower class) with 'u' ending and 'we' conjugation (archaic)",
   sK: "search-only kanji form",
   rk: "rarely used kana form",
   hob: "Hokkaido-ben",
@@ -281,16 +280,16 @@ const tags = {
   gikun: "gikun (meaning as reading) or jukujikun (special kanji reading)",
 };
 
-const plains = getAllPlains();
+const plains = await getAllPlains();
 for (const plain of plains) {
-  const sentence = getSentence(plain);
+  const sentence = await getSentence(plain);
   if (sentence && typeof sentence === "object") {
     const { vocab = [] } = sentence;
     for (const v of vocab) {
       const t = extractTags(v.entry, tags);
       v.tags = t;
     }
-    upsertSentence(sentence);
+    await upsertSentence(sentence);
     console.log(sentence.vocab?.map((v) => v.tags));
   }
 }

@@ -6,21 +6,19 @@ export interface GetResponse {
   sentence: Sentence;
   seenWordIds: Record<string, true>;
 }
-export const GET: APIRoute = ({ params }) => {
+export const GET: APIRoute = async ({ params }) => {
   const { plain } = params;
   if (plain) {
-    const sentence = getSentence(plain);
+    const sentence = await getSentence(plain);
     if (!sentence) {
       return new Response(null, { status: 404, statusText: "Not found" });
     }
     let seenWordIds: Record<string, true> = {};
     if (typeof sentence.nlp.curtiz !== "string") {
       const allWordIds = sentence.nlp.curtiz.hits.flatMap((h) =>
-        h.results.flatMap((r) => r.results.map((w) => w.wordId))
+        h.results.flatMap((r) => r.results.map((w) => w.wordId)),
       );
-      seenWordIds = Object.fromEntries(
-        hasJmdicts(allWordIds).map((id) => [id, true])
-      );
+      seenWordIds = Object.fromEntries((await hasJmdicts(allWordIds)).map((id) => [id, true]));
     }
     const body: GetResponse = { sentence, seenWordIds };
     return new Response(JSON.stringify(body), {
@@ -38,14 +36,12 @@ export const POST: APIRoute = async ({ params, request }) => {
 
   // TODO? io-ts
   if (plain && payload && "sentence" in payload) {
-    return new Response(JSON.stringify(upsertSentence(payload.sentence)), {
+    return new Response(JSON.stringify(await upsertSentence(payload.sentence)), {
       headers: {
         "Content-Type": "application/json",
       },
     });
   }
-  console.error(
-    `Bad POST: plain must be provided and payload payload=${payload} must have "sentence"`
-  );
+  console.error(`Bad POST: plain must be provided and payload payload=${payload} must have "sentence"`);
   return new Response(null, { status: 400, statusText: "Bad request" });
 };

@@ -6,10 +6,7 @@ import type { SenseAndSub } from "../../../../components/commonInterfaces";
 export interface IncludesWordsChildrenArrayPost {
   wordIds: string[];
 }
-export type IncludesWordsChildrenArrayPostResponse = Record<
-  string,
-  { word: Word; senses: SenseAndSub[] }[]
->;
+export type IncludesWordsChildrenArrayPostResponse = Record<string, { word: Word; senses: SenseAndSub[] }[]>;
 
 export const POST: APIRoute = async ({ request }) => {
   const { wordIds } = (await request.json()) as IncludesWordsChildrenArrayPost;
@@ -18,11 +15,12 @@ export const POST: APIRoute = async ({ request }) => {
     const result: IncludesWordsChildrenArrayPostResponse = {};
     for (const wordId of wordIds) {
       if (wordId in result) continue;
-      const children = allChildren(wordId, "includes");
+      const children = await allChildren(wordId, "includes");
       if (children.length) {
-        result[wordId] = getJmdicts(children.map((c) => c.childId)).map(
-          (word, idx) => ({ word, senses: children[idx].senses })
-        );
+        result[wordId] = (await getJmdicts(children.map((c) => c.childId))).map((word, idx) => ({
+          word,
+          senses: children[idx].senses,
+        }));
       }
     }
     return new Response(JSON.stringify(result), jsonOptions);

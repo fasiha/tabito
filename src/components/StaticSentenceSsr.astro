@@ -6,10 +6,7 @@ import "../styles/editor.css";
 import { enrollSentenceIntoDoc, getSentence } from "../db";
 import { Sentence } from "./preact/Sentence";
 import { SentenceAnnotations } from "./solid/SentenceAnnotations";
-import type {
-  AnnotatedSentence,
-  Sentence as SentenceType,
-} from "../interfaces/backend";
+import type { AnnotatedSentence, Sentence as SentenceType } from "../interfaces/backend";
 
 interface Props {
   plain: string;
@@ -18,8 +15,8 @@ interface Props {
 
 const { plain, d: docName } = Astro.props;
 
-enrollSentenceIntoDoc(plain, docName);
-const sentence: AnnotatedSentence | undefined = getSentence(plain, false);
+await enrollSentenceIntoDoc(plain, docName);
+const sentence: AnnotatedSentence | undefined = await getSentence(plain, false);
 if (sentence) {
   const curtiz = (sentence as SentenceType).nlp?.curtiz;
   if (typeof curtiz === "object") sentence.kanjidic = curtiz.kanjidic;

@@ -1,9 +1,5 @@
 import fetch from "node-fetch";
-import type {
-  v1ResSentence,
-  Furigana,
-  Word,
-} from "curtiz-japanese-nlp/interfaces";
+import type { v1ResSentence, Furigana, Word } from "curtiz-japanese-nlp/interfaces";
 
 const CURTIZ_URL = process.env["CURTIZ_URL"] || "http://127.0.0.1:8133";
 
@@ -16,21 +12,16 @@ export async function stringToFurigana(raw: string): Promise<Furigana[]> {
 }
 
 export async function analyzeString(raw: string): Promise<v1ResSentence> {
-  const reply = await fetch(
-    CURTIZ_URL + "/api/v1/sentence?includeWord=1&includeClozes=1",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sentence: raw }),
-    }
-  );
+  const reply = await fetch(CURTIZ_URL + "/api/v1/sentence?includeWord=1&includeClozes=1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sentence: raw }),
+  });
   const data: v1ResSentence[] = (await reply.json()) as any;
   return data[0];
 }
 
-export async function jmdictSeqsToWords(
-  seqs: number[]
-): Promise<(Word | undefined)[]> {
+export async function jmdictSeqsToWords(seqs: number[]): Promise<(Word | undefined)[]> {
   const ret: (Word | undefined)[] = [];
   for (const x of seqs) {
     // serialize this, don't want to DDOS the Curtiz server. If we ever

@@ -27,5 +27,5 @@ pnpm-debug.log*
 *.db-wal
 
 # more
-sql/*cjs
 *.txt
+.env

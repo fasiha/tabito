@@ -9,9 +9,9 @@ export const POST: APIRoute = async ({ request }) => {
     const result: Record<string, Word[]> = {};
     for (const wordId of wordIds) {
       if (wordId in result) continue;
-      const thisWordIds = getConnectedWordIds(wordId, "equivalent");
+      const thisWordIds = await getConnectedWordIds(wordId, "equivalent");
       if (thisWordIds.length) {
-        result[wordId] = getJmdicts(thisWordIds);
+        result[wordId] = await getJmdicts(thisWordIds);
       }
     }
     return new Response(JSON.stringify(result), jsonOptions);

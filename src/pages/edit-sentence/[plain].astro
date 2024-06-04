@@ -13,14 +13,12 @@ import "../../styles/editor.css";
 const { plain } = Astro.params;
 if (!plain) throw new Error("parameter not provided unexpectedly");
 
-const existing = getSentence(plain);
+const existing = await getSentence(plain);
 if (existing === undefined || (typeof existing === "object" && !existing.nlp)) {
   const curtiz = await analyzeString(plain);
   const { ichiran, jmdictSeqs, seqMap } = await rawToIchiran(plain);
   const words = Object.fromEntries(
-    (await jmdictSeqsToWords(jmdictSeqs))
-      .filter((x): x is Word => !!x)
-      .map((w) => [w.id, w])
+    (await jmdictSeqsToWords(jmdictSeqs)).filter((x): x is Word => !!x).map((w) => [w.id, w])
   );
 
   {
@@ -34,14 +32,13 @@ if (existing === undefined || (typeof existing === "object" && !existing.nlp)) {
     }
   }
 
-  const furigana =
-    typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat();
+  const furigana = typeof curtiz === "string" ? [curtiz] : curtiz.furigana.flat();
   const sentence: SentenceType = {
     furigana: existing?.furigana || furigana, // keep old furigana as it might have corrections
     ...existing,
     nlp: { curtiz, ichiran, words },
   };
-  upsertSentence(sentence);
+  await upsertSentence(sentence);
 }
 ---
 
