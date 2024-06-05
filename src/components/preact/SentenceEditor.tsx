@@ -385,6 +385,39 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
+  async function disconnectConnected(wordId: string) {
+    const fetchResult = await fetch("/api/connected-words/connect", {
+      ...jsonHeaders,
+      method: "DELETE",
+      body: JSON.stringify({ wordId }),
+    });
+    if (fetchResult.ok) {
+      sentenceSignalToGraphs(
+        wordIds,
+        connected,
+        connectedNetworkFeedback,
+        parentToChildren,
+        parentToChildrenNetworkFeedback,
+      );
+    }
+  }
+  async function disconnectParentChild(parentId: string, childId: string) {
+    const fetchResult = await fetch("/api/includes-words/connect", {
+      ...jsonHeaders,
+      method: "DELETE",
+      body: JSON.stringify({ parentId, childId }),
+    });
+    if (fetchResult.ok) {
+      sentenceSignalToGraphs(
+        wordIds,
+        connected,
+        connectedNetworkFeedback,
+        parentToChildren,
+        parentToChildrenNetworkFeedback,
+      );
+    }
+  }
+
   async function handleDrop(event: TargetedEvent<HTMLLIElement, DragEvent>) {
     const wordIdDropped = event.currentTarget.dataset.wordid;
     if (dragType.value === "connected" && wordIdBeingDragged.value !== wordIdDropped && dropValid) {
@@ -560,6 +593,8 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             handleNewVocabGrammar={handleNewVocabGrammar}
             connected={connected}
             parentToChildren={parentToChildren}
+            disconnectParentChild={disconnectParentChild}
+            disconnectConnected={disconnectConnected}
           />
 
           <NlpTable
@@ -710,6 +745,8 @@ interface VocabListProps {
   handleNewVocabGrammar: ({ vocab, grammar }: VocabGrammarProps) => Promise<void>;
   connected: Signal<Record<string, Word[]>>;
   parentToChildren: Signal<Record<string, { word: Word; senses: SenseAndSub[] }[]>>;
+  disconnectParentChild: (parentId: string, childId: string) => Promise<void>;
+  disconnectConnected: (wordId: string) => Promise<void>;
 }
 
 const VocabList: FunctionalComponent<VocabListProps> = memo(
@@ -723,6 +760,8 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
     handleNewVocabGrammar,
     connected,
     parentToChildren,
+    disconnectParentChild,
+    disconnectConnected,
   }) => {
     if (!sentence.value?.vocab?.length) return null;
     return (
@@ -773,6 +812,9 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
                   {connected.value[v.entry.id].map((word) =>
                     word.id !== v.entry.id ? (
                       <li>
+                        <button title="Disconnect" onClick={() => disconnectConnected(word.id)}>
+                          ❌
+                        </button>{" "}
                         <SimpleWord word={word} gloss />
                       </li>
                     ) : null,
@@ -786,6 +828,9 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
                 <ul>
                   {parentToChildren.value[v.entry.id].map(({ word, senses }) => (
                     <li key={word.id}>
+                      <button title="Disconnect" onClick={() => disconnectParentChild(v.entry.id, word.id)}>
+                        ❌
+                      </button>{" "}
                       <SimpleWord word={word} gloss senses={senses} />
                     </li>
                   ))}
