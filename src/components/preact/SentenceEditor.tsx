@@ -1,10 +1,5 @@
 import type { FunctionalComponent, VNode } from "preact";
-import {
-  Signal,
-  useComputed,
-  useSignal,
-  useSignalEffect,
-} from "@preact/signals";
+import { Signal, useComputed, useSignal, useSignalEffect } from "@preact/signals";
 import { addSynonym, validateSynonyms } from "tabito-lib";
 import { memo, useMemo, type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
@@ -12,12 +7,7 @@ import type { Furigana } from "curtiz-japanese-nlp";
 import type { GrammarConj, Sentence } from "../../interfaces/backend";
 import type { Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
-import {
-  deconjEqual,
-  grammarConjEqual,
-  senseAndSubEqual,
-  vocabEqual,
-} from "../../utils/equality";
+import { deconjEqual, grammarConjEqual, senseAndSubEqual, vocabEqual } from "../../utils/equality";
 import type {
   IncludesWordsChildrenArrayPost,
   IncludesWordsChildrenArrayPostResponse,
@@ -39,12 +29,11 @@ async function plainToSentenceSignal(
   plain: string,
   sentence: Pick<Signal<Sentence | undefined>, "value">,
   networkFeedback: Signal<string>,
-  seenWordIds?: Signal<Record<string, true>>
+  seenWordIds?: Signal<Record<string, true>>,
 ) {
   const res = await fetch(`/api/sentence/${plain}`);
   if (res.ok) {
-    const { sentence: sentenceObj, seenWordIds: seenWordIdsObj }: GetResponse =
-      await res.json();
+    const { sentence: sentenceObj, seenWordIds: seenWordIdsObj }: GetResponse = await res.json();
     sentenceObj.furigana.filter((x) => x !== ""); // ignore empty strings in case we get any
     sentence.value = sentenceObj;
     if (seenWordIds) seenWordIds.value = seenWordIdsObj;
@@ -58,10 +47,8 @@ async function sentenceSignalToGraphs(
   wordIds: Signal<string[]>,
   connected: Signal<Record<string, Word[]>>,
   connectedNetworkFeedback: Signal<string>,
-  parentToChildren: Signal<
-    Record<string, { word: Word; senses: SenseAndSub[] }[]>
-  >,
-  parentToChildrenNetworkFeedback: Signal<string>
+  parentToChildren: Signal<Record<string, { word: Word; senses: SenseAndSub[] }[]>>,
+  parentToChildrenNetworkFeedback: Signal<string>,
 ) {
   if (!wordIds.value.length) return;
   {
@@ -85,8 +72,7 @@ async function sentenceSignalToGraphs(
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      parentToChildren.value =
-        (await res.json()) as IncludesWordsChildrenArrayPostResponse;
+      parentToChildren.value = (await res.json()) as IncludesWordsChildrenArrayPostResponse;
       parentToChildrenNetworkFeedback.value = "";
     } else {
       parentToChildrenNetworkFeedback.value = `${res.status} ${res.statusText}`;
@@ -107,18 +93,14 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const connectedNetworkFeedback = useSignal("");
   const importFrom = useSignal<string>("");
 
-  const parentToChildren = useSignal<
-    Record<Word["id"], { word: Word; senses: SenseAndSub[] }[]>
-  >({});
+  const parentToChildren = useSignal<Record<Word["id"], { word: Word; senses: SenseAndSub[] }[]>>({});
   const parentToChildrenNetworkFeedback = useSignal("");
 
   useSignalEffect(() => {
     plainToSentenceSignal(plain, sentence, networkFeedback, seenWordIds);
   });
 
-  const wordIds = useComputed(
-    () => sentence.value?.vocab?.map((v) => v.entry.id) ?? []
-  );
+  const wordIds = useComputed(() => sentence.value?.vocab?.map((v) => v.entry.id) ?? []);
 
   useSignalEffect(() => {
     sentenceSignalToGraphs(
@@ -126,7 +108,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       connected,
       connectedNetworkFeedback,
       parentToChildren,
-      parentToChildrenNetworkFeedback
+      parentToChildrenNetworkFeedback,
     );
   });
 
@@ -140,22 +122,13 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
         onNewVocabGrammar: handleNewVocabGrammar,
       });
     }
-  }, [
-    plain,
-    sentence.value?.nlp,
-    sentence.value?.vocab,
-    sentence.value?.grammarConj,
-  ]);
+  }, [plain, sentence.value?.nlp, sentence.value?.vocab, sentence.value?.grammarConj]);
 
-  function handleInputTranslation(
-    ev: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleInputTranslation(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
     newTranslation.value = ev.currentTarget.value;
   }
 
-  async function handleSubmitTranslation(
-    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
-  ) {
+  async function handleSubmitTranslation(ev: TargetedEvent<HTMLFormElement, SubmitEvent>) {
     ev.preventDefault();
     if (newTranslation.value && sentence.value) {
       const body: Sentence = structuredClone(sentence.value);
@@ -188,15 +161,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
-  function handleInputCitation(
-    ev: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleInputCitation(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
     newCitation.value = ev.currentTarget.value;
   }
 
-  async function handleSubmitCitation(
-    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
-  ) {
+  async function handleSubmitCitation(ev: TargetedEvent<HTMLFormElement, SubmitEvent>) {
     ev.preventDefault();
     if (sentence.value && newCitation.value !== undefined) {
       const body: Sentence = {
@@ -219,15 +188,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
-  function handleInputSynonymSent(
-    ev: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleInputSynonymSent(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
     synonymSentence.value = ev.currentTarget.value;
   }
 
-  async function handleSubmitSynonymSent(
-    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
-  ) {
+  async function handleSubmitSynonymSent(ev: TargetedEvent<HTMLFormElement, SubmitEvent>) {
     ev.preventDefault();
     if (sentence.value && synonymSentence.value) {
       const furiganaResponse = await fetch(`/api/furigana/${synonymSentence}`);
@@ -259,9 +224,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 
   async function handleDeleteSynonym(syn: string, alt: Furigana[]) {
     if (sentence.value) {
-      const newSynonyms = sentence.value.synonyms?.filter(
-        ([oldSyn, oldAlt]) => !(oldSyn === syn && oldAlt === alt)
-      );
+      const newSynonyms = sentence.value.synonyms?.filter(([oldSyn, oldAlt]) => !(oldSyn === syn && oldAlt === alt));
       const newSentence: Sentence = {
         ...sentence.value,
         synonyms: newSynonyms,
@@ -282,25 +245,17 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
-  function handleInputSynonymWord1(
-    ev: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleInputSynonymWord1(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
     synonymWord.value = [ev.currentTarget.value, synonymWord.value[1]];
   }
-  function handleInputSynonymWord2(
-    ev: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleInputSynonymWord2(ev: TargetedEvent<HTMLInputElement, InputEvent>) {
     synonymWord.value = [synonymWord.value[0], ev.currentTarget.value];
   }
 
-  async function handleSubmitSynonymWord(
-    ev: TargetedEvent<HTMLFormElement, SubmitEvent>
-  ) {
+  async function handleSubmitSynonymWord(ev: TargetedEvent<HTMLFormElement, SubmitEvent>) {
     ev.preventDefault();
     if (sentence.value && synonymWord.value[0]) {
-      const furiganaResponse = synonymWord.value[1]
-        ? await fetch(`/api/furigana/${synonymWord.value[1]}`)
-        : undefined;
+      const furiganaResponse = synonymWord.value[1] ? await fetch(`/api/furigana/${synonymWord.value[1]}`) : undefined;
       if (furiganaResponse === undefined || furiganaResponse.ok) {
         const newSynonyms = sentence.value.synonyms ?? [];
         if (furiganaResponse) {
@@ -342,15 +297,11 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           newSentence.vocab = [];
         }
 
-        const existingIdx = newSentence.vocab.findIndex((v) =>
-          vocabEqual(v, vocab)
-        );
+        const existingIdx = newSentence.vocab.findIndex((v) => vocabEqual(v, vocab));
         if (existingIdx >= 0) {
           const existing = newSentence.vocab[existingIdx];
           for (const newSense of vocab.senses) {
-            const senseIdx = existing.senses.findIndex((s) =>
-              senseAndSubEqual(s, newSense)
-            );
+            const senseIdx = existing.senses.findIndex((s) => senseAndSubEqual(s, newSense));
             if (senseIdx >= 0) {
               existing.senses.splice(senseIdx, 1);
             } else {
@@ -371,9 +322,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           newSentence.grammarConj = [];
         }
 
-        const existingIdx = newSentence.grammarConj.findIndex((g) =>
-          grammarConjEqual(g, grammar)
-        );
+        const existingIdx = newSentence.grammarConj.findIndex((g) => grammarConjEqual(g, grammar));
         if (existingIdx >= 0) {
           newSentence.grammarConj.splice(existingIdx, 1);
         } else {
@@ -399,9 +348,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   const wordIdBeingDragged = useSignal<string | undefined>(undefined);
   const wordIdUnder = useSignal<string | undefined>(undefined);
   const dropValid = useSignal<boolean>(false);
-  const dragType = useSignal<undefined | "connected" | "parentChild">(
-    undefined
-  );
+  const dragType = useSignal<undefined | "connected" | "parentChild">(undefined);
 
   function handleDragStart(event: TargetedEvent<HTMLButtonElement, DragEvent>) {
     const targetDragType = event.currentTarget.dataset.dragtype;
@@ -422,9 +369,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           dropValid.value = false;
         } else if (
           !(under! in connected.value) ||
-          connected.value[under!].every(
-            (w) => w.id !== wordIdBeingDragged.value
-          )
+          connected.value[under!].every((w) => w.id !== wordIdBeingDragged.value)
         ) {
           dropValid.value = true;
         } else {
@@ -435,23 +380,15 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 
         dropValid.value =
           under !== wordIdBeingDragged.value &&
-          !!sentence.value?.vocab?.find(
-            (v) => v.entry.id === wordIdBeingDragged.value
-          )?.senses;
+          !!sentence.value?.vocab?.find((v) => v.entry.id === wordIdBeingDragged.value)?.senses;
       }
     }
   }
 
   async function handleDrop(event: TargetedEvent<HTMLLIElement, DragEvent>) {
     const wordIdDropped = event.currentTarget.dataset.wordid;
-    if (
-      dragType.value === "connected" &&
-      wordIdBeingDragged.value !== wordIdDropped &&
-      dropValid
-    ) {
-      console.log(
-        `will merge ${wordIdBeingDragged.value} into ${wordIdDropped}`
-      );
+    if (dragType.value === "connected" && wordIdBeingDragged.value !== wordIdDropped && dropValid) {
+      console.log(`will merge ${wordIdBeingDragged.value} into ${wordIdDropped}`);
       const fetchResult = await fetch("/api/connected-words/connect", {
         ...jsonHeaders,
         method: "POST",
@@ -465,28 +402,20 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           connected,
           connectedNetworkFeedback,
           parentToChildren,
-          parentToChildrenNetworkFeedback
+          parentToChildrenNetworkFeedback,
         );
       }
       // TODO: update connectedNetworkFeedback
-    } else if (
-      dragType.value === "parentChild" &&
-      wordIdBeingDragged.value !== wordIdDropped &&
-      dropValid
-    ) {
+    } else if (dragType.value === "parentChild" && wordIdBeingDragged.value !== wordIdDropped && dropValid) {
       const parentId = wordIdDropped;
       const childId = wordIdBeingDragged.value;
       console.log(`child=${childId}, parent=${parentId}`);
 
-      const newChildSenses = sentence.value?.vocab?.find(
-        (v) => v.entry.id === childId
-      )?.senses;
-      const origChildSenses = parentToChildren.value[parentId ?? ""]?.find(
-        (w) => w.word.id === childId
-      )?.senses;
+      const newChildSenses = sentence.value?.vocab?.find((v) => v.entry.id === childId)?.senses;
+      const origChildSenses = parentToChildren.value[parentId ?? ""]?.find((w) => w.word.id === childId)?.senses;
       const childSenses = dedupeBy(
         (newChildSenses || []).concat(origChildSenses || []),
-        (s) => `${s.sense}/${s.subsense ?? -1}`
+        (s) => `${s.sense}/${s.subsense ?? -1}`,
       );
 
       if (!(childSenses.length && parentId && childId)) {
@@ -508,7 +437,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           connected,
           connectedNetworkFeedback,
           parentToChildren,
-          parentToChildrenNetworkFeedback
+          parentToChildrenNetworkFeedback,
         );
         parentToChildrenNetworkFeedback.value = "";
       } else {
@@ -538,17 +467,13 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
       newFurigana.value = { ...newFurigana.value, [idx]: next };
     }
   }
-  async function handleSubmitFurigana(
-    idx: number,
-    ev: TargetedEvent<HTMLFormElement, Event>
-  ) {
+  async function handleSubmitFurigana(idx: number, ev: TargetedEvent<HTMLFormElement, Event>) {
     ev.preventDefault();
     const orig = sentence.value?.furigana[idx];
     if (
       sentence.value &&
       newFurigana.value[idx] &&
-      newFurigana.value[idx] !==
-        (typeof orig === "object" ? orig.rt : undefined)
+      newFurigana.value[idx] !== (typeof orig === "object" ? orig.rt : undefined)
     ) {
       const body: Sentence = structuredClone(sentence.value);
       const f = body.furigana[idx];
@@ -576,30 +501,22 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
     }
   }
 
-  function handleEditImportFrom(
-    event: TargetedEvent<HTMLInputElement, InputEvent>
-  ) {
+  function handleEditImportFrom(event: TargetedEvent<HTMLInputElement, InputEvent>) {
     importFrom.value = event.currentTarget.value;
   }
 
-  async function handleSubmitImportFrom(
-    event: TargetedEvent<HTMLFormElement, SubmitEvent>
-  ) {
+  async function handleSubmitImportFrom(event: TargetedEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     const fakeOldSentence = { value: undefined };
     // download old sentence data
-    await plainToSentenceSignal(
-      importFrom.value,
-      fakeOldSentence,
-      networkFeedback
-    );
+    await plainToSentenceSignal(importFrom.value, fakeOldSentence, networkFeedback);
     if (fakeOldSentence.value && sentence.value && nlp) {
       const newSentence = copyAnnotations(
         fakeOldSentence.value,
         sentence.value,
         nlp.cellsIchiran,
         nlp.cellsCurtizVocab,
-        nlp.cellsCurtizGrammar
+        nlp.cellsCurtizGrammar,
       );
 
       const request = await fetch(`/api/sentence/${plain}`, {
@@ -621,19 +538,12 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
   return (
     <div>
       {networkFeedback.value && <p>Network feedback: {networkFeedback}</p>}
-      {connectedNetworkFeedback.value && (
-        <p>Network feedback 2: {connectedNetworkFeedback}</p>
-      )}
-      {parentToChildrenNetworkFeedback.value && (
-        <p>Network feedback 3: {parentToChildrenNetworkFeedback}</p>
-      )}
+      {connectedNetworkFeedback.value && <p>Network feedback 2: {connectedNetworkFeedback}</p>}
+      {parentToChildrenNetworkFeedback.value && <p>Network feedback 3: {parentToChildrenNetworkFeedback}</p>}
       {sentence.value && (
         <>
           {typeof sentence.value.nlp.curtiz !== "string" && (
-            <Jdepp
-              furigana={sentence.value.nlp.curtiz.furigana}
-              origBunsetsus={sentence.value.nlp.curtiz.bunsetsus}
-            />
+            <Jdepp furigana={sentence.value.nlp.curtiz.furigana} origBunsetsus={sentence.value.nlp.curtiz.bunsetsus} />
           )}
           <h2>
             <SentenceComponent sentence={sentence.value} />
@@ -662,23 +572,13 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
 
           <p>
             Synonyms (plain: {plain}, boundaries:{" "}
-            {sentence.value.furigana
-              .map((f) => (typeof f === "string" ? f : f.ruby))
-              .join("|")}{" "}
-            ):
+            {sentence.value.furigana.map((f) => (typeof f === "string" ? f : f.ruby)).join("|")} ):
           </p>
           <ul>
             {(sentence.value.synonyms ?? []).map(([syn, alt]) => (
               <li>
-                {syn}:{" "}
-                {alt.length ? (
-                  <SentenceComponent sentence={{ furigana: alt }} />
-                ) : (
-                  "-"
-                )}{" "}
-                <button onClick={() => handleDeleteSynonym(syn, alt)}>
-                  Delete
-                </button>
+                {syn}: {alt.length ? <SentenceComponent sentence={{ furigana: alt }} /> : "-"}{" "}
+                <button onClick={() => handleDeleteSynonym(syn, alt)}>Delete</button>
               </li>
             ))}
             <li>
@@ -725,34 +625,24 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           <ul>
             {sentence.value.furigana
               .map((f, i) => [f, i] as const)
-              .filter(
-                (pair): pair is [Exclude<Furigana, string>, number] =>
-                  typeof pair[0] !== "string"
-              )
+              .filter((pair): pair is [Exclude<Furigana, string>, number] => typeof pair[0] !== "string")
               .map(([{ ruby, rt }, idx]) => (
                 <li>
                   {ruby}:{" "}
                   {idx in newFurigana.value ? (
                     <form onSubmit={(e) => handleSubmitFurigana(idx, e)}>
                       <input
-                        onInput={(e) =>
-                          handleEditFurigana(idx, e.currentTarget.value)
-                        }
+                        onInput={(e) => handleEditFurigana(idx, e.currentTarget.value)}
                         placeholder="Reading"
                         type="text"
                         value={newFurigana.value[idx]}
                       />{" "}
                       <button type="submit">Submit</button>
-                      <button onClick={() => handleToggleFurigana(idx)}>
-                        Cancel
-                      </button>
+                      <button onClick={() => handleToggleFurigana(idx)}>Cancel</button>
                     </form>
                   ) : (
                     <>
-                      {rt}{" "}
-                      <button onClick={() => handleToggleFurigana(idx)}>
-                        Edit
-                      </button>
+                      {rt} <button onClick={() => handleToggleFurigana(idx)}>Edit</button>
                     </>
                   )}
                 </li>
@@ -781,17 +671,12 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
             Citation:{" "}
             {newCitation.value === undefined ? (
               <>
-                <span>{sentence.value.citation || "(none)"}</span>{" "}
-                <button onClick={handleEditCitation}>Edit</button>
+                <span>{sentence.value.citation || "(none)"}</span> <button onClick={handleEditCitation}>Edit</button>
               </>
             ) : (
               <>
                 <form onSubmit={handleSubmitCitation}>
-                  <input
-                    onInput={handleInputCitation}
-                    type="text"
-                    value={newCitation.value}
-                  />{" "}
+                  <input onInput={handleInputCitation} type="text" value={newCitation.value} />{" "}
                   <button type="submit">Submit</button>
                   <button onClick={handleEditCitation}>Cancel</button>
                 </form>
@@ -801,11 +686,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           <p>
             Import from{" "}
             <form onSubmit={handleSubmitImportFrom}>
-              <input
-                type="text"
-                value={importFrom}
-                onInput={handleEditImportFrom}
-              />
+              <input type="text" value={importFrom} onInput={handleEditImportFrom} />
               <button type="submit" disabled={!importFrom.value}>
                 Submit
               </button>
@@ -826,14 +707,9 @@ interface VocabListProps {
   wordIdUnder: Signal<string | undefined>;
   dropValid: Signal<boolean>;
   handleDragStart: (event: TargetedEvent<HTMLButtonElement, DragEvent>) => void;
-  handleNewVocabGrammar: ({
-    vocab,
-    grammar,
-  }: VocabGrammarProps) => Promise<void>;
+  handleNewVocabGrammar: ({ vocab, grammar }: VocabGrammarProps) => Promise<void>;
   connected: Signal<Record<string, Word[]>>;
-  parentToChildren: Signal<
-    Record<string, { word: Word; senses: SenseAndSub[] }[]>
-  >;
+  parentToChildren: Signal<Record<string, { word: Word; senses: SenseAndSub[] }[]>>;
 }
 
 const VocabList: FunctionalComponent<VocabListProps> = memo(
@@ -858,11 +734,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
             onDrop={handleDrop}
             style={{
               backgroundColor:
-                v.entry.id === wordIdUnder.value
-                  ? dropValid.value
-                    ? "DarkGreen"
-                    : "DarkRed"
-                  : undefined,
+                v.entry.id === wordIdUnder.value ? (dropValid.value ? "DarkGreen" : "DarkRed") : undefined,
             }}
           >
             <button
@@ -883,10 +755,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
             >
               👶
             </button>
-            <button
-              title="Remove"
-              onClick={() => handleNewVocabGrammar({ vocab: v })}
-            >
+            <button title="Remove" onClick={() => handleNewVocabGrammar({ vocab: v })}>
               ❌
             </button>
             <SimpleWord word={v.entry} />
@@ -894,7 +763,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
               .map((s) =>
                 s.subsense
                   ? v.entry.sense[s.sense].gloss[s.subsense].text
-                  : v.entry.sense[s.sense].gloss.map((g) => g.text).join(", ")
+                  : v.entry.sense[s.sense].gloss.map((g) => g.text).join(", "),
               )
               .join("; ")}
             {v.entry.id in connected.value && (
@@ -906,7 +775,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
                       <li>
                         <SimpleWord word={word} gloss />
                       </li>
-                    ) : null
+                    ) : null,
                   )}
                 </ul>
               </ul>
@@ -915,13 +784,11 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
               <ul>
                 <li>Implicit reviews</li>
                 <ul>
-                  {parentToChildren.value[v.entry.id].map(
-                    ({ word, senses }) => (
-                      <li key={word.id}>
-                        <SimpleWord word={word} gloss senses={senses} />
-                      </li>
-                    )
-                  )}
+                  {parentToChildren.value[v.entry.id].map(({ word, senses }) => (
+                    <li key={word.id}>
+                      <SimpleWord word={word} gloss senses={senses} />
+                    </li>
+                  ))}
                 </ul>
               </ul>
             )}
@@ -929,7 +796,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
         ))}
       </ul>
     );
-  }
+  },
 );
 
 /**
@@ -940,7 +807,7 @@ function copyAnnotations(
   nextOrig: Sentence,
   cellsIchiran: Cell<VNode<{}>, { word: Word }>[],
   cellsCurtizVocab: Cell<VNode, { word: Word }>[],
-  cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[]
+  cellsCurtizGrammar: Cell<VNode, GrammarConj["deconj"][]>[],
 ) {
   const next = structuredClone(nextOrig);
 
@@ -977,10 +844,7 @@ function copyAnnotations(
     const prevSnippet = prevPlain.slice(c.start, c.start + c.len);
     const hit = cellsCurtizGrammar.find((x) => {
       const thisSnippet = nextPlain.slice(x.start, x.start + x.len);
-      return (
-        prevSnippet === thisSnippet &&
-        x.extra.some((dec) => deconjEqual(dec, c.deconj))
-      );
+      return prevSnippet === thisSnippet && x.extra.some((dec) => deconjEqual(dec, c.deconj));
     });
     if (hit) {
       if (!next.grammarConj) next.grammarConj = [];
