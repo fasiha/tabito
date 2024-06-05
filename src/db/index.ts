@@ -8,12 +8,17 @@ import type { Word } from "curtiz-japanese-nlp";
 import { newComponentId } from "../utils/randomId";
 import type { SenseAndSub } from "../components/commonInterfaces";
 
+// just for testing
+import { unlinkSync, existsSync } from "node:fs";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
+import { join } from "node:path";
+
 if (!process.env.DATABASE_URL) throw new Error("no url?");
 const dialect = new SqliteDialect({
   database: new SQLite(process.env.DATABASE_URL),
 });
-
-export const db = new Kysely<DB>({ dialect });
+export let db = new Kysely<DB>({ dialect });
 
 const ver = await db.selectFrom("_tabito_db_state").select("schemaVersion").executeTakeFirstOrThrow();
 // change this as the schema migrates?
@@ -257,3 +262,13 @@ export async function allChildren(
     .execute();
   return idsAndJson.map((x) => ({ childId: x.childId, senses: JSON.parse(x.childSensesJson) }));
 }
+
+// JUST FOR TESTING
+const execP = promisify(exec);
+export const _overwriteDb = async (newFile: string) => {
+  const sqlPath = join(__dirname, "..", "..", "sql", "db-v1.sql");
+  if (existsSync(newFile)) unlinkSync(newFile); // delete
+  await execP(`sqlite3 ${newFile} < ${sqlPath}`);
+  const dialect = new SqliteDialect({ database: new SQLite(newFile) });
+  db = new Kysely<DB>({ dialect });
+};

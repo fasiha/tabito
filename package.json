@@ -10,8 +10,7 @@
     "astro": "astro",
     "test": "vitest",
     "db:init": "sqlite3 sentences.db < sql/db-v1.sql",
-    "db:wrap": "kysely-codegen --dialect sqlite --out-file src/db/db.d.ts",
-    "server:schema": "esbuild sql/makeWrapper.ts --outfile=sql/makeWrapper.cjs --format=cjs && node sql/makeWrapper.cjs"
+    "db:wrap": "kysely-codegen --dialect sqlite --out-file src/db/db.d.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.7",
