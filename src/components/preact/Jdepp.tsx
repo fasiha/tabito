@@ -8,10 +8,7 @@ interface Props {
   origBunsetsus: Bunsetsu<unknown>[];
 }
 
-export const Jdepp: FunctionalComponent<Props> = ({
-  furigana,
-  origBunsetsus,
-}) => {
+export const Jdepp: FunctionalComponent<Props> = ({ furigana, origBunsetsus }) => {
   const bunsetsu = origBunsetsus.map((o) => ({
     idx: o.idx,
     parent: o.parent,
@@ -43,9 +40,7 @@ export const Jdepp: FunctionalComponent<Props> = ({
     }
     return n;
   }
-  const idxToNumLevels: Map<number, number> = new Map(
-    bunsetsu.map((b) => [b.idx, calcIdxToNumLevels(b.idx)])
-  );
+  const idxToNumLevels: Map<number, number> = new Map(bunsetsu.map((b) => [b.idx, calcIdxToNumLevels(b.idx)]));
 
   const maxLevels = Math.max(...Array.from(idxToNumLevels.values()));
 
@@ -71,9 +66,7 @@ export const Jdepp: FunctionalComponent<Props> = ({
             if (n === 0) {
               boxclass = "bunsetsu";
             } else if (n === 1) {
-              boxclass = `${"box-drawing"} ${
-                parentVisited ? "box-drawing-T" : "box-drawing-7"
-              }`;
+              boxclass = `${"box-drawing"} ${parentVisited ? "box-drawing-T" : "box-drawing-7"}`;
             } else if (n > 1) {
               const actualColumn = maxLevels - level + 1 + n; // 1, 2, ...
               if (prevRowIsChild[actualColumn - 1]) {
@@ -85,12 +78,7 @@ export const Jdepp: FunctionalComponent<Props> = ({
               <td key={n} colSpan={colSpan} className={boxclass}>
                 {n === 0 && (
                   <FuriganaComponent
-                    furigana={furigana
-                      .slice(
-                        bunsetsuIndexes[b.idx].startIdx,
-                        bunsetsuIndexes[b.idx].endIdx
-                      )
-                      .flat()}
+                    furigana={furigana.slice(bunsetsuIndexes[b.idx].startIdx, bunsetsuIndexes[b.idx].endIdx).flat()}
                   />
                 )}
               </td>
