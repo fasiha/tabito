@@ -11,17 +11,14 @@ export async function stringToFurigana(raw: string): Promise<Furigana[]> {
   return data.furigana.flat();
 }
 
-export async function analyzeString(raw: string): Promise<v1ResSentence> {
-  // Until we handle this better in the UI: if you want nBest > 1, customize this:
-  const N_BEST_INDEX_WANTED = 0;
-
+export async function analyzeString(raw: string, nBest = 0): Promise<v1ResSentence> {
   const reply = await fetch(CURTIZ_URL + "/api/v1/sentence?includeWord=1&includeClozes=1", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sentence: raw, nBest: N_BEST_INDEX_WANTED + 1 }),
+    body: JSON.stringify({ sentence: raw, nBest: nBest + 1 }),
   });
   const data: v1ResSentence[] = (await reply.json()) as any;
-  return data[N_BEST_INDEX_WANTED];
+  return data[nBest];
 }
 
 export async function jmdictSeqsToWords(seqs: number[]): Promise<(Word | undefined)[]> {

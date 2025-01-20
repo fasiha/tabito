@@ -13,9 +13,19 @@ import "../../styles/editor.css";
 const { plain } = Astro.params;
 if (!plain) throw new Error("parameter not provided unexpectedly");
 
+// Terrible hack to get to MeCab's nBest parsing but, manually add a query parameter to the URL to access this:
+const nBestRaw = Astro.url.searchParams.get("nBest");
+const nBestNum = Number(nBestRaw);
+const nBest =
+  nBestRaw && isFinite(nBestNum) && nBestNum >= 0 ? nBestNum : undefined;
+
 const existing = await getSentence(plain);
-if (existing === undefined || (typeof existing === "object" && !existing.nlp)) {
-  const curtiz = await analyzeString(plain);
+if (
+  existing === undefined ||
+  (typeof existing === "object" && !existing.nlp) ||
+  typeof nBest === "number"
+) {
+  const curtiz = await analyzeString(plain, nBest);
   const { ichiran, jmdictSeqs, seqMap } = await rawToIchiran(plain);
   const words = Object.fromEntries(
     (await jmdictSeqsToWords(jmdictSeqs)).filter((x): x is Word => !!x).map((w) => [w.id, w])
