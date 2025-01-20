@@ -1,7 +1,7 @@
 // .prettierrc.mjs
 /** @type {import("prettier").Config} */
 export default {
-  printWidth: 120,
+  printWidth: 80,
   proseWrap: "never",
   plugins: ["prettier-plugin-astro"],
   overrides: [

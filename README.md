@@ -26,6 +26,16 @@ To clear all saved vocabulary:
 sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded, '$.vocab')" && npm run dev
 ```
 
+Adapting this to just clearing the NLP data for a single sentence:
+```sh
+sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded, '$.nlp') WHERE plain='なにか調べものをしに来たのか'" && npm run dev
+```
+
+> 🚨 Danger ⚠️: to delete an entire sentence:
+> ```sh
+  sqlite3 sentences.db "DELETE FROM sentence WHERE plain='抑えられなくなる'"
+> ```
+
 ## Working notes
 
 - in the vocab memory, track what senses we've learned
