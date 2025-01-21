@@ -1,4 +1,4 @@
-import type { Furigana, Word, Xref } from "curtiz-japanese-nlp";
+import type { ContextCloze, Furigana, Word, Xref } from "curtiz-japanese-nlp";
 import type { SenseAndSub } from "../components/commonInterfaces";
 
 export function furiganaToPlain(furigana: Furigana[]): string {
@@ -11,25 +11,16 @@ export function furiganaToReading(furigana: Furigana[]): string {
 /**
  * Does NOT split string or Ruby
  */
-export function furiganaSlice(
-  furigana: Furigana[],
-  start: number,
-  len: number
-): Furigana[] {
+export function furiganaSlice(furigana: Furigana[], start: number, len: number): Furigana[] {
   const mapping: (Furigana | undefined)[] = [];
   for (const f of furigana) {
     mapping.push(f);
-    const extra = Math.max(
-      0,
-      (typeof f === "string" ? f.length : f.ruby.length) - 1
-    );
+    const extra = Math.max(0, (typeof f === "string" ? f.length : f.ruby.length) - 1);
     for (let i = 0; i < extra; i++) {
       mapping.push(undefined);
     }
   }
-  const subset = mapping
-    .slice(start, start + len)
-    .filter((f): f is Furigana => !!f);
+  const subset = mapping.slice(start, start + len).filter((f): f is Furigana => !!f);
 
   const expectedPlain = furiganaToPlain(furigana).slice(start, start + len);
   const subsetPlain = furiganaToPlain(subset);
@@ -80,14 +71,11 @@ export function compressFurigana(input: Furigana[]): Furigana[] {
       typeof curr === "string" && typeof arr[arr.length - 1] === "string"
         ? arr.slice(0, -1).concat(arr[arr.length - 1] + curr)
         : arr.concat(curr),
-    []
+    [],
   );
 }
 
-const circledNumbers =
-  "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿".split(
-    ""
-  );
+const circledNumbers = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉑㉒㉓㉔㉕㉖㉗㉘㉙㉚㉛㉜㉝㉞㉟㊱㊲㊳㊴㊵㊶㊷㊸㊹㊺㊻㊼㊽㊾㊿".split("");
 export const prefixNumber = (n: number) => circledNumbers[n] || `(${n + 1})`;
 
 /**
@@ -101,10 +89,7 @@ export function join<T, U>(arr: T[], sep: U): (T | U)[] {
   return ret.slice(0, -1);
 }
 
-export function extractTags(
-  word: Word,
-  tags: Record<string, string>
-): Record<string, string> {
+export function extractTags(word: Word, tags: Record<string, string>): Record<string, string> {
   const relevant: typeof tags = {};
   const keys = ["partOfSpeech", "field", "misc", "dialect"] as const;
   for (const sense of word.sense) {
@@ -129,25 +114,14 @@ export function objectIsEmpty(obj: Record<string, unknown>): boolean {
   return true;
 }
 
-export function senseSeenClass(
-  senseIdx: number,
-  senses?: SenseAndSub[]
-): string | undefined {
-  return senses?.find(
-    ({ sense, subsense }) => sense === senseIdx && subsense === undefined
-  )
+export function senseSeenClass(senseIdx: number, senses?: SenseAndSub[]): string | undefined {
+  return senses?.find(({ sense, subsense }) => sense === senseIdx && subsense === undefined)
     ? "already-picked"
     : undefined;
 }
 
-export function subsenseSeenClass(
-  senseIdx: number,
-  subsenseIdx: number,
-  senses?: SenseAndSub[]
-): string | undefined {
-  return senses?.find(
-    ({ sense, subsense }) => sense === senseIdx && subsense === subsenseIdx
-  )
+export function subsenseSeenClass(senseIdx: number, subsenseIdx: number, senses?: SenseAndSub[]): string | undefined {
+  return senses?.find(({ sense, subsense }) => sense === senseIdx && subsense === subsenseIdx)
     ? "already-picked"
     : undefined;
 }
@@ -155,7 +129,7 @@ export function subsenseSeenClass(
 function furiganaIdxToPlain(
   furigana: Furigana[][],
   startIdx: number = 0,
-  endIdx: undefined | number = undefined
+  endIdx: undefined | number = undefined,
 ): string {
   return furigana
     .slice(startIdx, endIdx)
@@ -175,4 +149,12 @@ export function dedupeBy<T, U>(v: T[], key: (x: T) => U): T[] {
     }
   }
   return ret;
+}
+
+export function findClozeIdx(plain: string, run: ContextCloze): number {
+  const clozeHit = plain.indexOf(`${run.left}${run.cloze}${run.right}`);
+  if (clozeHit >= 0) {
+    return clozeHit + run.left.length;
+  }
+  throw new Error("cloze not found?");
 }

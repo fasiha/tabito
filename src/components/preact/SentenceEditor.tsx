@@ -20,6 +20,7 @@ import { dedupeBy, furiganaToPlain } from "../../utils/utils";
 import type { Cell } from "../../utils/cellFit";
 import { Jdepp } from "./Jdepp";
 import type { GetResponse } from "../../pages/api/sentence/[plain]";
+import { CustomDeconjugator } from "./CustomDeconjugation";
 
 interface Props {
   plain: string;
@@ -581,6 +582,8 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           <h2>
             <SentenceComponent sentence={sentence.value} />
           </h2>
+
+          <CustomDeconjugator onNewVocabGrammar={handleNewVocabGrammar} sentence={sentence} />
 
           {/* Vocab selected and equivalent */}
           <VocabList

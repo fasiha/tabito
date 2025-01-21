@@ -1,18 +1,14 @@
-import type { VNode } from "preact";
+import { type VNode } from "preact";
 import type { GrammarConj, Sentence } from "../../interfaces/backend";
 import { type Cell } from "../../utils/cellFit";
-import type { ContextCloze, Word } from "curtiz-japanese-nlp/interfaces";
-import { Furigana as FuriganaComponent } from "./Furigana";
+import type { Word } from "curtiz-japanese-nlp/interfaces";
 import { WordPicker } from "./WordPicker";
-import type {
-  IchiranConjProp,
-  IchiranWord,
-} from "../../nlp-wrappers/ichiran-types";
+import type { IchiranConjProp, IchiranWord } from "../../nlp-wrappers/ichiran-types";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
-import { extractTags, join, prefixNumber } from "../../utils/utils";
-import { grammarConjEqual } from "../../utils/equality";
+import { extractTags, findClozeIdx, furiganaSlice, join } from "../../utils/utils";
 import { IchiranGloss } from "./IchiranGloss";
-import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
+import { GrammarCell } from "./nlp/GrammarCell";
+import { selectedGrammarConjsNotFromCurtiz } from "../../utils/grammar";
 
 export interface Props {
   grammarConj: Sentence["grammarConj"];
@@ -33,36 +29,14 @@ export function parseNlp(props: Props): {
 
   const tags = typeof curtiz === "string" ? {} : curtiz.tags ?? {};
 
-  const { cellsIchiran, jmdictSeqStartLenSeen, jmdictSeqSeen } = parseIchiran(
-    props,
-    tags
-  );
+  const { cellsIchiran, jmdictSeqStartLenSeen, jmdictSeqSeen } = parseIchiran(props, tags);
 
-  const { cellsCurtizVocab, cellsCurtizGrammar } = parseCurtiz(
-    props,
-    jmdictSeqStartLenSeen,
-    jmdictSeqSeen
-  );
+  const { cellsCurtizVocab, cellsCurtizGrammar } = parseCurtiz(props, jmdictSeqStartLenSeen, jmdictSeqSeen);
 
   return { cellsIchiran, cellsCurtizGrammar, cellsCurtizVocab };
 }
 
-function findClozeIdx(plain: string, run: ContextCloze): number {
-  const clozeHit = plain.indexOf(`${run.left}${run.cloze}${run.right}`);
-  if (clozeHit >= 0) {
-    return clozeHit + run.left.length;
-  }
-  throw new Error("cloze not found?");
-}
-function renderDeconjugation(d: AdjDeconjugated | Deconjugated) {
-  if ("auxiliaries" in d && d.auxiliaries.length) {
-    return `${d.auxiliaries.join(" + ")} + ${d.conjugation}`;
-  }
-  return d.conjugation;
-}
-
-const seenId = (id: string | number, start: number, len: number) =>
-  `${id}/${start}/${len}`;
+const seenId = (id: string | number, start: number, len: number) => `${id}/${start}/${len}`;
 
 const ConjProp = (prop: IchiranConjProp[]) => (
   <em>
@@ -73,7 +47,7 @@ const ConjProp = (prop: IchiranConjProp[]) => (
           {p.fml && Formal}]
         </>
       )),
-      "; "
+      "; ",
     )}{" "}
   </em>
 );
@@ -93,7 +67,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
   const jmdictSeqSeen = new Set<string>();
 
   const ichiWords: (string | IchiranWord)[] = ichiran.flatMap(
-    (i) => (typeof i === "string" ? [i] : i[0][0]) as (string | IchiranWord)[]
+    (i) => (typeof i === "string" ? [i] : i[0][0]) as (string | IchiranWord)[],
   );
 
   let start = 0;
@@ -107,21 +81,16 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
       continue;
     }
     const wordOrAlt = iword[1];
-    const wordArr =
-      "alternative" in wordOrAlt ? wordOrAlt.alternative : [wordOrAlt];
+    const wordArr = "alternative" in wordOrAlt ? wordOrAlt.alternative : [wordOrAlt];
     if (!wordArr.every((w) => w.text.length === wordArr[0].text.length)) {
-      throw new Error(
-        "invariant fail: expect all alternatives to have same length"
-      );
+      throw new Error("invariant fail: expect all alternatives to have same length");
     }
 
     // because sometimes Ichiran expands punctuation so try to adjust
     // start. See above and
     // https://github.com/tshatrov/ichiran/issues/19#issuecomment-1963208246
     {
-      const proposedStarts = wordArr
-        .map((w) => plain.indexOf(w.text, start))
-        .filter((x) => x >= 0);
+      const proposedStarts = wordArr.map((w) => plain.indexOf(w.text, start)).filter((x) => x >= 0);
       if (proposedStarts.length) {
         start = Math.min(...proposedStarts);
       }
@@ -171,16 +140,12 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
                     via{" "}
                     {join(
                       conj.via.map((conj) => ConjProp(conj.prop)),
-                      " or "
+                      " or ",
                     )}
                   </>
                 )}
                 <IchiranGloss
-                  origGloss={
-                    "gloss" in conj
-                      ? conj.gloss
-                      : conj.via.flatMap((conj) => conj.gloss)
-                  }
+                  origGloss={"gloss" in conj ? conj.gloss : conj.via.flatMap((conj) => conj.gloss)}
                   word={words[x.seq]}
                   tags={tags}
                   onNewVocabGrammar={onNewVocabGrammar}
@@ -254,16 +219,12 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
                         via{" "}
                         {join(
                           conj.via.map((conj) => ConjProp(conj.prop)),
-                          " or "
+                          " or ",
                         )}
                       </>
                     )}
                     <IchiranGloss
-                      origGloss={
-                        "gloss" in conj
-                          ? conj.gloss
-                          : conj.via.flatMap((conj) => conj.gloss)
-                      }
+                      origGloss={"gloss" in conj ? conj.gloss : conj.via.flatMap((conj) => conj.gloss)}
                       word={words[y.seq]}
                       tags={tags}
                       onNewVocabGrammar={onNewVocabGrammar}
@@ -284,11 +245,7 @@ function parseIchiran(args: Props, tags: Record<string, string>) {
   }
   return { cellsIchiran, jmdictSeqStartLenSeen, jmdictSeqSeen };
 }
-function parseCurtiz(
-  args: Props,
-  jmdictSeqStartLenSeen: Set<string>,
-  jmdictSeqSeen: Set<string>
-) {
+function parseCurtiz(args: Props, jmdictSeqStartLenSeen: Set<string>, jmdictSeqSeen: Set<string>) {
   const { nlp, onNewVocabGrammar, plain, vocab, grammarConj } = args;
   const { curtiz } = nlp;
 
@@ -325,10 +282,7 @@ function parseCurtiz(
             });
           const alreadyPicked: SenseAndSub[] =
             vocab
-              ?.filter(
-                (v) =>
-                  v.entry.id === wordId && v.start === start && v.len === len
-              )
+              ?.filter((v) => v.entry.id === wordId && v.start === start && v.len === len)
               .flatMap((v) => v.senses) ?? [];
           const next = {
             start,
@@ -355,43 +309,43 @@ function parseCurtiz(
     for (const { deconj, cloze, lemmas, startIdx, endIdx } of conjugated) {
       const start = findClozeIdx(plain, cloze);
       const len = cloze.cloze.length;
-
-      const grammar = {
-        start,
-        len,
-        lemmas,
-      };
-      const handleClick = (deconj: GrammarConj["deconj"]) =>
-        onNewVocabGrammar({
-          grammar: { ...grammar, deconj },
-        });
+      const furigana = curtiz.furigana.slice(startIdx, endIdx).flat();
       const content = (
-        <>
-          <FuriganaComponent furigana={lemmas[0]} /> →{" "}
-          <FuriganaComponent
-            furigana={curtiz.furigana.slice(startIdx, endIdx).flat()}
-          />{" "}
-          via
-          <ul>
-            {deconj.map((deconj, di) => {
-              const className = grammarConj?.find((g) =>
-                grammarConjEqual(g, { ...grammar, deconj })
-              )
-                ? "already-picked"
-                : undefined;
-              return (
-                <li class={className}>
-                  <button onClick={() => handleClick(deconj)}>
-                    {prefixNumber(di)}
-                  </button>{" "}
-                  {renderDeconjugation(deconj)}
-                </li>
-              );
-            })}
-          </ul>
-        </>
+        <GrammarCell
+          alreadySelectedGrammarConj={grammarConj}
+          deconjs={deconj}
+          lemmasFurigana={lemmas}
+          len={len}
+          literalFurigana={furigana}
+          onNewVocabGrammar={onNewVocabGrammar}
+          start={start}
+        />
       );
       cellsCurtizGrammar.push({ start, len, content, extra: deconj });
+    }
+
+    // are there any custom/manual grammar deconjugations we've selected but not from Curtiz?
+    if (grammarConj) {
+      const customDeconj = selectedGrammarConjsNotFromCurtiz(plain, conjugated, grammarConj);
+      for (const custom of customDeconj) {
+        cellsCurtizGrammar.push({
+          start: custom.start,
+          len: custom.len,
+          content: (
+            <GrammarCell
+              alreadySelectedGrammarConj={grammarConj}
+              custom
+              deconjs={[custom.deconj]}
+              lemmasFurigana={custom.lemmas}
+              len={custom.len}
+              literalFurigana={furiganaSlice(curtiz.furigana.flat(), custom.start, custom.len)}
+              onNewVocabGrammar={onNewVocabGrammar}
+              start={custom.start}
+            />
+          ),
+          extra: [custom.deconj],
+        });
+      }
     }
   }
   return { cellsCurtizVocab, cellsCurtizGrammar };
