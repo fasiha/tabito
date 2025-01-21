@@ -1,8 +1,8 @@
-import type { ConjugatedPhrase, ContextCloze } from "curtiz-japanese-nlp";
+import type { ConjugatedPhrase } from "curtiz-japanese-nlp";
 
 import type { GrammarConj } from "../interfaces/backend";
 
-import { grammarConjEqual } from "./equality";
+import { deconjEqual, grammarConjEqual } from "./equality";
 import { findClozeIdx } from "./utils";
 
 export const selectedGrammarConjsNotFromCurtiz = (
@@ -12,18 +12,30 @@ export const selectedGrammarConjsNotFromCurtiz = (
 ): GrammarConj[] => {
   // This is a pain because the Curtiz deconjugations are different format from the ones saved here
   // and we have to convert them.
-  const curtizDeconjToGrammarConj = (conjugated: ConjugatedPhrase): GrammarConj | undefined => {
-    const { deconj, cloze, lemmas } = conjugated;
-    if (deconj.length !== 1) {
-      return undefined;
-    }
+  const curtizDeconjToGrammarConj = (conjugated: ConjugatedPhrase): Omit<GrammarConj, "deconj"> => {
+    const { cloze, lemmas } = conjugated;
     const start = findClozeIdx(plain, cloze);
     const len = cloze.cloze.length;
-    return { start, len, deconj: deconj[0], lemmas };
+    return { start, len, lemmas };
   };
   // then we have to find which if any of our saved conjugations are NOT
   // from Curtiz
   const curtizGrammarConjs = fromCurtiz.map(curtizDeconjToGrammarConj).filter((x) => !!x);
 
-  return selectedConj.filter((selected) => !curtizGrammarConjs.some((auto) => grammarConjEqual(auto, selected)));
+  const res = selectedConj.filter(
+    (selected) =>
+      !curtizGrammarConjs.some(
+        (curt, ci) =>
+          grammarConjEqualIgnoreDeconj(curt, selected) &&
+          fromCurtiz[ci].deconj.some((d) => deconjEqual(d, selected.deconj)),
+      ),
+  );
+  if (res.length) {
+    console.log({ res, curtizGrammarConjs, selectedConj });
+  }
+  return res;
 };
+
+const grammarConjEqualIgnoreDeconj = (fromCurtiz: Omit<GrammarConj, "deconj">, selected: GrammarConj): boolean =>
+  grammarConjEqual({ ...fromCurtiz, deconj: selected.deconj }, selected);
+// copy the same deconj
