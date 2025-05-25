@@ -14,8 +14,11 @@ interface Props {
 }
 
 const { plain, d: docName } = Astro.props;
-
-await enrollSentenceIntoDoc(plain, docName);
+try {
+  await enrollSentenceIntoDoc(plain, docName);
+} catch {
+  // noop
+}
 const sentence: AnnotatedSentence | undefined = await getSentence(plain, false);
 if (sentence) {
   const curtiz = (sentence as SentenceType).nlp?.curtiz;
