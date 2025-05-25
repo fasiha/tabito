@@ -1,8 +1,9 @@
-import type { Furigana, Word, v1ResSentence, v1ResSentenceAnalyzed } from "curtiz-japanese-nlp/interfaces";
-import { type Sentence as TabitoSentence } from "tabito-lib";
-import type { Ichiran } from "../nlp-wrappers/ichiran-types";
+import type { Furigana, v1ResSentence, v1ResSentenceAnalyzed, Word } from "curtiz-japanese-nlp/interfaces";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
+import { type Sentence as TabitoSentence } from "tabito-lib";
+
 import type { SenseAndSub } from "../components/commonInterfaces";
+import type { Ichiran } from "../nlp-wrappers/ichiran-types";
 
 export * as Tables from "./DbTablesV1";
 
@@ -28,7 +29,11 @@ export interface GrammarConj {
   deconj: AdjDeconjugated | Deconjugated;
 }
 
-export type Bunsetsu = { idx: number; parent: number; numMorphemes: number };
+export type Bunsetsu = {
+  idx: number;
+  parent: number;
+  numMorphemes: number;
+};
 
 export interface Sentence extends TabitoSentence {
   translations?: Record<"en", string[]>; // add more target languages someday
