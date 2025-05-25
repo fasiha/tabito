@@ -1,0 +1,93 @@
+---
+export const prerender = true;
+
+import "../styles/editor.css";
+
+import { Sentence } from "./solid/Sentence";
+import { loadSentence } from "../utils/loadSentence";
+import type { Furigana as FuriganaType } from "curtiz-japanese-nlp";
+import type { AnnotatedSentence, Vocab } from "../interfaces/backend";
+import { hasKanji } from "curtiz-utils";
+import { furiganaSlice, minBy, plainToFurigana, prefixNumber } from "../utils/utils";
+import { Furigana } from "./solid/Furigana";
+
+interface Props {
+  plain: string;
+  d: string;
+}
+
+const { plain, d: docName } = Astro.props;
+const sentence = await loadSentence({ plain, docName });
+
+const vocabToHead = (vocab: Vocab, plain: string, furigana: AnnotatedSentence["furigana"]): FuriganaType[] => {
+  const snippet = plain.slice(vocab.start, vocab.start + vocab.len);
+  const snippetKanji = snippet.split("").filter(hasKanji);
+
+  if (snippetKanji.length) {
+    const bestKanji = minBy(vocab.entry.kanji, (k) => {
+      const headKanji = k.text.split("").filter(hasKanji);
+      const missing = snippetKanji.filter((s) => !k.text.includes(s));
+      const extra = headKanji.filter((s) => !snippetKanji.includes(s));
+      return missing.length + extra.length;
+    });
+
+    if (bestKanji) {
+      const furiSlice = furiganaSlice(furigana, vocab.start, vocab.len);
+      return plainToFurigana(bestKanji.text, furiSlice);
+    }
+  }
+
+  const bestReading = minBy(vocab.entry.kana, (k) => {
+    const extra = k.text.split("").filter((s) => !snippet.includes(s));
+    const misising = snippet.split("").filter((s) => !k.text.includes(s));
+    return extra.length + misising.length;
+  });
+  if (bestReading) return [bestReading.text];
+
+  return [snippet];
+};
+---
+
+<style>
+  @media print {
+    li.vocab {
+      break-inside: avoid;
+    }
+  }
+</style>
+
+<section>
+  <h3>{sentence ? <Sentence sentence={sentence} /> : plain}</h3>
+
+  {
+    sentence?.vocab?.length && (
+      <ul>
+        {sentence.vocab.map((v) => (
+          <li class="vocab">
+            <Furigana furigana={vocabToHead(v, plain, sentence.furigana)} />{" "}
+            {v.senses.map(({ sense: si, subsense: subi }) => {
+              if (!subi)
+                return (
+                  <span>
+                    {prefixNumber(si)}
+                    {v.entry.sense[si].gloss.map((g, gi) => (
+                      <span>
+                        <sup>{prefixNumber(gi)}</sup> {g.text}{" "}
+                      </span>
+                    ))}
+                  </span>
+                );
+
+              return (
+                <span>
+                  {prefixNumber(si)}
+                  <sup>{prefixNumber(subi)}</sup> {v.entry.sense[si].gloss[subi].text}
+                </span>
+              );
+            })}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>

@@ -3,10 +3,9 @@ export const prerender = true;
 
 import "../styles/editor.css";
 
-import { enrollSentenceIntoDoc, getSentence } from "../db";
-import { Sentence } from "./preact/Sentence";
+import { Sentence } from "./solid/Sentence";
 import { SentenceAnnotations } from "./solid/SentenceAnnotations";
-import type { AnnotatedSentence, Sentence as SentenceType } from "../interfaces/backend";
+import { loadSentence } from "../utils/loadSentence";
 
 interface Props {
   plain: string;
@@ -14,17 +13,7 @@ interface Props {
 }
 
 const { plain, d: docName } = Astro.props;
-try {
-  await enrollSentenceIntoDoc(plain, docName);
-} catch {
-  // noop
-}
-const sentence: AnnotatedSentence | undefined = await getSentence(plain, false);
-if (sentence) {
-  const curtiz = (sentence as SentenceType).nlp?.curtiz;
-  if (typeof curtiz === "object") sentence.kanjidic = curtiz.kanjidic;
-  delete (sentence as any)["nlp"];
-}
+const sentence = await loadSentence({ plain, docName });
 ---
 
 <style>

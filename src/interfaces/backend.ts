@@ -52,7 +52,8 @@ export const ALLOWED_PARENT_CHILD_TYPES = ["includes"] as const;
 export type ParentChildType = (typeof ALLOWED_PARENT_CHILD_TYPES)[number];
 
 export type WithoutNlp<T> = Omit<T, "nlp">;
-export type WithKanjidic<T> = T & {
+type WithKanjidic<T> = T & {
   kanjidic?: v1ResSentenceAnalyzed["kanjidic"];
 };
-export type AnnotatedSentence = WithKanjidic<WithoutNlp<Sentence>>;
+type WithLemmaFurigana<T> = T & Pick<v1ResSentenceAnalyzed, "lemmaFurigana">;
+export type AnnotatedSentence = WithLemmaFurigana<WithKanjidic<WithoutNlp<Sentence>>>;

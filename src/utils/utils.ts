@@ -9,6 +9,59 @@ export function furiganaToReading(furigana: Furigana[]): string {
 }
 
 /**
+ * Take a plain string, and a potentially unrelated list of furigana, and try
+ * to replace the kanji in the plain string.
+ *
+ * This might happen if `plain` is from JMDict and `furigana` is your sentence's readings.
+ */
+export const plainToFurigana = (plain: string, furigana: Furigana[]): Furigana[] => {
+  const rubyToRt = new Map<string, string>();
+  for (const f of furigana) {
+    if (typeof f !== "string") {
+      rubyToRt.set(f.ruby, f.rt);
+    }
+  }
+  const rubies = [...rubyToRt.keys()].sort((a, b) => b.length - a.length);
+  // longest first to have the best change to match longer kanji
+
+  const ret: Furigana[] = [plain];
+  for (const ruby of rubies) {
+    for (let idx = 0; idx < ret.length; idx++) {
+      const str = ret[idx];
+      if (typeof str !== "string") continue;
+
+      const rubyIdx = str.indexOf(ruby);
+      if (rubyIdx < 0) continue;
+
+      // found a ruby, replace it with the furigana
+      const rt = rubyToRt.get(ruby);
+      if (!rt) continue;
+
+      // might have empty left/right
+      const replacement = [str.slice(0, rubyIdx), { ruby, rt }, str.slice(rubyIdx + ruby.length)];
+      ret.splice(idx, 1, ...replacement.filter((s) => s));
+    }
+  }
+
+  return ret;
+};
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+  describe("plainToFurigana", () => {
+    it("works for the happy case", () => {
+      expect(plainToFurigana("abc", [{ ruby: "a", rt: "A" }])).toEqual([{ ruby: "a", rt: "A" }, "bc"]);
+      expect(plainToFurigana("abc", [{ ruby: "ab", rt: "AB" }])).toEqual([{ ruby: "ab", rt: "AB" }, "c"]);
+    });
+    it("doesn't get confused?", () => {
+      expect(plainToFurigana("abc", [])).toEqual(["abc"]);
+      expect(plainToFurigana("abc", [{ ruby: "x", rt: "X" }])).toEqual(["abc"]);
+      expect(plainToFurigana("abc", ["a", { ruby: "x", rt: "X" }, "c", "d"])).toEqual(["abc"]);
+    });
+  });
+}
+
+/**
  * Does NOT split string or Ruby
  */
 export function furiganaSlice(furigana: Furigana[], start: number, len: number): Furigana[] {
@@ -126,7 +179,7 @@ export function subsenseSeenClass(senseIdx: number, subsenseIdx: number, senses?
     : undefined;
 }
 
-function furiganaIdxToPlain(
+export function furiganaIdxToPlain(
   furigana: Furigana[][],
   startIdx: number = 0,
   endIdx: undefined | number = undefined,
@@ -158,3 +211,17 @@ export function findClozeIdx(plain: string, run: ContextCloze): number {
   }
   throw new Error("cloze not found?");
 }
+
+export const minBy = <T>(arr: T[], key: (x: T) => number): T | undefined => {
+  if (arr.length === 0) return undefined;
+  let bestY = Infinity;
+  let bestX: T | undefined = undefined;
+  for (const x of arr) {
+    const y = key(x);
+    if (y < bestY) {
+      bestY = y;
+      bestX = x;
+    }
+  }
+  return bestX;
+};

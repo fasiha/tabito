@@ -22,4 +22,8 @@ export default defineConfig({
       },
     },
   },
+  // just because this is annoying for printing
+  devToolbar: {
+    enabled: false,
+  },
 });
