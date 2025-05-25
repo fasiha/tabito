@@ -16,11 +16,14 @@ if (!plain) throw new Error("parameter not provided unexpectedly");
 // Terrible hack to get to MeCab's nBest parsing but, manually add a query parameter to the URL to access this:
 const nBestRaw = Astro.url.searchParams.get("nBest");
 const nBestNum = Number(nBestRaw);
-const nBest =
-  nBestRaw && isFinite(nBestNum) && nBestNum >= 0 ? nBestNum : undefined;
+const nBest = nBestRaw && isFinite(nBestNum) && nBestNum >= 0 ? nBestNum : undefined;
+
+// Another terrible hack to rerun analysis (e.g., if Kamiya-Codec has changed in Curtiz-Japanese-NLP):
+const reanalyze = Astro.url.searchParams.has("reanalyze");
 
 const existing = await getSentence(plain);
 if (
+  reanalyze ||
   existing === undefined ||
   (typeof existing === "object" && !existing.nlp) ||
   typeof nBest === "number"
@@ -51,6 +54,14 @@ if (
   await upsertSentence(sentence);
 }
 ---
+
+<script>
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("reanalyze")) {
+    url.searchParams.delete("reanalyze");
+    window.history.replaceState(null, "", url.toString());
+  }
+</script>
 
 <Basic title="Sentence Editor">
   <h1>Sentence Editor</h1>
