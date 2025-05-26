@@ -39,7 +39,7 @@
     "dexie": "^3.2.5",
     "dotenv": "^16.4.5",
     "ebisu-js": "^2.1.2",
-    "kamiya-codec": "^4.16.0",
+    "kamiya-codec": "^4.16.1",
     "kysely": "^0.27.3",
     "minimize-golden-section-1d": "^3.0.0",
     "node-fetch": "^3.3.2",
