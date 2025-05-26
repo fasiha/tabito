@@ -1,4 +1,4 @@
-import { computed, useSignal, type Signal } from "@preact/signals";
+import { computed, useSignal, useSignalEffect, type Signal } from "@preact/signals";
 import type { FunctionalComponent } from "preact";
 import type { GrammarConj, Sentence } from "../../interfaces/backend";
 import type { Furigana } from "tabito-lib";
@@ -9,6 +9,10 @@ import {
   type Auxiliary,
   type Conjugation,
   type Deconjugated,
+  type AdjDeconjugated,
+  adjConjugations,
+  adjConjugate,
+  type AdjConjugation,
 } from "kamiya-codec";
 import type { VocabGrammarProps } from "../commonInterfaces";
 
@@ -21,6 +25,7 @@ const furiganaToString = (fs: Furigana[]): string => fs.map((f) => (typeof f ===
 const furiganasToString = (bunsetsu: Furigana[][]): string => bunsetsu.map(furiganaToString).join("");
 const isConj = (s: string): s is Conjugation => conjugations.includes(s as any);
 const isAux = (s: string): s is Auxiliary => auxiliaries.includes(s as any);
+const isAdjConj = (s: string): s is AdjConjugation => adjConjugations.includes(s as any);
 
 export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGrammar, sentence }) => {
   const curtiz = sentence.value?.nlp.curtiz;
@@ -28,8 +33,19 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const startIndex = useSignal(0);
   const endIndex = useSignal(1);
   const auxs = useSignal<Auxiliary[]>([]);
-  const finalConj = useSignal<Conjugation>("Dictionary");
+  const finalConj = useSignal<Conjugation | AdjConjugation>("Dictionary");
   const ichidan = useSignal(false);
+  const verb = useSignal(true);
+  const iAdj = useSignal(true);
+
+  useSignalEffect(() => {
+    if (curtiz && typeof curtiz !== "string") {
+      const lemma = curtiz.bunsetsus.flatMap((b) => b.morphemes)[startIndex.value].lemma;
+      if (!verb.value && lemma.endsWith("い")) {
+        iAdj.value = true;
+      }
+    }
+  });
 
   if (!sentence.value || !curtiz || typeof curtiz === "string") {
     return null;
@@ -47,8 +63,16 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const handleToggleIchidan = () => {
     ichidan.value = !ichidan.value;
   };
+  const handleToggleVerb = () => {
+    verb.value = !verb.value;
+  };
+  const handleToggleIAdj = () => {
+    iAdj.value = !iAdj.value;
+  };
   const handleFinalConj = (conj: string) => {
-    if (isConj(conj)) {
+    if (verb.value && isConj(conj)) {
+      finalConj.value = conj;
+    } else if (!verb.value && isAdjConj(conj)) {
       finalConj.value = conj;
     }
   };
@@ -87,7 +111,9 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const results = computed(() => {
     try {
       return {
-        results: conjugateAuxiliaries(lemma, auxs.value, finalConj.value, ichidan.value),
+        results: verb.value
+          ? conjugateAuxiliaries(lemma, auxs.value, finalConj.value, ichidan.value)
+          : adjConjugate(lemma, finalConj.value, iAdj.value),
       };
     } catch (e) {
       return { error: String(e) };
@@ -125,39 +151,56 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
 
         <div>
           <ul>
+            <li>
+              <label>
+                {verb.value ? "Verb" : "Adjective"} <input type="checkbox" checked={verb} onChange={handleToggleVerb} />
+              </label>
+            </li>
+            <li>
+              {verb.value ? (
+                <label>
+                  Ichidan verb? <input type="checkbox" checked={ichidan} onChange={handleToggleIchidan} />
+                </label>
+              ) : (
+                <label>
+                  い adjective? <input type="checkbox" checked={iAdj} onChange={handleToggleIAdj} />
+                </label>
+              )}
+            </li>
             <li>{snippet} =</li>
             <ul>
               <li>{lemma}</li>
-              <li>+ Auxiliaries</li>
-              <ol>
-                {auxs.value.map((aux) => (
-                  <li key={aux}>
-                    + {aux} <button onClick={() => handleDeleteAux(aux)}>❌</button>
-                  </li>
-                ))}
-                <li>
-                  <select value="" onChange={(e) => handleAddAux(e.currentTarget.value)}>
-                    <option value="">--Pick another auxiliary</option>
-                    {auxiliaries.map((aux) => (
-                      <option value={aux} key={aux}>
-                        {aux}
-                      </option>
+              {verb.value && (
+                <>
+                  <li>+ Auxiliaries</li>
+                  <ol>
+                    {auxs.value.map((aux) => (
+                      <li key={aux}>
+                        + {aux} <button onClick={() => handleDeleteAux(aux)}>❌</button>
+                      </li>
                     ))}
-                  </select>
-                </li>
-              </ol>
+                    <li>
+                      <select value="" onChange={(e) => handleAddAux(e.currentTarget.value)}>
+                        <option value="">--Pick another auxiliary</option>
+                        {auxiliaries.map((aux) => (
+                          <option value={aux} key={aux}>
+                            {aux}
+                          </option>
+                        ))}
+                      </select>
+                    </li>
+                  </ol>
+                </>
+              )}
               <li>
                 + Final conjugation:{" "}
                 <select value={finalConj.value} onChange={(e) => handleFinalConj(e.currentTarget.value)}>
-                  {conjugations.map((conj) => (
+                  {(verb.value ? conjugations : adjConjugations).map((conj) => (
                     <option value={conj} key={conj}>
                       {conj}
                     </option>
                   ))}
                 </select>
-              </li>
-              <li>
-                Ichidan verb? <input type="checkbox" checked={ichidan} onChange={handleToggleIchidan} />
               </li>
             </ul>
             {results.value.results && results.value.results.length > 0 && <li>= {results.value.results.join(", ")}</li>}
