@@ -803,7 +803,7 @@ const VocabList: FunctionalComponent<VocabListProps> = memo(
             <SimpleWord word={v.entry} />
             {v.senses
               .map((s) =>
-                s.subsense
+                typeof s.subsense === "number"
                   ? v.entry.sense[s.sense].gloss[s.subsense].text
                   : v.entry.sense[s.sense].gloss.map((g) => g.text).join(", "),
               )

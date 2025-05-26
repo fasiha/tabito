@@ -49,6 +49,10 @@ const vocabToHead = (vocab: Vocab, plain: string, furigana: AnnotatedSentence["f
 ---
 
 <style>
+  section {
+    display: inline-block;
+  }
+
   @media print {
     li.vocab {
       break-inside: avoid;
@@ -66,7 +70,7 @@ const vocabToHead = (vocab: Vocab, plain: string, furigana: AnnotatedSentence["f
           <li class="vocab">
             <Furigana furigana={vocabToHead(v, plain, sentence.furigana)} />{" "}
             {v.senses.map(({ sense: si, subsense: subi }) => {
-              if (!subi)
+              if (typeof subi !== "number")
                 return (
                   <span>
                     {prefixNumber(si)}
