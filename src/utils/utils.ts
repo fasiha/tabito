@@ -13,6 +13,9 @@ export function furiganaToReading(furigana: Furigana[]): string {
  * to replace the kanji in the plain string.
  *
  * This might happen if `plain` is from JMDict and `furigana` is your sentence's readings.
+ *
+ * If `furigana` has the same kanji repeated twice with different readings, the
+ * last one will be used.
  */
 export const plainToFurigana = (plain: string, furigana: Furigana[]): Furigana[] => {
   const rubyToRt = new Map<string, string>();
