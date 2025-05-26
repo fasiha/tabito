@@ -49,8 +49,8 @@ const sentence = await loadSentence({ plain, docName });
   }
 </style>
 
-<span class="sentence-container">
-  {sentence ? <Sentence sentence={sentence} /> : plain}
+<span class="sentence-container"
+  >{sentence ? <Sentence sentence={sentence} /> : plain}
   {
     !justFurigana && (
       <div class="hover-area">
