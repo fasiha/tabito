@@ -10,9 +10,13 @@ import { loadSentence } from "../utils/loadSentence";
 interface Props {
   plain: string;
   d: string;
+  /**
+   * No hover area, just the sentence with furigana.
+   */
+  justFurigana?: boolean;
 }
 
-const { plain, d: docName } = Astro.props;
+const { plain, d: docName, justFurigana } = Astro.props;
 const sentence = await loadSentence({ plain, docName });
 ---
 
@@ -47,16 +51,18 @@ const sentence = await loadSentence({ plain, docName });
 
 <span class="sentence-container">
   {sentence ? <Sentence sentence={sentence} /> : plain}
-  <div class="hover-area">
-    <a href={`/edit-sentence/${plain}`}>
-      {sentence ? (sentence?.translations ? "📝" : "❓") : "❌"}
-    </a>
-    {
-      sentence && (
-        <div class="sentence-annotations">
-          <SentenceAnnotations sentence={sentence} client:visible />
-        </div>
-      )
-    }
-  </div>
+  {
+    !justFurigana && (
+      <div class="hover-area">
+        <a href={`/edit-sentence/${plain}`}>
+          {sentence ? (sentence?.translations ? "📝" : sentence?.vocab?.length ? "✔️" : "❓") : "❌"}
+        </a>
+        {sentence && (
+          <div class="sentence-annotations">
+            <SentenceAnnotations sentence={sentence} client:visible />
+          </div>
+        )}
+      </div>
+    )
+  }
 </span>

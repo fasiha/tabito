@@ -13,8 +13,8 @@ interface Props {
 export const Kanjidic: Component<Props> = ({ kanjidic, plain }) => {
   if (!kanjidic) return null;
   return (
-    <>
-      <p>Kanji</p>
+    <details>
+      <summary>Kanji</summary>
       <ul>
         {Object.values(kanjidic)
           .filter((dic) => plain.includes(dic.literal))
@@ -29,7 +29,7 @@ export const Kanjidic: Component<Props> = ({ kanjidic, plain }) => {
             </li>
           ))}
       </ul>
-    </>
+    </details>
   );
 };
 
@@ -56,11 +56,7 @@ function renderKanjidicRoot(k: SimpleCharacter) {
     <>
       「
       {k.readings.map((r, i) => (
-        <span
-          class={
-            hasHiragana(r) ? "kunyomi" : hasKatakana(r) ? "onyomi" : undefined
-          }
-        >
+        <span class={hasHiragana(r) ? "kunyomi" : hasKatakana(r) ? "onyomi" : undefined}>
           {r}
           {i < k.readings.length - 1 ? "・" : ""}
         </span>
