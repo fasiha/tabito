@@ -32,7 +32,7 @@ async function plainToSentenceSignal(
   networkFeedback: Signal<string>,
   seenWordIds?: Signal<Record<string, true>>,
 ) {
-  const res = await fetch(`/api/sentence/${plain}`);
+  const res = await fetch(`/api/sentence/${encodeURIComponent(plain)}`);
   if (res.ok) {
     const { sentence: sentenceObj, seenWordIds: seenWordIdsObj }: GetResponse = await res.json();
     sentenceObj.furigana.filter((x) => x !== ""); // ignore empty strings in case we get any

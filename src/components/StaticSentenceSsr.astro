@@ -54,7 +54,7 @@ const sentence = await loadSentence({ plain, docName });
   {
     !justFurigana && (
       <div class="hover-area">
-        <a href={`/edit-sentence/${plain}`}>
+        <a href={`/edit-sentence/${encodeURIComponent(plain)}`}>
           {sentence ? (sentence?.translations ? "📝" : sentence?.vocab?.length ? "✔️" : "❓") : "❌"}
         </a>
         {sentence && (
