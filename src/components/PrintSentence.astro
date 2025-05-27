@@ -6,10 +6,11 @@ import "../styles/editor.css";
 import { Sentence } from "./solid/Sentence";
 import { loadSentence } from "../utils/loadSentence";
 import type { Furigana as FuriganaType } from "curtiz-japanese-nlp";
-import type { AnnotatedSentence, Vocab } from "../interfaces/backend";
+import type { AnnotatedSentence, GrammarConj, Vocab } from "../interfaces/backend";
 import { hasKanji } from "curtiz-utils";
 import { furiganaSlice, minBy, plainToFurigana, prefixNumber } from "../utils/utils";
 import { Furigana } from "./solid/Furigana";
+import { GrammarConjPicked } from "./solid/GrammarConjPicked";
 
 interface Props {
   plain: string;
@@ -46,52 +47,61 @@ const vocabToHead = (vocab: Vocab, plain: string, furigana: AnnotatedSentence["f
 
   return [snippet];
 };
+
+const isVocab = (v: Vocab | GrammarConj): v is Vocab => "entry" in v;
 ---
 
 <style>
-  section {
-    display: inline-block;
-  }
-
   @media print {
-    li.vocab {
+    li {
       break-inside: avoid;
     }
   }
 </style>
 
-<section>
-  <h3>{sentence ? <Sentence sentence={sentence} /> : plain}</h3>
+<h3>{sentence ? <Sentence sentence={sentence} /> : plain}</h3>
 
-  {
-    sentence?.vocab?.length && (
-      <ul>
-        {sentence.vocab.map((v) => (
-          <li class="vocab">
-            <Furigana furigana={vocabToHead(v, plain, sentence.furigana)} />{" "}
-            {v.senses.map(({ sense: si, subsense: subi }) => {
-              if (typeof subi !== "number")
+{
+  (sentence?.vocab?.length || sentence?.grammarConj?.length) && (
+    <ul>
+      {[...(sentence?.vocab ?? []), ...(sentence?.grammarConj ?? [])]
+        .sort((a, b) => a.start - b.start)
+        .map((v) =>
+          isVocab(v) ? (
+            <li>
+              <Furigana furigana={vocabToHead(v, plain, sentence.furigana)} />{" "}
+              {v.senses.map(({ sense: si, subsense: subi }) => {
+                if (typeof subi !== "number")
+                  return (
+                    <span>
+                      {prefixNumber(si)}
+                      {v.entry.sense[si].gloss.map((g, gi) => (
+                        <span>
+                          <sup>{prefixNumber(gi)}</sup> {g.text}{" "}
+                        </span>
+                      ))}
+                    </span>
+                  );
+
                 return (
                   <span>
                     {prefixNumber(si)}
-                    {v.entry.sense[si].gloss.map((g, gi) => (
-                      <span>
-                        <sup>{prefixNumber(gi)}</sup> {g.text}{" "}
-                      </span>
-                    ))}
+                    <sup>{prefixNumber(subi)}</sup> {v.entry.sense[si].gloss[subi].text}
                   </span>
                 );
-
-              return (
-                <span>
-                  {prefixNumber(si)}
-                  <sup>{prefixNumber(subi)}</sup> {v.entry.sense[si].gloss[subi].text}
-                </span>
-              );
-            })}
-          </li>
-        ))}
-      </ul>
-    )
-  }
-</section>
+              })}
+            </li>
+          ) : (
+            <li>
+              <GrammarConjPicked
+                client:only="solid-js"
+                lemmas={v.lemmas}
+                deconj={v.deconj}
+                relevantFurigana={furiganaSlice(sentence.furigana, v.start, v.len)}
+              />
+            </li>
+          )
+        )}
+    </ul>
+  )
+}

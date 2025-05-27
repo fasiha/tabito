@@ -2,7 +2,7 @@
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { Component } from "solid-js";
 import type { AdjDeconjugated, Deconjugated } from "kamiya-codec";
-import { FuriganaComponent } from "./FuriganaComponent";
+import { Furigana as FuriganaComponent } from "./Furigana";
 import { furiganaToPlain, plainToFurigana } from "../../utils/utils";
 
 interface Props {

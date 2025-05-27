@@ -7,7 +7,7 @@ import { createDexieSignalQuery } from "../../indexeddb/solid-dexie";
 import { db } from "../../indexeddb";
 import { furiganaToPlain } from "../../utils/utils";
 import { makeSentenceMemory } from "../../utils/make";
-import { FuriganaComponent } from "./FuriganaComponent";
+import { Furigana as FuriganaComponent } from "./Furigana";
 
 interface Props {
   sentence: WithoutNlp<Sentence>;
