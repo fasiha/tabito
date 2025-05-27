@@ -1,8 +1,6 @@
 ---
 export const prerender = true;
 
-import "../styles/editor.css";
-
 import { Sentence } from "./solid/Sentence";
 import { loadSentence } from "../utils/loadSentence";
 import type { Furigana as FuriganaType } from "curtiz-japanese-nlp";
@@ -15,9 +13,10 @@ import { GrammarConjPicked } from "./solid/GrammarConjPicked";
 interface Props {
   plain: string;
   d: string;
+  justFurigana?: boolean;
 }
 
-const { plain, d: docName } = Astro.props;
+const { plain, d: docName, justFurigana } = Astro.props;
 const sentence = await loadSentence({ plain, docName });
 
 const vocabToHead = (vocab: Vocab, plain: string, furigana: AnnotatedSentence["furigana"]): FuriganaType[] => {
@@ -62,7 +61,7 @@ const isVocab = (v: Vocab | GrammarConj): v is Vocab => "entry" in v;
 <h3>{sentence ? <Sentence sentence={sentence} /> : plain}</h3>
 
 {
-  (sentence?.vocab?.length || sentence?.grammarConj?.length) && (
+  !justFurigana && (sentence?.vocab?.length || sentence?.grammarConj?.length) && (
     <ul>
       {[...(sentence?.vocab ?? []), ...(sentence?.grammarConj ?? [])]
         .sort((a, b) => a.start - b.start)
