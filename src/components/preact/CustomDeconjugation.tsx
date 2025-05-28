@@ -15,6 +15,7 @@ import {
   type AdjConjugation,
 } from "kamiya-codec";
 import type { VocabGrammarProps } from "../commonInterfaces";
+import { plainToFurigana } from "../../utils/utils";
 
 interface Props {
   onNewVocabGrammar: (x: VocabGrammarProps) => Promise<void>;
@@ -51,8 +52,18 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
     return null;
   }
 
-  const lemma = curtiz.bunsetsus.flatMap((b) => b.morphemes)[startIndex.value].lemma;
+  const initialLemma = curtiz.bunsetsus.flatMap((b) => b.morphemes)[startIndex.value].lemma;
+  // this can be changed to pick an entry from Jmdict
+  const lemma = useSignal(initialLemma);
+  useSignalEffect(() => {
+    // when startIndex -> initialLemma changes, copy it back to the lemma
+    const initialLemma = curtiz.bunsetsus.flatMap((b) => b.morphemes)[startIndex.value].lemma;
+    lemma.value = initialLemma;
+  });
 
+  const handleLemma = (raw: string) => {
+    lemma.value = raw;
+  };
   const handleChangeStart = (raw: string) => {
     startIndex.value = Number(raw);
     endIndex.value = Number(raw) + 1;
@@ -87,7 +98,16 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const handleSubmit = () => {
     if (results.value.results) {
       const left = furiganasToString(curtiz.furigana.slice(0, startIndex.value));
-      const lemmas = curtiz.lemmaFurigana.slice(startIndex.value, endIndex.value);
+
+      // if we're picking a Jmdict lemma, let's just prepend that to the MeCab lemmas
+      const mecabLemmas = curtiz.lemmaFurigana.slice(startIndex.value, endIndex.value);
+      const literalFuri = curtiz.furigana.slice(startIndex.value, endIndex.value);
+      const newInitialLemma =
+        lemma.value === initialLemma
+          ? undefined
+          : plainToFurigana(lemma.value, [...mecabLemmas, ...literalFuri].flat());
+      const lemmas = newInitialLemma ? [newInitialLemma, ...mecabLemmas] : mecabLemmas;
+
       const grammar = {
         start: left.length,
         len: snippet.length,
@@ -117,9 +137,9 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const results = computed((): Results => {
     try {
       if (verb.value && isConj(finalConj.value)) {
-        return { results: conjugateAuxiliaries(lemma, auxs.value, finalConj.value, ichidan.value) };
+        return { results: conjugateAuxiliaries(lemma.value, auxs.value, finalConj.value, ichidan.value) };
       } else if (!verb.value && isAdjConj(finalConj.value)) {
-        return { results: adjConjugate(lemma, finalConj.value, iAdj.value) };
+        return { results: adjConjugate(lemma.value, finalConj.value, iAdj.value) };
       }
       return { error: "Unexpect verb/adjective conjugation state" };
     } catch (e) {
@@ -176,7 +196,16 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
             </li>
             <li>{snippet} =</li>
             <ul>
-              <li>{lemma}</li>
+              <li>
+                <select value={lemma.value} onChange={(e) => handleLemma(e.currentTarget.value)}>
+                  <option value={initialLemma}>{initialLemma}</option>
+                  {sentence.value.vocab
+                    ?.filter((v) => v.start >= startIndex.value)
+                    .flatMap((v) =>
+                      [...v.entry.kanji, ...v.entry.kana].map((k) => <option value={k.text}>{k.text}</option>),
+                    )}
+                </select>
+              </li>
               {verb.value && (
                 <>
                   <li>+ Auxiliaries</li>
