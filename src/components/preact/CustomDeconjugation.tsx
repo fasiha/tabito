@@ -87,34 +87,41 @@ export const CustomDeconjugator: FunctionalComponent<Props> = ({ onNewVocabGramm
   const handleSubmit = () => {
     if (results.value.results) {
       const left = furiganasToString(curtiz.furigana.slice(0, startIndex.value));
-
-      const deconj: Deconjugated = {
-        auxiliaries: auxs.value,
-        conjugation: finalConj.value,
-        result: results.value.results,
-      };
-
       const lemmas = curtiz.lemmaFurigana.slice(startIndex.value, endIndex.value);
-
-      const grammar: GrammarConj = {
+      const grammar = {
         start: left.length,
         len: snippet.length,
         lemmas,
-        deconj,
       };
-      onNewVocabGrammar({ grammar });
+
+      if (verb.value && isConj(finalConj.value)) {
+        const deconj: Deconjugated = {
+          auxiliaries: auxs.value,
+          conjugation: finalConj.value,
+          result: results.value.results,
+        };
+        onNewVocabGrammar({ grammar: { ...grammar, deconj } });
+      } else if (!verb.value && isAdjConj(finalConj.value)) {
+        const deconj: AdjDeconjugated = {
+          conjugation: finalConj.value,
+          result: results.value.results,
+        };
+        onNewVocabGrammar({ grammar: { ...grammar, deconj } });
+      }
     }
   };
 
   const snippet = furiganasToString(curtiz.furigana.slice(startIndex.value, endIndex.value));
 
-  const results = computed(() => {
+  type Results = { results: string[]; error?: never } | { error: string; results?: never };
+  const results = computed((): Results => {
     try {
-      return {
-        results: verb.value
-          ? conjugateAuxiliaries(lemma, auxs.value, finalConj.value, ichidan.value)
-          : adjConjugate(lemma, finalConj.value, iAdj.value),
-      };
+      if (verb.value && isConj(finalConj.value)) {
+        return { results: conjugateAuxiliaries(lemma, auxs.value, finalConj.value, ichidan.value) };
+      } else if (!verb.value && isAdjConj(finalConj.value)) {
+        return { results: adjConjugate(lemma, finalConj.value, iAdj.value) };
+      }
+      return { error: "Unexpect verb/adjective conjugation state" };
     } catch (e) {
       return { error: String(e) };
     }
