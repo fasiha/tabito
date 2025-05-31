@@ -6,6 +6,9 @@ export interface GetResponse {
   sentence: Sentence;
   seenWordIds: Record<string, true>;
 }
+/**
+ * This is about loading data from SQLite: it's already been parsed by Curtiz and Ichiran.
+ */
 export const GET: APIRoute = async ({ params }) => {
   const { plain } = params;
   if (plain) {

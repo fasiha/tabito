@@ -5,7 +5,7 @@ import { memo, useMemo, type TargetedEvent } from "preact/compat";
 import { Sentence as SentenceComponent } from "./Sentence";
 import type { Furigana } from "curtiz-japanese-nlp";
 import type { GrammarConj, Sentence } from "../../interfaces/backend";
-import type { Word } from "curtiz-japanese-nlp/interfaces";
+import type { ScoreHit, ScoreHits, Word } from "curtiz-japanese-nlp/interfaces";
 import type { SenseAndSub, VocabGrammarProps } from "../commonInterfaces";
 import { deconjEqual, grammarConjEqual, senseAndSubEqual, vocabEqual } from "../../utils/equality";
 import type {
@@ -21,6 +21,7 @@ import type { Cell } from "../../utils/cellFit";
 import { Jdepp } from "./Jdepp";
 import type { GetResponse } from "../../pages/api/sentence/[plain]";
 import { CustomDeconjugator } from "./CustomDeconjugation";
+import { CustomVocab } from "./CustomVocab";
 
 interface Props {
   plain: string;
@@ -584,6 +585,7 @@ export const SentenceEditor: FunctionalComponent<Props> = ({ plain }) => {
           </h2>
 
           <CustomDeconjugator onNewVocabGrammar={handleNewVocabGrammar} sentence={sentence} />
+          <CustomVocab sentence={sentence} />
 
           {/* Vocab selected and equivalent */}
           <VocabList
