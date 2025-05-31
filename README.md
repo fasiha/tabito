@@ -33,7 +33,7 @@ sqlite3 sentences.db "UPDATE sentence SET jsonEncoded = json_remove(jsonEncoded,
 
 > 🚨 Danger ⚠️: to delete an entire sentence:
 > ```sh
-  sqlite3 sentences.db "DELETE FROM sentence WHERE plain='抑えられなくなる'"
+>  sqlite3 sentences.db "DELETE FROM sentence WHERE plain='抑えられなくなる'"
 > ```
 
 ## Working notes
