@@ -2,6 +2,11 @@
 
 Very work in progress.
 
+| Document reader mode       | Sentence annotator mode       |
+| -------------------------- | ----------------------------- |
+| ![](./document-reader.png) | ![](./sentence-annotator.png) |
+
+
 ## Setup
 First-time setup:
 ```sh
